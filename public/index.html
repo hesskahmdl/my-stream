@@ -1,65 +1,353 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-	<meta charset="utf-8" />
-	<title>TMDB Embed Login</title>
-	<meta name="viewport" content="width=device-width,initial-scale=1" />
-	<link rel="stylesheet" href="/style.css" />
-	<style>
-		body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#0f141a; font-family: system-ui, sans-serif; }
-		.login-card { background:#1e1e24; padding:2rem 2.25rem; border-radius:12px; width:100%; max-width:380px; box-shadow:0 4px 24px -4px rgba(0,0,0,.6); }
-		.login-card h1 { margin:0 0 1rem; font-size:1.3rem; color: white; text-align: center;}
-		.pw-change { display:none; background:#1e1e24; padding:2rem 2.25rem; border-radius:12px; width:100%; max-width:380px; box-shadow:0 4px 24px -4px rgba(0,0,0,.6); }
-		.pw-change h2 { margin:0 0 1rem; font-size:1.3rem; color: white; text-align: center;}
-		.field { display:flex; flex-direction:column; gap:.35rem; margin-bottom:.9rem; }
-		.field label { font-size:.85rem; text-transform:uppercase; letter-spacing:.08em; color:#bbb; text-align: center;}
-		.field input { padding:.65rem .75rem !important; border:1px solid #333 !important; color:#bbb !important; border-radius:6px !important; background:#111 !important; font-size:.95rem !important; }
-		.actions { display:block; gap:.75rem; align-items:center; text-align: center;}
-		button.primary { background:#2563eb; color:#fff; padding:.65rem 1rem; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:.95rem; }
-		button.primary:disabled { opacity:.55; cursor:default; }
-		.status { min-height:1.1rem; font-size:.8rem; color:#eee; }
-		.error { color:#f87171; }
-		.success { color:#4ade80; }
-		.meta { margin-top:1.25rem; font-size:.7rem; line-height:1.2; color:#666; text-align:center; }
-		.link-btn { background:none; border:none; color:#60a5fa; cursor:pointer; font-size:.75rem; padding:0; }
-		.expiry-text { margin-top:.5rem; margin-bottom: .5rem; font-weight: 500; color: yellow;}
-	</style>
-	<script defer src="/login.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SK Stream</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #0b0b0e; color: #fff; overflow-x: hidden; }
+
+        /* Header Navigation */
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 15px 40px; background: rgba(11, 11, 14, 0.9);
+            position: fixed; top: 0; width: 100%; z-index: 1000; backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .logo { font-size: 24px; font-weight: 900; color: #e50914; letter-spacing: 1px; text-transform: uppercase; }
+
+        nav { display: flex; gap: 25px; align-items: center; }
+        .nav-item {
+            background: none; border: none; color: #aaa; font-size: 15px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; font-weight: 600; padding-bottom: 5px;
+            position: relative; transition: color 0.2s;
+        }
+        .nav-item:hover, .nav-item.active { color: #fff; }
+        .nav-item.active::after {
+            content: ''; position: absolute; bottom: -2px; left: 0; width: 100%; height: 2px; background: #e50914;
+        }
+        .nav-item svg { width: 18px; height: 18px; fill: currentColor; }
+
+        .search-box input {
+            background: #18181f; border: 1px solid #2a2a35; color: #fff; padding: 8px 16px;
+            border-radius: 20px; outline: none; font-size: 14px; width: 220px; transition: width 0.3s;
+        }
+        .search-box input:focus { width: 280px; border-color: #e50914; }
+
+        /* Hero Banner Slider */
+        .hero-container {
+            position: relative; width: 100%; height: 80vh; min-height: 500px;
+            background-size: cover; background-position: center; transition: background-image 0.8s ease-in-out;
+            display: flex; align-items: flex-end; padding: 0 50px 60px; margin-top: 60px;
+        }
+        .hero-overlay {
+            position: absolute; inset: 0;
+            background: linear-gradient(0deg, #0b0b0e 0%, rgba(11,11,14,0.6) 50%, rgba(11,11,14,0.3) 100%),
+                        linear-gradient(90deg, #0b0b0e 0%, rgba(11,11,14,0.7) 40%, transparent 100%);
+        }
+        .hero-content { position: relative; z-index: 10; max-width: 650px; }
+        .hero-tag {
+            color: #e50914; font-size: 12px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+            display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+        }
+        .hero-title { font-size: 42px; font-weight: 900; line-height: 1.1; margin-bottom: 15px; }
+        
+        .hero-meta { display: flex; align-items: center; gap: 12px; font-size: 13px; margin-bottom: 15px; color: #ccc; }
+        .badge { background: rgba(255,255,255,0.15); padding: 3px 8px; border-radius: 4px; font-weight: bold; }
+        .badge-rating { background: #ffc107; color: #000; font-weight: 800; }
+
+        .hero-overview { font-size: 14px; color: #aaa; line-height: 1.5; margin-bottom: 25px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .btn-watch {
+            background: #e50914; color: #fff; border: none; padding: 12px 30px; border-radius: 30px;
+            font-size: 15px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 10px;
+            transition: transform 0.2s, background 0.2s; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.4);
+        }
+        .btn-watch:hover { background: #ff0f1a; transform: scale(1.05); }
+
+        /* Slider Controls */
+        .hero-controls { position: absolute; top: 100px; right: 50px; z-index: 10; display: flex; gap: 10px; }
+        .ctrl-btn {
+            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); color: #fff;
+            width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s;
+        }
+        .ctrl-btn:hover { background: #e50914; border-color: #e50914; }
+
+        .hero-progress {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 3px; background: rgba(255,255,255,0.1); z-index: 10;
+        }
+        .hero-progress-bar { height: 100%; background: #e50914; width: 0%; transition: width 0.1s linear; }
+
+        /* Sections & Carrousels */
+        .main-content { padding: 20px 50px; }
+        .section-title { font-size: 20px; font-weight: 800; margin: 30px 0 15px; color: #fff; display: flex; align-items: center; gap: 10px; }
+        
+        .carousel-wrapper { position: relative; }
+        .carousel {
+            display: flex; gap: 16px; overflow-x: auto; scroll-behavior: smooth; padding: 10px 0;
+            scrollbar-width: none;
+        }
+        .carousel::-webkit-scrollbar { display: none; }
+
+        .card {
+            flex: 0 0 170px; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s;
+            border-radius: 8px; overflow: hidden; background: #14141d; position: relative;
+        }
+        .card:hover { transform: translateY(-8px); box-shadow: 0 8px 20px rgba(0,0,0,0.8); }
+        .card img { width: 100%; height: 240px; object-fit: cover; display: block; }
+        .card-info { padding: 10px; }
+        .card-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .card-meta { font-size: 11px; color: #888; display: flex; justify-content: space-between; }
+
+        .arrow-btn {
+            position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px;
+            background: #e50914; border-radius: 50%; border: none; color: #fff; cursor: pointer;
+            z-index: 5; display: flex; align-items: center; justify-content: center; font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5); opacity: 0; transition: opacity 0.2s;
+        }
+        .carousel-wrapper:hover .arrow-btn { opacity: 1; }
+        .arrow-btn.left { left: -15px; }
+        .arrow-btn.right { right: -15px; }
+
+        /* Modal Player */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 2000;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal {
+            width: 100%; max-width: 1000px; background: #121218; border-radius: 12px; overflow: hidden;
+            border: 1px solid #222; display: flex; flex-direction: column;
+        }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: #1a1a24; }
+        .modal-close { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+        .modal iframe { width: 100%; height: 520px; border: none; background: #000; }
+    </style>
 </head>
 <body>
-	<div class="login-card" id="loginCard">
-		<div id="lockoutBanner" style="display:none; background:#7f1d1d; color:#fca5a5; padding:.6rem .75rem; border-radius:8px; font-size:.8rem; line-height:1.2; margin-bottom:1rem;">
-			<strong>Too Many Attempts.</strong> Try again in <span id="lockoutCountdown">00:00</span>.
-		</div>
-		<h1>TMDB Embed Admin</h1>
-		<form id="loginForm" autocomplete="off">
-			<div class="field">
-				<label for="username">Username</label>
-				<input id="username" name="username" type="text" required autofocus />
-			</div>
-			<div class="field">
-				<label for="password">Password</label>
-				<input id="password" name="password" type="password" required />
-			</div>
-			<div class="actions">
-				<button id="loginBtn" class="primary" type="submit">Login</button>
-				<div class="status" id="status" aria-live="polite"></div>
-			</div>
-		</form>
-		<div class="pw-change" id="pwChange">
-			<h2>Change Password</h2>
-			<form id="pwForm" autocomplete="off">
-				<div class="field"><label for="oldPw">Old Password</label><input id="oldPw" type="password" required /></div>
-				<div class="field"><label for="newPw">New Password</label><input id="newPw" type="password" minlength="8" required /></div>
-				<div class="actions"><button id="pwBtn" class="primary" type="submit">Update</button><div class="status" id="pwStatus" aria-live="polite"></div></div>
-			</form>
-		</div>
-		<div class="meta">
-			<button id="togglePw" class="link-btn" type="button">Change Password</button>
-			<div class="expiry-text">Sessions expire after 12h or on server restart.</div>
-			<p class="login-hint">Default user created if none exists: admin / change-me (change it!).</p>
-		</div>
-	</div>
+
+    <header>
+        <div class="logo">SK STREAM</div>
+        <nav>
+            <button class="nav-item active" onclick="filterType('all')">
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil
+            </button>
+            <button class="nav-item" onclick="filterType('movie')">
+                <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg> Films
+            </button>
+            <button class="nav-item" onclick="filterType('tv')">
+                <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg> Séries
+            </button>
+            <button class="nav-item" onclick="filterType('anime')">
+                <svg viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61z"/></svg> Anime
+            </button>
+        </nav>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Rechercher un titre...">
+        </div>
+    </header>
+
+    <!-- Hero Banner Auto-Slider -->
+    <div class="hero-container" id="heroBanner">
+        <div class="hero-overlay"></div>
+        
+        <div class="hero-controls">
+            <button class="ctrl-btn" onclick="prevHero()">❮</button>
+            <button class="ctrl-btn" onclick="nextHero()">❯</button>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-tag">🔥 TENDANCES DU MOMENT</div>
+            <h1 class="hero-title" id="heroTitle">---</h1>
+            <div class="hero-meta">
+                <span class="badge" id="heroType">FILM</span>
+                <span id="heroYear">2026</span>
+                <span class="badge badge-rating" id="heroRating">⭐ 8.5</span>
+            </div>
+            <p class="hero-overview" id="heroOverview">...</p>
+            <button class="btn-watch" id="heroWatchBtn">▶ REGARDER</button>
+        </div>
+
+        <div class="hero-progress"><div class="hero-progress-bar" id="progressBar"></div></div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="main-content">
+        <div class="section-title">🔥 Nouveautés</div>
+        <div class="carousel-wrapper">
+            <button class="arrow-btn left" onclick="scrollCarousel('gridNew', -400)">❮</button>
+            <div class="carousel" id="gridNew"></div>
+            <button class="arrow-btn right" onclick="scrollCarousel('gridNew', 400)">❯</button>
+        </div>
+
+        <div class="section-title">🎬 Films Populaires</div>
+        <div class="carousel-wrapper">
+            <button class="arrow-btn left" onclick="scrollCarousel('gridMovies', -400)">❮</button>
+            <div class="carousel" id="gridMovies"></div>
+            <button class="arrow-btn right" onclick="scrollCarousel('gridMovies', 400)">❯</button>
+        </div>
+
+        <div class="section-title">📺 Séries Incontournables</div>
+        <div class="carousel-wrapper">
+            <button class="arrow-btn left" onclick="scrollCarousel('gridSeries', -400)">❮</button>
+            <div class="carousel" id="gridSeries"></div>
+            <button class="arrow-btn right" onclick="scrollCarousel('gridSeries', 400)">❯</button>
+        </div>
+
+        <div class="section-title">✨ Animés & Mangas</div>
+        <div class="carousel-wrapper">
+            <button class="arrow-btn left" onclick="scrollCarousel('gridAnimes', -400)">❮</button>
+            <div class="carousel" id="gridAnimes"></div>
+            <button class="arrow-btn right" onclick="scrollCarousel('gridAnimes', 400)">❯</button>
+        </div>
+    </div>
+
+    <!-- Modal Player -->
+    <div class="overlay" id="playerModal" style="display:none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modalTitle" style="font-size:15px;"></h3>
+                <button class="modal-close" onclick="closePlayer()">✕</button>
+            </div>
+            <div id="embedContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        let catalog = [];
+        let heroItems = [];
+        let heroIndex = 0;
+        let sliderTimer = null;
+        let progressTimer = null;
+
+        async function init() {
+            try {
+                const res = await fetch('data.json');
+                catalog = await res.json();
+
+                // Sélectionner les 10 meilleurs films/séries pour le slider Hero
+                heroItems = catalog.slice(0, 10);
+                setupHeroSlider();
+                renderSections();
+            } catch (e) {
+                console.error("Erreur de chargement du catalogue:", e);
+            }
+        }
+
+        function setupHeroSlider() {
+            if (!heroItems.length) return;
+            showHero(0);
+            startAutoSlider();
+        }
+
+        function showHero(index) {
+            heroIndex = index;
+            const item = heroItems[heroIndex];
+
+            // Image de fond (Affiche haute qualité)
+            const bgUrl = item.poster ? item.poster.replace('w342', 'original') : '';
+            document.getElementById('heroBanner').style.backgroundImage = `url('${bgUrl}')`;
+            
+            document.getElementById('heroTitle').textContent = item.title;
+            document.getElementById('heroType').textContent = (item.type === 'tv' || item.type === 'anime') ? 'SÉRIE' : 'FILM';
+            document.getElementById('heroYear').textContent = item.year || '';
+            document.getElementById('heroRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
+            document.getElementById('heroOverview').textContent = item.overview || "Aucun synopsis disponible.";
+            
+            document.getElementById('heroWatchBtn').onclick = () => openPlayer(item);
+
+            resetProgressBar();
+        }
+
+        function nextHero() {
+            heroIndex = (heroIndex + 1) % heroItems.length;
+            showHero(heroIndex);
+        }
+
+        function prevHero() {
+            heroIndex = (heroIndex - 1 + heroItems.length) % heroItems.length;
+            showHero(heroIndex);
+        }
+
+        function startAutoSlider() {
+            clearInterval(sliderTimer);
+            sliderTimer = setInterval(nextHero, 6000);
+        }
+
+        function resetProgressBar() {
+            clearInterval(progressTimer);
+            const bar = document.getElementById('progressBar');
+            bar.style.width = '0%';
+            let p = 0;
+            progressTimer = setInterval(() => {
+                p += 1.66;
+                bar.style.width = `${p}%`;
+                if (p >= 100) clearInterval(progressTimer);
+            }, 100);
+        }
+
+        function renderCard(item) {
+            return `
+                <div class="card" onclick='openPlayer(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                    <img src="${item.poster || 'https://via.placeholder.com/170x240'}" alt="${item.title}">
+                    <div class="card-info">
+                        <div class="card-title">${item.title}</div>
+                        <div class="card-meta">
+                            <span>${item.year || ''}</span>
+                            <span>⭐ ${parseFloat(item.rating || 0).toFixed(1)}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSections() {
+            const movies = catalog.filter(i => i.type === 'movie' || !i.type);
+            const series = catalog.filter(i => i.type === 'tv');
+            const animes = catalog.filter(i => i.type === 'anime');
+
+            document.getElementById('gridNew').innerHTML = catalog.slice(0, 20).map(renderCard).join('');
+            document.getElementById('gridMovies').innerHTML = movies.slice(0, 20).map(renderCard).join('');
+            document.getElementById('gridSeries').innerHTML = series.slice(0, 20).map(renderCard).join('');
+            document.getElementById('gridAnimes').innerHTML = animes.slice(0, 20).map(renderCard).join('');
+        }
+
+        function scrollCarousel(id, amount) {
+            document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
+        }
+
+        function openPlayer(item) {
+            const id = item.tmdb_id_clean || item.tmdb_id;
+            const isTv = (item.type === 'tv' || item.type === 'anime');
+            
+            // URL de lecture Frembed automatique
+            const streamUrl = isTv 
+                ? `https://frembed.casa/api/serie.php?id=${id}&sa=1&epi=1` 
+                : `https://frembed.casa/api/film.php?id=${id}`;
+
+            document.getElementById('modalTitle').textContent = `${item.title} (${item.year || ''})`;
+            const container = document.getElementById('embedContainer');
+            container.innerHTML = `<iframe src="${streamUrl}" allowfullscreen></iframe>`;
+            document.getElementById('playerModal').style.display = 'flex';
+        }
+
+        function closePlayer() {
+            document.getElementById('playerModal').style.display = 'none';
+            document.getElementById('embedContainer').innerHTML = '';
+        }
+
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const q = this.value.toLowerCase().trim();
+            if (!q) {
+                renderSections();
+                return;
+            }
+            const filtered = catalog.filter(i => i.title && i.title.toLowerCase().includes(q));
+            document.getElementById('gridNew').innerHTML = filtered.map(renderCard).join('');
+        });
+
+        init();
+    </script>
 </body>
 </html>
-
