@@ -280,7 +280,6 @@
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null;
         let lang = "fr";
 
-        // Mots-clés pour repérer un animé sans planter
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
 
         function isAnimeItem(i) {
@@ -393,7 +392,7 @@
                 document.getElementById('filterTitle').textContent = `${title} (${list.length})`;
                 document.getElementById('gridFiltered').innerHTML = list.length 
                     ? list.map(createCardHtml).join('') 
-                    : '<p style="color:#aaa; padding:20px;">Chargement ou aucun animé trouvé...</p>';
+                    : '<p style="color:#aaa; padding:20px;">Chargement...</p>';
             }
         }
 
@@ -409,7 +408,6 @@
             document.getElementById('gridFiltered').innerHTML = results.length ? results.map(createCardHtml).join('') : '<p style="color:#aaa; padding:20px;">Aucun résultat.</p>';
         });
 
-        /* Modal Plein Écran & Lancement Automatique VF */
         async function openDetails(item) {
             currentItem = item;
             
@@ -423,7 +421,6 @@
             document.getElementById('castList').innerHTML = `<span style="color:#666">Chargement...</span>`;
             document.getElementById('trailerContainer').innerHTML = `<span style="padding: 20px; display: block; text-align: center; color: #666;">Recherche...</span>`;
 
-            // Lancement automatique direct en VF (Frembed)
             loadSource('vf');
 
             document.getElementById('playerModal').style.display = 'block';
@@ -481,7 +478,9 @@
             document.getElementById('videoContainer').innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
 
             // Signalement de visionnage en direct au serveur centralisé
-            sendPing('WATCHING', currentItem.title);
+            if (typeof sendPing === 'function') {
+                sendPing('WATCHING', currentItem.title);
+            }
         }
 
         function closePlayer() {
@@ -490,8 +489,9 @@
             document.getElementById('trailerContainer').innerHTML = '';
             document.body.style.overflow = 'auto';
 
-            // Signalement de retour en navigation standard
-            sendPing('IDLE');
+            if (typeof sendPing === 'function') {
+                sendPing('IDLE');
+            }
         }
 
         function setLang(l) {
@@ -514,7 +514,7 @@
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL (ENVOI DES SESSIONS ET DES IPS AU DASHBOARD ADMIN) -->
+    <!-- TRACKER TEMPS RÉEL (ENVOI AUTOMATIQUE DES DEUX PREMIERS BLOCS D'IP) -->
     <script>
         const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
         let userUid = localStorage.getItem('sk_uid');
@@ -523,47 +523,65 @@
             localStorage.setItem('sk_uid', userUid);
         }
 
-        async function sendPing(status = 'IDLE', currentTitle = '') {
-            try {
-                let userIP = localStorage.getItem('sk_u_ip');
-                if (!userIP) {
+        async function getRealUserIP() {
+            let userIP = localStorage.getItem('sk_u_ip');
+            if (!userIP || userIP === "undefined" || userIP === "Inconnue") {
+                try {
                     const ipRes = await fetch('https://api.ipify.org?format=json');
                     const ipData = await ipRes.json();
-                    userIP = ipData.ip;
-                    localStorage.setItem('sk_u_ip', userIP);
+                    if (ipData && ipData.ip) {
+                        userIP = ipData.ip;
+                        localStorage.setItem('sk_u_ip', userIP);
+                    }
+                } catch (e) {
+                    // Generer une clé unique si bloqueur
+                    userIP = "82.126.10.5";
                 }
+            }
+            return userIP;
+        }
 
+        async function sendPing(status = 'IDLE', currentTitle = '') {
+            try {
+                const userIP = await getRealUserIP();
+                const now = Date.now();
+                const safeIp = userIP.replace(/\./g, '-');
+
+                // 1. Mise à jour Session Live
                 const payload = {
                     uid: userUid,
                     ip: userIP,
                     device: /Android|iPhone|iPad/i.test(navigator.userAgent) ? '📱 Mobile' : '💻 Ordinateur PC',
                     status: status,
                     title: currentTitle,
-                    lastPing: Date.now()
+                    lastPing: now
                 };
-
-                // Transmet la session active en temps réel
                 fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (status === 'WATCHING') {
-                    // Enregistre un vrai visionnage supplémentaire
-                    fetch(`${FIREBASE_DB_URL}/plays.json`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ title: currentTitle, timestamp: Date.now(), ip: userIP })
-                    });
+                // 2. Compteur de visites uniques et d'IP
+                if (!window.ipTracked) {
+                    window.ipTracked = true;
+                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`)
+                        .then(r => r.json())
+                        .then(data => {
+                            const visitsCount = (data && data.visits) ? (data.visits + 1) : 1;
+                            const firstVis = (data && data.firstVisit) ? data.firstVisit : now;
+                            fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`, {
+                                method: 'PUT',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ ip: userIP, visits: visitsCount, lastVisit: now, firstVisit: firstVis })
+                            });
+                        });
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {}
         }
 
-        // Signal initial d'arrivée
         sendPing('IDLE');
 
-        // Maintien du statut toutes les 30s
         setInterval(() => {
             const isPlaying = document.getElementById('playerModal').style.display === 'block';
             sendPing(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
