@@ -479,6 +479,9 @@
             }
 
             document.getElementById('videoContainer').innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
+
+            // Signalement de visionnage en direct au serveur centralisé
+            sendPing('WATCHING', currentItem.title);
         }
 
         function closePlayer() {
@@ -486,6 +489,9 @@
             document.getElementById('videoContainer').innerHTML = '';
             document.getElementById('trailerContainer').innerHTML = '';
             document.body.style.overflow = 'auto';
+
+            // Signalement de retour en navigation standard
+            sendPing('IDLE');
         }
 
         function setLang(l) {
@@ -506,6 +512,62 @@
         }
 
         init();
+    </script>
+
+    <!-- TRACKER TEMPS RÉEL (ENVOI DES SESSIONS ET DES IPS AU DASHBOARD ADMIN) -->
+    <script>
+        const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
+        let userUid = localStorage.getItem('sk_uid');
+        if (!userUid) {
+            userUid = 'usr_' + Math.random().toString(36).substring(2, 10);
+            localStorage.setItem('sk_uid', userUid);
+        }
+
+        async function sendPing(status = 'IDLE', currentTitle = '') {
+            try {
+                let userIP = localStorage.getItem('sk_u_ip');
+                if (!userIP) {
+                    const ipRes = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipRes.json();
+                    userIP = ipData.ip;
+                    localStorage.setItem('sk_u_ip', userIP);
+                }
+
+                const payload = {
+                    uid: userUid,
+                    ip: userIP,
+                    device: /Android|iPhone|iPad/i.test(navigator.userAgent) ? '📱 Mobile' : '💻 Ordinateur PC',
+                    status: status,
+                    title: currentTitle,
+                    lastPing: Date.now()
+                };
+
+                // Transmet la session active en temps réel
+                fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (status === 'WATCHING') {
+                    // Enregistre un vrai visionnage supplémentaire
+                    fetch(`${FIREBASE_DB_URL}/plays.json`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title: currentTitle, timestamp: Date.now(), ip: userIP })
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Signal initial d'arrivée
+        sendPing('IDLE');
+
+        // Maintien du statut toutes les 30s
+        setInterval(() => {
+            const isPlaying = document.getElementById('playerModal').style.display === 'block';
+            sendPing(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
+        }, 30000);
     </script>
 </body>
 </html>
