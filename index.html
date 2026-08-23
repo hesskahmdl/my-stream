@@ -74,7 +74,7 @@
         }
 
         .carousel-wrapper { position: relative; }
-        .carousel { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; min-height: 270px; }
+        .carousel { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
         
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 15px 0; }
@@ -91,7 +91,7 @@
             border: 2px dashed rgba(229, 9, 20, 0.6);
             background: rgba(19, 19, 26, 0.8);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 12px; text-align: center; padding: 15px; cursor: pointer;
+            gap: 12px; text-align: center; padding: 15px;
         }
         .card-add-saga:hover {
             border-color: #e50914; background: rgba(229, 9, 20, 0.15);
@@ -384,10 +384,10 @@
         <div class="saga-header">
             <img class="saga-poster" id="sagaPoster" src="" alt="Poster">
             <div class="saga-details">
-                <h1 class="saga-title" id="sagaTitle">Saga - <span class="red">Saga</span></h1>
+                <h1 class="saga-title" id="sagaTitle">Spider-Man (MCU) - <span class="red">Saga</span></h1>
                 <div class="saga-stats-bar">
-                    <span id="sagaMovieCount">🎬 0 films</span>
-                    <span id="sagaYears">📅 2026</span>
+                    <span id="sagaMovieCount">🎬 4 films</span>
+                    <span id="sagaYears">📅 2017 - 2026</span>
                 </div>
                 <p class="saga-desc" id="sagaDesc">Description...</p>
                 <div class="btn-group-actions">
@@ -425,19 +425,19 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_budget">💲 Budget total</div>
-                <div class="stat-card-value" id="statBudget">0 $</div>
+                <div class="stat-card-value" id="statBudget">760 000 000 $</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_revenue">💰 Revenus totaux</div>
-                <div class="stat-card-value" id="statRevenue">0 $</div>
+                <div class="stat-card-value" id="statRevenue">6 234 107 164 $</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_rating">⭐ Note moyenne</div>
-                <div class="stat-card-value" id="statRating">0 / 10</div>
+                <div class="stat-card-value" id="statRating">7.6 / 10</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_duration">⏱️ Durée totale</div>
-                <div class="stat-card-value" id="statDuration">0h 0min</div>
+                <div class="stat-card-value" id="statDuration">9h 20min</div>
             </div>
         </div>
     </div>
@@ -513,18 +513,11 @@
 
     <script>
         const API_KEY = "89dc647004be44c785266ccd4d69576a";
-        const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
-
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null, currentSaga = null;
         let lang = "fr";
         let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
-
-        // Variables de Tracking Dashboard (IP, Pays et Numéro Utilisateur Stable)
-        let clientIP = "Inconnu";
-        let clientCountry = "Inconnu";
-        let userUniqueNumber = "4700";
 
         const translations = {
             fr: {
@@ -579,9 +572,14 @@
                 if (translations[lang][key]) el.placeholder = translations[lang][key];
             });
 
-            if (currentItem) openDetails(currentItem, false);
-            if (currentSaga) openSagaView(currentSaga.id);
-            else if (currentCategoryType !== 'all') renderPaginatedGrid();
+            if (currentItem) {
+                openDetails(currentItem, false);
+            }
+            if (currentSaga) {
+                openSagaView(currentSaga.id);
+            } else if (currentCategoryType !== 'all') {
+                renderPaginatedGrid();
+            }
         }
 
         function slugify(text) {
@@ -589,143 +587,90 @@
                 .toString()
                 .toLowerCase()
                 .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                .replace(/[^a-z0-9]/g, '');
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
         }
 
-        const DEFAULT_SAGAS = [];
-        let SAGAS_DATABASE = DEFAULT_SAGAS;
-
-        const fallbackCatalog = [
-            { tmdb_id_clean: "1001", title: "Spider-Man: Brand New Day", rating: "8.8", year: "2026", type: "movie", overview: "Peter Parker entame un tout nouveau chapitre sous le costume de l'araignée.", poster: "https://image.tmdb.org/t/p/original/5cY4DgCWhABURo3Kedt5hBwhzxF.jpg", backdrop: "https://image.tmdb.org/t/p/original/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg" },
-            { tmdb_id_clean: "634649", title: "Spider-Man: No Way Home", rating: "8.2", year: "2021", type: "movie", overview: "Peter Parker demande l'aide du Docteur Strange pour faire oublier son identité.", poster: "https://image.tmdb.org/t/p/w780/1g0dhY21L2A929T3VIq3982828.jpg", backdrop: "https://image.tmdb.org/t/p/w1280/iQF3938382726192837.jpg" },
-            { tmdb_id_clean: "299536", title: "Avengers: Infinity War", rating: "8.3", year: "2018", type: "movie", overview: "Les Avengers et leurs alliés doivent tout sacrifier pour tenter de vaincre le puissant Thanos.", poster: "https://image.tmdb.org/t/p/w780/7WsyChLLEz33B3293829.jpg", backdrop: "https://image.tmdb.org/t/p/w1280/lm83928392.jpg" },
-            { tmdb_id_clean: "299534", title: "Avengers: Endgame", rating: "8.5", year: "2019", type: "movie", overview: "Après les événements dévastateurs, l'univers est en ruines. Les Avengers s'unissent une dernière fois.", poster: "https://image.tmdb.org/t/p/w780/or06ipHQ32p3B3293829.jpg", backdrop: "https://image.tmdb.org/t/p/w1280/783928392.jpg" },
-            { tmdb_id_clean: "603", title: "Matrix", rating: "8.2", year: "1999", type: "movie", overview: "Un pirate informatique découvre que sa réalité est une simulation virtuelle orchestrée par une IA.", poster: "https://image.tmdb.org/t/p/w780/f89U3289328.jpg", backdrop: "https://image.tmdb.org/t/p/w1280/83928392.jpg" },
-            { tmdb_id_clean: "120", title: "Le Seigneur des Anneaux : La Communauté de l'Anneau", rating: "8.8", year: "2001", type: "movie", overview: "Frodon reçoit l'Anneau Unique et doit entamer un périlleux voyage.", poster: "https://image.tmdb.org/t/p/w780/6oom83928392.jpg", backdrop: "https://image.tmdb.org/t/p/w1280/83928392.jpg" },
-            { tmdb_id_clean: "671", title: "Harry Potter à l'école des sorciers", rating: "8.1", year: "2001", type: "movie", overview: "Un jeune orphelin découvre ses origines de sorcier et rejoint l'école Poudlard.", poster: "https://image.tmdb.org/t/p/w780/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg", backdrop: "https://image.tmdb.org/t/p/w1280/83928392.jpg" },
-            { tmdb_id_clean: "181808", title: "Star Wars : Épisode VIII - Les Derniers Jedi", rating: "7.0", year: "2017", type: "movie", overview: "La Résistance fait face au Premier Ordre tandis que Rey cherche Luke Skywalker.", poster: "https://image.tmdb.org/t/p/w780/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg", backdrop: "https://image.tmdb.org/t/p/w1280/83928392.jpg" },
-            { tmdb_id_clean: "1002", title: "Mutiny", rating: "8.1", year: "2026", type: "movie", overview: "Un thriller d'action intense au cœur d'une mutinerie à haut risque.", poster: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg", backdrop: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg" },
-            { tmdb_id_clean: "1003", title: "L'Odyssée", rating: "8.5", year: "2026", type: "movie", overview: "L'adaptation spectaculaire de la célèbre épopée d'Ulysse.", poster: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg", backdrop: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg" }
+        const DEFAULT_SAGAS = [
+            {
+                id: "spider-man-mcu",
+                title: "Spider-Man (MCU) - Saga",
+                poster: "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
+                exactTitles: ["spider-man: homecoming", "spider-man: far from home", "spider-man: no way home", "spider-man: brand new day"],
+                desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU.",
+                budget: "760 000 000 $", revenue: "6 234 107 164 $", rating: "7.6", duration: "9h 20min",
+                producers: ["Marvel Studios", "Pascal Pictures", "Columbia Pictures"],
+                countries: ["United States of America"],
+                genres: ["Action", "Aventure", "Science-Fiction"]
+            },
+            {
+                id: "avengers",
+                title: "Avengers - Saga",
+                poster: "/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
+                exactTitles: ["avengers", "avengers : l'ère d'ultron", "avengers : infinity war", "avengers : endgame"],
+                desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
+                budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
+                producers: ["Marvel Studios"], countries: ["United States of America"], genres: ["Action", "Science-Fiction"]
+            },
+            {
+                id: "matrix",
+                title: "Matrix - Saga",
+                poster: "/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
+                exactTitles: ["matrix", "matrix reloaded", "matrix revolutions", "matrix resurrections"],
+                desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
+                budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
+                producers: ["Warner Bros.", "Village Roadshow"], countries: ["United States of America"], genres: ["Science-Fiction", "Action"]
+            },
+            {
+                id: "star-wars",
+                title: "Star Wars - Saga",
+                poster: "/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
+                exactTitles: ["star wars : épisode i", "star wars : épisode ii", "star wars : épisode iii", "star wars : épisode iv", "star wars : épisode v", "star wars : épisode vi", "star wars : épisode vii", "star wars : épisode viii", "star wars : épisode ix"],
+                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes.",
+                budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
+                producers: ["Lucasfilm Ltd."], countries: ["United States of America"], genres: ["Action", "Aventure", "Sci-Fi"]
+            },
+            {
+                id: "harry-potter",
+                title: "Harry Potter - Saga",
+                poster: "/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
+                exactTitles: ["harry potter à l'école des sorciers", "harry potter et la chambre des secrets", "harry potter et le prisonnier d'azkaban", "harry potter et la coupe de feu", "harry potter et l'ordre du phénix", "harry potter et le prince de sang-mêlé", "harry potter et les reliques de la mort - 1ère partie", "harry potter et les reliques de la mort - 2ème partie"],
+                desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
+                budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
+                producers: ["Warner Bros. Pictures", "Heyday Films"], countries: ["United Kingdom", "United States"], genres: ["Fantastique", "Aventure"]
+            },
+            {
+                id: "seigneur-des-anneaux",
+                title: "Le Seigneur des Anneaux - Saga",
+                poster: "/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
+                exactTitles: ["le seigneur des anneaux : la communauté de l'anneau", "le seigneur des anneaux : les deux tours", "le seigneur des anneaux : le retour du roi"],
+                desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
+                budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
+                producers: ["New Line Cinema", "WingNut Films"], countries: ["New Zealand", "United States"], genres: ["Aventure", "Fantastique"]
+            }
         ];
+
+        let SAGAS_DATABASE = JSON.parse(localStorage.getItem('sk_sagas_database')) || DEFAULT_SAGAS;
+
+        // Force l'affiche Spider-Man Saga avec le bon lien
+        const spideySaga = SAGAS_DATABASE.find(s => s.id === "spider-man-mcu");
+        if (spideySaga) {
+            spideySaga.poster = "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg";
+        }
 
         function saveSagasToStorage() {
             localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
-            syncWithFirebase();
         }
 
-        async function syncWithFirebase() {
-            try {
-                const savedSlides = localStorage.getItem('sk_hero_slides');
-                const heroSlides = savedSlides ? JSON.parse(savedSlides) : null;
-                await fetch(`${FIREBASE_DB_URL}/sk_config.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        sagas: SAGAS_DATABASE,
-                        hero_slides: heroSlides,
-                        catalog: catalog
-                    })
-                });
-            } catch (e) {
-                console.warn("Sync Firebase indisponible", e);
-            }
-        }
-
-        // --- GESTION DE LA GÉNÉRATION DU NUMÉRO UTILISATEUR ET ENVOI AU DASHBOARD ---
-        async function initUserTrackingAndDashboard() {
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                if (response.ok) {
-                    const data = await response.json();
-                    clientIP = data.ip || "Inconnu";
-                    clientCountry = data.country_name || data.country || "Inconnu";
-                }
-            } catch (e) {
-                clientIP = "IP_Fallback_" + Math.floor(Math.random() * 1000);
-                clientCountry = "France";
-            }
-
-            // Génération ou récupération stable du numéro unique basé sur l'IP + le pays
-            const trackerKey = `sk_user_hash_${clientIP}_${clientCountry}`;
-            let storedUserNum = localStorage.getItem(trackerKey);
-
-            if (!storedUserNum) {
-                // Génère un chiffre aléatoire unique de type #4700, #1942, etc.
-                const randomNum = Math.floor(1000 + Math.random() * 9000);
-                userUniqueNumber = `#${randomNum}`;
-                localStorage.setItem(trackerKey, userUniqueNumber);
-            } else {
-                userUniqueNumber = storedUserNum;
-            }
-
-            // Envoi initial au dashboard
-            sendDashboardData("Accueil", "Navigation sur la page d'accueil");
-        }
-
-        async function sendDashboardData(pageName, currentAction) {
-            try {
-                const payload = {
-                    user_tag: userUniqueNumber,
-                    ip: clientIP,
-                    country: clientCountry,
-                    page: pageName,
-                    action: currentAction,
-                    timestamp: new Date().toISOString()
-                };
-
-                // Enregistrement dans une collection dédiée au Dashboard sur Firebase RTDB
-                // Nettoyage de l'IP pour l'utiliser comme clé valide dans Firebase (remplacement des points)
-                const safeIpKey = clientIP.replace(/[\.#\$\[\]]/g, "_");
-                await fetch(`${FIREBASE_DB_URL}/sk_dashboard_live/${safeIpKey}.json`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-            } catch (e) {
-                console.warn("Erreur d'envoi vers le dashboard", e);
-            }
-        }
-        // --------------------------------------------------------------------------
-
-        async function fetchFirebaseConfig() {
-            try {
-                const res = await fetch(`${FIREBASE_DB_URL}/sk_config.json`);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data) {
-                        if (data.sagas && Array.isArray(data.sagas) && data.sagas.length > 0) {
-                            SAGAS_DATABASE = data.sagas;
-                            localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
-                        }
-                        if (data.hero_slides && Array.isArray(data.hero_slides) && data.hero_slides.length > 0) {
-                            localStorage.setItem('sk_hero_slides', JSON.stringify(data.hero_slides));
-                        }
-                        if (data.catalog && Array.isArray(data.catalog) && data.catalog.length > 0) {
-                            data.catalog.forEach(newItem => {
-                                if (!newItem) return;
-                                const id = String(newItem.tmdb_id_clean || newItem.tmdb_id);
-                                const idx = catalog.findIndex(i => String(i.tmdb_id_clean || i.tmdb_id) === id);
-                                if (idx !== -1) {
-                                    catalog[idx] = { ...catalog[idx], ...newItem };
-                                } else {
-                                    catalog.push(newItem);
-                                }
-                            });
-                        }
-                    }
-                }
-            } catch(e) {
-                console.warn("Chargement configuration globale Firebase", e);
-            }
-        }
-
-        function triggerAdminPrompt(providedPass = null) {
-            const pass = providedPass || prompt("Entrez le mot de passe Administrateur :");
-            if (pass === "Tastycrousty1996" || pass === "tastycroustyjetaime2026" || pass === "2026") {
+        /* VERIFICATION MOT DE PASSE SECRET */
+        function triggerAdminPrompt() {
+            const pass = prompt("Entrez le mot de passe Administrateur :");
+            if (pass === "tastycroustyjetaime2026") {
                 isAdmin = true;
-                alert("🔓 Mode Administrateur activé ! Vous pouvez gérer et créer des Sagas.");
+                alert("🔓 Mode Administrateur activé ! L'option 'Créer une Saga' est débloquée.");
                 updateAdminUI();
-                switchTab('saga');
+                renderSections();
             } else if (pass !== null) {
                 alert("❌ Mot de passe incorrect !");
             }
@@ -749,59 +694,147 @@
         }
 
         function isAnimeItem(i) {
-            if (!i) return false;
             if (i.type === 'anime') return true;
             const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
             return animeKeywords.some(kw => text.includes(kw));
         }
 
-        function formatCatalogImages() {
-            catalog.forEach(item => {
-                if (!item) return;
-                item.poster = formatTmdbImage(item.poster || item.poster_path, 'w780');
-                const rawBackdrop = item.backdrop || item.backdrops || item.backdrop_path;
-                item.backdrop = formatTmdbImage(rawBackdrop, 'w1280');
-            });
-        }
-
         async function init() {
-            // Lancement du tracking IP/Pays et Dashboard
-            await initUserTrackingAndDashboard();
-
-            const localSavedSagas = localStorage.getItem('sk_sagas_database');
-            if (localSavedSagas) {
-                try { SAGAS_DATABASE = JSON.parse(localSavedSagas); } catch(e){}
-            }
+            const fallbackCatalog = [
+                {
+                    tmdb_id_clean: "1001",
+                    title: "Spider-Man: Brand New Day",
+                    rating: "8.8",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Peter Parker entame un tout nouveau chapitre sous le costume de l'araignée.",
+                    poster: "https://image.tmdb.org/t/p/original/5cY4DgCWhABURo3Kedt5hBwhzxF.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg"
+                },
+                {
+                    tmdb_id_clean: "1002",
+                    title: "Mutiny",
+                    rating: "8.1",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Un thriller d'action intense au cœur d'une mutinerie à haut risque.",
+                    poster: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg"
+                },
+                {
+                    tmdb_id_clean: "1003",
+                    title: "L'Odyssée",
+                    rating: "8.5",
+                    year: "2026",
+                    type: "movie",
+                    overview: "L'adaptation spectaculaire et éblouissante de la célèbres épopée d'Ulysse.",
+                    poster: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg"
+                },
+                {
+                    tmdb_id_clean: "1004",
+                    title: "Toy Story 5",
+                    rating: "8.3",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Woody, Buzz et toute la bande reviennent pour de nouvelles aventures captivantes.",
+                    poster: "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg"
+                },
+                {
+                    tmdb_id_clean: "1005",
+                    title: "Colony",
+                    rating: "7.9",
+                    year: "2026",
+                    type: "movie",
+                    overview: "La lutte acharnée pour la survie d'une colonie dans un futur mystérieux et hostile.",
+                    poster: "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg"
+                },
+                {
+                    tmdb_id_clean: "1006",
+                    title: "Vaiana (Moana)",
+                    rating: "8.4",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Une grande aventure océanique guidée par le destin et la découverte de soi.",
+                    poster: "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg"
+                },
+                {
+                    tmdb_id_clean: "1007",
+                    title: "Obsession",
+                    rating: "8.0",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Un thriller psychologique haletant où le désir devient une véritable obsession.",
+                    poster: "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg"
+                }
+            ];
 
             try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1500);
-                const res = await fetch('data.json', { signal: controller.signal });
-                clearTimeout(timeoutId);
-
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        catalog = data;
-                    } else {
-                        catalog = fallbackCatalog;
-                    }
-                } else {
-                    catalog = fallbackCatalog;
-                }
+                const res = await fetch('data.json');
+                if (!res.ok) throw new Error("Fichier data.json non trouvé");
+                catalog = await res.json();
             } catch (e) {
+                console.warn("data.json non trouvé. Chargement du catalogue d'images personnalisées.", e);
                 catalog = fallbackCatalog;
             }
 
-            formatCatalogImages();
-            setupHeroSlider();
-            renderSections();
-            handleInitialUrl();
+            const customPosters = {
+                "spider-man: brand new day": "https://image.tmdb.org/t/p/original/5cY4DgCWhABURo3Kedt5hBwhzxF.jpg",
+                "mutiny": "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg",
+                "l'odyssée": "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
+                "l'odyssee": "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
+                "toy story 5": "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg",
+                "colony": "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg",
+                "vaiana": "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+                "moana": "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+                "obsession": "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg"
+            };
 
-            await fetchFirebaseConfig();
-            formatCatalogImages();
+            const customBackdrops = {
+                "spider-man: brand new day": "https://image.tmdb.org/t/p/original/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg",
+                "minion": "https://image.tmdb.org/t/p/original/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg",
+                "monster": "https://image.tmdb.org/t/p/original/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg"
+            };
+
+            catalog.forEach(item => {
+                const titleLower = (item.title || '').toLowerCase().trim();
+                let hasCustom = false;
+                for (let key in customPosters) {
+                    if (titleLower.includes(key)) {
+                        item.poster = customPosters[key];
+                        hasCustom = true;
+                        break;
+                    }
+                }
+                
+                let hasCustomBackdrop = false;
+                for (let key in customBackdrops) {
+                    if (titleLower.includes(key)) {
+                        item.backdrop = customBackdrops[key];
+                        hasCustomBackdrop = true;
+                        break;
+                    }
+                }
+
+                if (!hasCustom) {
+                    item.poster = formatTmdbImage(item.poster || item.poster_path, 'w780');
+                }
+                if (!hasCustomBackdrop) {
+                    // Restauration de la logique originale pour lire correctement la propriété 'backdrop', 'backdrops' ou 'backdrop_path'
+                    const rawBackdrop = item.backdrop || item.backdrops || item.backdrop_path;
+                    item.backdrop = formatTmdbImage(rawBackdrop, 'w1280');
+                }
+            });
+
+            heroItems = catalog.slice(0, 10);
             setupHeroSlider();
             renderSections();
+
+            handleInitialUrl();
         }
 
         function handleInitialUrl() {
@@ -813,7 +846,7 @@
             } else if (hash.startsWith('watch-')) {
                 const parts = hash.split('-');
                 const tmdbId = parts[parts.length - 1];
-                const foundItem = catalog.find(i => i && String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+                const foundItem = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
                 if (foundItem) {
                     openDetails(foundItem, false);
                 }
@@ -821,35 +854,6 @@
         }
 
         function setupHeroSlider() {
-            const savedSlides = localStorage.getItem('sk_hero_slides');
-            if (savedSlides) {
-                try {
-                    const parsed = JSON.parse(savedSlides);
-                    if (parsed && parsed.length > 0) {
-                        heroItems = parsed.map(s => {
-                            const found = catalog.find(i => i && (i.title || '').toLowerCase().includes((s.title || '').toLowerCase()));
-                            return {
-                                tmdb_id_clean: found ? (found.tmdb_id_clean || found.tmdb_id) : 'custom',
-                                title: s.title,
-                                year: s.meta ? s.meta : '2026',
-                                rating: s.meta && s.meta.includes('⭐') ? s.meta.split('⭐')[1].split('|')[0].trim() : '8.5',
-                                type: 'movie',
-                                overview: s.desc || '',
-                                poster: s.poster || (found ? found.poster : ''),
-                                backdrop: s.backdrop || s.poster || (found ? found.backdrop : ''),
-                                rawObject: found || null
-                            };
-                        });
-                    } else {
-                        heroItems = catalog.slice(0, 10);
-                    }
-                } catch(e) {
-                    heroItems = catalog.slice(0, 10);
-                }
-            } else {
-                heroItems = catalog.slice(0, 10);
-            }
-
             if (!heroItems.length) return;
             showHero(0);
             clearInterval(sliderTimer);
@@ -862,17 +866,14 @@
         function showHero(index) {
             heroIndex = index;
             const item = heroItems[heroIndex];
-            if (!item) return;
+            // S'assure de récupérer l'image de fond si disponible, sinon se rabat sur le poster
             const bgImage = (item.backdrop && item.backdrop !== 'https://via.placeholder.com/500x750') ? item.backdrop : item.poster;
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
-            document.getElementById('heroTitle').textContent = item.title || '---';
+            document.getElementById('heroTitle').textContent = item.title;
             document.getElementById('heroYear').textContent = item.year || '2026';
-            document.getElementById('heroRating').textContent = (item.rating && item.rating.includes('⭐')) ? item.rating : `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
+            document.getElementById('heroRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('heroOverview').textContent = item.overview || "";
-            document.getElementById('heroWatchBtn').onclick = () => {
-                if (item.rawObject) openDetails(item.rawObject);
-                else openDetails(item);
-            };
+            document.getElementById('heroWatchBtn').onclick = () => openDetails(item);
         }
 
         function isSavedInWatchlist(id) {
@@ -899,21 +900,19 @@
                 star.classList.remove('active');
                 star.textContent = "☆";
             }
-            sendDashboardData("Watchlist", `Modification watchlist item ${id}`);
         }
 
         function openDetailsById(tmdbId) {
-            const found = catalog.find(i => i && String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+            const found = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
             if (found) {
                 openDetails(found);
             }
         }
 
         function createCardHtml(item, isInSagaView = false) {
-            if (!item) return '';
             const id = String(item.tmdb_id_clean || item.tmdb_id);
             const isSaved = isSavedInWatchlist(id);
-            const removeBtn = (isAdmin && isInSagaView) ? `<button class="btn-remove-movie" onclick="removeMovieFromCurrentSaga(event, '${(item.title || '').replace(/'/g, "\\'")}')">✕</button>` : '';
+            const removeBtn = (isAdmin && isInSagaView) ? `<button class="btn-remove-movie" onclick="removeMovieFromCurrentSaga(event, '${item.title.replace(/'/g, "\\'")}')">✕</button>` : '';
 
             return `
                 <div class="card movie-saga-item" onclick="openDetailsById('${id}')">
@@ -921,9 +920,9 @@
                     <div class="star-watchlist ${isSaved ? 'active' : ''}" onclick="toggleWatchlistEvent(event, '${id}')">
                         ${isSaved ? '★' : '☆'}
                     </div>
-                    <img class="poster-img" src="${item.poster || 'https://via.placeholder.com/500x750'}" alt="${(item.title || '').replace(/"/g, '&quot;')}" loading="lazy">
+                    <img class="poster-img" src="${item.poster || 'https://via.placeholder.com/500x750'}" alt="${item.title.replace(/"/g, '&quot;')}" loading="lazy">
                     <div class="card-hover-overlay">
-                        <div class="card-hover-title">${item.title || ''}</div>
+                        <div class="card-hover-title">${item.title}</div>
                         <div class="card-hover-rating">⭐ ${parseFloat(item.rating || 0).toFixed(1)} (${item.year || 'N/A'})</div>
                         <div class="card-hover-desc">${item.overview || "Regarder maintenant..."}</div>
                     </div>
@@ -946,7 +945,6 @@
         }
 
         function createSagaCardHtml(saga) {
-            if (!saga) return '';
             const isSaved = isSavedInWatchlist(saga.id);
             return `
                 <div class="card" onclick="openSagaView('${saga.id}')">
@@ -957,8 +955,8 @@
                     <img class="poster-img" src="${formatTmdbImage(saga.poster, 'w780')}" alt="${saga.title}">
                     <div class="card-hover-overlay">
                         <div class="card-hover-title">${saga.title}</div>
-                        <div class="card-hover-rating">⭐ ${saga.rating || 'N/A'}</div>
-                        <div class="card-hover-desc">${saga.desc || ''}</div>
+                        <div class="card-hover-rating">⭐ ${saga.rating}</div>
+                        <div class="card-hover-desc">${saga.desc}</div>
                     </div>
                 </div>
             `;
@@ -974,51 +972,38 @@
         }
 
         function createTop10CardHtml(item, rank) {
-            if (!item) return '';
             const id = String(item.tmdb_id_clean || item.tmdb_id);
             return `
                 <div class="card-top10" onclick="openDetailsById('${id}')">
                     <div class="top10-number">${rank}</div>
-                    <img src="${item.poster || 'https://via.placeholder.com/500x750'}" alt="${(item.title || '').replace(/"/g, '&quot;')}" loading="lazy">
+                    <img src="${item.poster}" alt="${item.title.replace(/"/g, '&quot;')}" loading="lazy">
                 </div>
             `;
         }
 
         function renderSections() {
-            if (!catalog || !catalog.length) return;
+            const top10 = [...catalog].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0)).slice(0, 10);
+            const popMovies = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i)).slice(0, 30);
+            const popSeries = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i)).slice(0, 30);
+            const popAnimes = catalog.filter(i => isAnimeItem(i)).slice(0, 30);
 
-            const top10 = [...catalog].sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0)).slice(0, 10);
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
-
+            
             document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
-
-            let popMovies = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i));
-            if (!popMovies.length) popMovies = catalog;
-            document.getElementById('gridMovies').innerHTML = popMovies.slice(0, 30).map(createCardHtml).join('');
-
-            let popSeries = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i));
-            if (!popSeries.length) popSeries = catalog.slice().reverse();
-            document.getElementById('gridSeries').innerHTML = popSeries.slice(0, 30).map(createCardHtml).join('');
-
-            let popAnimes = catalog.filter(i => i && isAnimeItem(i));
-            if (!popAnimes.length) popAnimes = catalog.slice(0, 30);
-            document.getElementById('gridAnimes').innerHTML = popAnimes.slice(0, 30).map(createCardHtml).join('');
+            
+            document.getElementById('gridMovies').innerHTML = popMovies.map(createCardHtml).join('');
+            document.getElementById('gridSeries').innerHTML = popSeries.map(createCardHtml).join('');
+            document.getElementById('gridAnimes').innerHTML = (popAnimes.length ? popAnimes : catalog.slice(0, 30)).slice(0, 30).map(createCardHtml).join('');
         }
 
         function renderSagaMovies() {
             if (!currentSaga) return;
             const sagaMovies = catalog.filter(item => {
-                if (!item || !item.title) return false;
-                const titleClean = slugify(item.title);
-                return (currentSaga.exactTitles || []).some(exact => {
-                    const exactClean = slugify(exact);
-                    return titleClean.includes(exactClean) || exactClean.includes(titleClean);
-                });
+                const titleLower = (item.title || '').toLowerCase();
+                return currentSaga.exactTitles.some(exact => titleLower.includes(exact.toLowerCase()));
             });
-            document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} film${sagaMovies.length > 1 ? 's' : ''}`;
-            document.getElementById('sagaMoviesList').innerHTML = sagaMovies.length
-                ? sagaMovies.map(item => createCardHtml(item, true)).join('')
-                : '<p style="color:#aaa; grid-column:1/-1; padding:20px;">Aucun film trouvé pour cette saga.</p>';
+            document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} films`;
+            document.getElementById('sagaMoviesList').innerHTML = sagaMovies.map(item => createCardHtml(item, true)).join('');
         }
 
         function openSagaView(sagaId) {
@@ -1029,15 +1014,15 @@
             document.getElementById('sagaTitle').innerHTML = `${saga.title}`;
             document.getElementById('sagaPoster').src = formatTmdbImage(saga.poster, 'w780');
             document.getElementById('sagaDesc').textContent = saga.desc;
-            document.getElementById('statBudget').textContent = saga.budget || "N/A";
-            document.getElementById('statRevenue').textContent = saga.revenue || "N/A";
-            document.getElementById('statRating').textContent = `${saga.rating || 'N/A'} / 10`;
-            document.getElementById('statDuration').textContent = saga.duration || "N/A";
+            document.getElementById('statBudget').textContent = saga.budget;
+            document.getElementById('statRevenue').textContent = saga.revenue;
+            document.getElementById('statRating').textContent = `${saga.rating} / 10`;
+            document.getElementById('statDuration').textContent = saga.duration;
 
-            document.getElementById('infoProducers').innerHTML = (saga.producers || []).map(p => `<div class="info-list-item"><span>${p}</span><span class="count">Collection</span></div>`).join('');
-            document.getElementById('infoCountries').innerHTML = (saga.countries || []).map(c => `<div class="info-list-item"><span>${c}</span><span class="count">Officiel</span></div>`).join('');
+            document.getElementById('infoProducers').innerHTML = saga.producers.map(p => `<div class="info-list-item"><span>${p}</span><span class="count">Collection</span></div>`).join('');
+            document.getElementById('infoCountries').innerHTML = saga.countries.map(c => `<div class="info-list-item"><span>${c}</span><span class="count">Officiel</span></div>`).join('');
             document.getElementById('infoLanguages').innerHTML = `<div class="info-list-item"><span>Français (VF)</span><span class="count">VF</span></div><div class="info-list-item"><span>English (VOSTFR)</span><span class="count">VOSTFR</span></div>`;
-            document.getElementById('infoGenres').innerHTML = (saga.genres || []).map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
+            document.getElementById('infoGenres').innerHTML = saga.genres.map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
 
             renderSagaMovies();
             updateWatchlistButton('btnWatchlistSaga', saga.id);
@@ -1048,7 +1033,9 @@
             document.getElementById('sagaDetailView').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            sendDashboardData("Saga", `Visite Saga: ${saga.title}`);
+            if (typeof window.sendPingFunc === 'function') {
+                window.sendPingFunc('IDLE', `Consulte Saga: ${saga.title}`);
+            }
         }
 
         function closeSagaView() {
@@ -1078,7 +1065,6 @@
                 document.getElementById('heroBanner').style.display = 'flex';
                 document.getElementById('homeSections').style.display = 'block';
                 document.getElementById('filteredSection').style.display = 'none';
-                renderSections();
             } else {
                 document.getElementById('heroBanner').style.display = 'none';
                 document.getElementById('homeSections').style.display = 'none';
@@ -1087,34 +1073,24 @@
                 if (type === 'saga') {
                     currentFilteredList = SAGAS_DATABASE;
                 } else if (type === 'movie') {
-                    currentFilteredList = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i));
-                    if (!currentFilteredList.length) currentFilteredList = catalog;
+                    currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i));
                 } else if (type === 'tv') {
-                    currentFilteredList = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i));
-                    if (!currentFilteredList.length) currentFilteredList = catalog;
+                    currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i));
                 } else if (type === 'anime') {
-                    currentFilteredList = catalog.filter(i => i && isAnimeItem(i));
-                    if (!currentFilteredList.length) currentFilteredList = catalog;
+                    currentFilteredList = catalog.filter(i => isAnimeItem(i));
                 } else if (type === 'watchlist') {
                     const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
-                    currentFilteredList = catalog.filter(i => i && saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
+                    currentFilteredList = catalog.filter(i => saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
                 }
 
                 applySorting();
             }
             updateAdminUI();
-            sendDashboardData(type, `Navigation sur l'onglet ${type}`);
         }
 
         function handleSearch(query) {
             const q = query.trim();
             
-            if (q.toLowerCase() === "le lion qui dors ne dors pas") {
-                document.getElementById('searchInput').value = '';
-                triggerAdminPrompt("Tastycrousty1996");
-                return;
-            }
-
             if (q.toLowerCase() === "panel_adminhesskaceo") {
                 document.getElementById('searchInput').value = '';
                 closeSagaView();
@@ -1140,12 +1116,11 @@
             document.getElementById('homeSections').style.display = 'none';
             document.getElementById('filteredSection').style.display = 'block';
 
-            currentFilteredList = catalog.filter(i => i && (i.title || '').toLowerCase().includes(q.toLowerCase()));
+            currentFilteredList = catalog.filter(i => (i.title || '').toLowerCase().includes(q.toLowerCase()));
             currentPage = 1;
 
             document.getElementById('filterTitle').textContent = `🔍 Recherche: "${query}" (${currentFilteredList.length})`;
             renderPaginatedGrid();
-            sendDashboardData("Recherche", `Recherche de: ${query}`);
         }
 
         function applySorting() {
@@ -1153,13 +1128,13 @@
 
             if (currentCategoryType !== 'saga') {
                 if (sortVal === 'rating-desc') {
-                    currentFilteredList.sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0));
+                    currentFilteredList.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
                 } else if (sortVal === 'rating-asc') {
-                    currentFilteredList.sort((a, b) => parseFloat((a && a.rating) || 0) - parseFloat((b && b.rating) || 0));
+                    currentFilteredList.sort((a, b) => parseFloat(a.rating || 0) - parseFloat(b.rating || 0));
                 } else if (sortVal === 'title-asc') {
-                    currentFilteredList.sort((a, b) => ((a && a.title) || '').localeCompare((b && b.title) || ''));
+                    currentFilteredList.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
                 } else if (sortVal === 'year-desc') {
-                    currentFilteredList.sort((a, b) => parseInt((b && b.year) || 0) - parseInt((a && a.year) || 0));
+                    currentFilteredList.sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0));
                 }
             }
 
@@ -1205,7 +1180,6 @@
         }
 
         async function openDetails(item, updateUrl = true) {
-            if (!item) return;
             currentItem = item;
             const idClean = item.tmdb_id_clean || item.tmdb_id;
             
@@ -1214,7 +1188,7 @@
                 history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
             }
 
-            document.getElementById('modalTitle').textContent = item.title || 'Inconnu';
+            document.getElementById('modalTitle').textContent = item.title;
             document.getElementById('modalPoster').src = formatTmdbImage(item.poster, 'w780');
             document.getElementById('modalYear').textContent = item.year || '2026';
             document.getElementById('modalRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
@@ -1267,7 +1241,9 @@
                 }
             } catch (e) {}
 
-            sendDashboardData("Lecture", `Regarde: ${item.title}`);
+            if (typeof window.sendPingFunc === 'function') {
+                window.sendPingFunc('WATCHING', item.title);
+            }
         }
 
         function loadSource(s) {
@@ -1331,13 +1307,13 @@
 
             const activeTab = document.querySelector('.nav-item.active') ? document.querySelector('.nav-item.active').id.replace('btn-', '') : 'all';
             history.pushState(null, null, `#${activeTab === 'all' ? 'home' : activeTab}`);
-            sendDashboardData(activeTab, "Fermeture du lecteur vidéo");
         }
 
         function scrollCarousel(id, amount) {
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
+        /* FONCTIONS ADMIN */
         function openCreateSagaModal() {
             document.getElementById('createSagaModal').style.display = 'flex';
         }
@@ -1384,10 +1360,10 @@
         function filterMoviesForSaga(query) {
             const listDiv = document.getElementById('movieSelectList');
             const q = query.toLowerCase();
-            const filtered = catalog.filter(m => m && (m.title || '').toLowerCase().includes(q)).slice(0, 15);
+            const filtered = catalog.filter(m => (m.title || '').toLowerCase().includes(q)).slice(0, 15);
 
             listDiv.innerHTML = filtered.map(m => `
-                <div style="padding:6px; cursor:pointer; border-bottom:1px solid #222; font-size:13px; display:flex; justify-content:space-between;" onclick="addMovieToCurrentSaga('${(m.title || '').replace(/'/g, "\\'")}')">
+                <div style="padding:6px; cursor:pointer; border-bottom:1px solid #222; font-size:13px; display:flex; justify-content:space-between;" onclick="addMovieToCurrentSaga('${m.title.replace(/'/g, "\\'")}')">
                     <span>${m.title} (${m.year || 'N/A'})</span>
                     <span style="color:#e50914; font-weight:bold;">+ Ajouter</span>
                 </div>
@@ -1396,44 +1372,91 @@
 
         function addMovieToCurrentSaga(movieTitle) {
             if (!currentSaga) return;
-            if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
-            
-            if (!currentSaga.exactTitles.includes(movieTitle)) {
-                currentSaga.exactTitles.push(movieTitle);
+            if (!currentSaga.exactTitles.includes(movieTitle.toLowerCase())) {
+                currentSaga.exactTitles.push(movieTitle.toLowerCase());
                 saveSagasToStorage();
-                renderSagaMovies();
-                alert(`Le film "${movieTitle}" a bien été ajouté à la saga !`);
+                openSagaView(currentSaga.id);
+                closeAdminModals();
+                alert(`Film "${movieTitle}" ajouté à la saga !`);
             } else {
-                alert(`Le film "${movieTitle}" est déjà présent dans cette saga.`);
+                alert("Ce film est déjà présent dans la saga.");
             }
-            closeAdminModals();
         }
 
         function removeMovieFromCurrentSaga(e, movieTitle) {
             e.stopPropagation();
-            if (!currentSaga || !currentSaga.exactTitles) return;
-            
-            if (confirm(`Es-tu sûr de vouloir retirer le film "${movieTitle}" de la saga ?`)) {
-                currentSaga.exactTitles = currentSaga.exactTitles.filter(title => title !== movieTitle);
+            if (!currentSaga || !isAdmin) return;
+            if (confirm(`Voulez-vous vraiment retirer "${movieTitle}" de cette saga ?`)) {
+                currentSaga.exactTitles = currentSaga.exactTitles.filter(t => t !== movieTitle.toLowerCase());
                 saveSagasToStorage();
-                renderSagaMovies();
+                openSagaView(currentSaga.id);
             }
         }
 
         function deleteCurrentSaga() {
-            if (!currentSaga) return;
-            if (confirm(`⚠️ Es-tu sûr de vouloir supprimer définitivement la saga "${currentSaga.title}" ?`)) {
+            if (!currentSaga || !isAdmin) return;
+            if (confirm(`Êtes-vous sûr de vouloir SUPPRIMER définitivement la saga "${currentSaga.title}" ?`)) {
                 SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
                 saveSagasToStorage();
                 closeSagaView();
-                renderSections();
-                if (currentCategoryType === 'saga') {
-                    switchTab('saga');
-                }
+                switchTab('saga');
+                alert("Saga supprimée !");
             }
         }
 
-        window.onload = init;
+        window.addEventListener('popstate', handleInitialUrl);
+
+        init();
+    </script>
+
+    <!-- TRACKER FIREBASE AUTOMATIQUE -->
+    <script>
+        (function() {
+            if (window.location.href.includes('sk-admin-secret.html')) return;
+
+            const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
+            
+            let userId = localStorage.getItem('sk_user_id');
+            if (!userId) {
+                userId = `Utilisateur #${Math.floor(1000 + Math.random() * 9000)}`;
+                localStorage.setItem('sk_user_id', userId);
+            }
+
+            const ua = navigator.userAgent;
+            let deviceType = "💻 PC Windows";
+            if (/iPhone/i.test(ua)) deviceType = "📱 iPhone";
+            else if (/Android/i.test(ua)) deviceType = "📱 Android";
+
+            let geoInfo = localStorage.getItem('sk_geo_info') || "France";
+            let userIp = localStorage.getItem('sk_real_ip') || "82.120.XX.XX";
+
+            window.sendPingFunc = function(status = 'IDLE', customTitle = '') {
+                const now = Date.now();
+                const safeKey = userId.replace('#', 'ID_');
+
+                const payload = {
+                    uid: userId, ip: userIp, geo: geoInfo, device: deviceType,
+                    status: status, title: customTitle || (currentItem ? currentItem.title : "Page d'Accueil"), lastPing: now
+                };
+
+                try {
+                    fetch(`${FIREBASE_DB_URL}/requests/${now}_${safeKey}.json`, {
+                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
+                        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ uid: userId, ip: userIp, geo: geoInfo, device: deviceType, lastVisit: now, lastPage: payload.title })
+                    });
+                } catch (e) {}
+            };
+
+            window.sendPingFunc('IDLE');
+            setInterval(() => {
+                const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
+                window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
+            }, 5000);
+        })();
     </script>
 </body>
 </html>
