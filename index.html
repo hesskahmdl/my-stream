@@ -515,7 +515,7 @@
                 history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
             }
 
-            // Déclenchement réseau direct à l'ouverture du film (Spécial téléphone)
+            // Signal Réseau immédiat pour l'Admin
             if (typeof window.sendPingFunc === 'function') {
                 window.sendPingFunc('WATCHING', item.title);
             }
@@ -626,84 +626,91 @@
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL (IDENTIFIANTS UNIQUES PAR TÉLÉPHONE + RÉGION + ENVOI EN DIRECT) -->
+    <!-- TRACKER TEMPS RÉEL UNIFIÉ (NOM DU FILM + IDENTIFIANT VISITEUR UNIQUE) -->
     <script>
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
 
             const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
             
+            // ID unique fixe par navigateur
             let userUid = localStorage.getItem('sk_uid');
             if (!userUid) {
-                userUid = 'usr_' + Math.random().toString(36).substring(2, 9);
+                userUid = 'usr_' + Math.floor(100000 + Math.random() * 900000);
                 localStorage.setItem('sk_uid', userUid);
             }
 
-            // Attribuer un identifiant unique (Ex: Visiteur #81549 • France (Nord))
-            let displayLabel = localStorage.getItem('sk_user_label');
-            if (!displayLabel) {
-                const randomId = Math.floor(Math.random() * 89999) + 10000;
-                const regions = ['France (Nord)', 'France (Sud)', 'France (Est)', 'France (Ouest)', 'France (Paris)'];
-                const assignedRegion = regions[Math.floor(Math.random() * regions.length)];
-                displayLabel = `Visiteur #${randomId} • ${assignedRegion}`;
-                localStorage.setItem('sk_user_label', displayLabel);
+            // Identifiant Visiteur propre (ex: Visiteur #4819 (France))
+            let userLabel = localStorage.getItem('sk_user_label');
+            if (!userLabel) {
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                userLabel = `Visiteur #${randomNum} (France)`;
+                localStorage.setItem('sk_user_label', userLabel);
             }
 
-            let realIp = localStorage.getItem('sk_real_ip') || displayLabel;
+            // Tente de récupérer la vraie IP en arrière-plan sans bloquer
             fetch('https://api.ipify.org?format=json')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.ip) {
-                        realIp = data.ip;
-                        localStorage.setItem('sk_real_ip', realIp);
+                        localStorage.setItem('sk_user_label', data.ip);
+                        userLabel = data.ip;
                     }
                 }).catch(() => {});
 
-            window.sendPingFunc = function(status = 'IDLE', currentTitle = '') {
+            window.sendPingFunc = function(status = 'IDLE', customTitle = '') {
                 const now = Date.now();
                 const currentHash = window.location.hash || '#home';
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 const deviceLabel = isMobile ? '📱 Mobile' : '💻 PC';
-                
-                const finalTitle = currentTitle ? `${currentTitle}` : `Salon: ${currentHash}`;
-                const safeKey = userUid;
+
+                let pageTitle = customTitle;
+                if (!pageTitle) {
+                    if (currentHash.startsWith('#watch-')) {
+                        const cleanSlug = currentHash.replace('#watch-', '').replace(/-\d+$/, '').replace(/-/g, ' ');
+                        pageTitle = cleanSlug.charAt(0).toUpperCase() + cleanSlug.slice(1);
+                    } else {
+                        pageTitle = `Salon: ${currentHash}`;
+                    }
+                }
 
                 const payload = {
                     uid: userUid,
-                    ip: realIp,
+                    ip: userLabel,
                     device: deviceLabel,
                     status: status,
-                    title: finalTitle,
+                    title: pageTitle,
                     lastPing: now
                 };
 
                 try {
-                    // Mettre à jour la session en direct
-                    fetch(`${FIREBASE_DB_URL}/sessions/${safeKey}.json`, {
+                    // Mettre à jour Firebase immédiatement
+                    fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
-                    // Enregistrer dans l'historique des visiteurs avec le dernier film/page consulté
-                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
+                    fetch(`${FIREBASE_DB_URL}/ip_stats/${userUid}.json`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
-                            ip: realIp, 
+                            ip: userLabel, 
                             lastVisit: now, 
-                            lastPage: finalTitle 
+                            lastPage: pageTitle 
                         })
                     });
                 } catch (e) {}
             };
 
+            // Ping initial au chargement
             window.sendPingFunc('IDLE');
 
+            // Ping automatique toutes les 3 secondes
             setInterval(() => {
                 const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
                 window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', (typeof currentItem !== 'undefined' && currentItem) ? currentItem.title : '');
-            }, 4000);
+            }, 3000);
         })();
     </script>
 </body>
