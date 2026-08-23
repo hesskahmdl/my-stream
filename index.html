@@ -278,35 +278,35 @@
 
     <div class="main-content" id="homeMainView">
         <div id="homeSections">
-            <div class="section-title" id="title-top10">🔥 Top 10 des Tendances</div>
+            <div class="section-title">🔥 Top 10 des Tendances</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridTop10', -500)">❮</button>
                 <div class="carousel carousel-top10" id="gridTop10"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridTop10', 500)">❯</button>
             </div>
 
-            <div class="section-title" id="title-sagas" style="margin-top: 35px;">👑 Les Sagas Incontournables</div>
+            <div class="section-title" style="margin-top: 35px;">👑 Les Sagas Incontournables</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridSagas', -500)">❮</button>
                 <div class="carousel" id="gridSagas"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridSagas', 500)">❯</button>
             </div>
 
-            <div class="section-title" id="title-movies" style="margin-top: 25px;">🎬 Films Populaires</div>
+            <div class="section-title" style="margin-top: 25px;">🎬 Films Populaires</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridMovies', -500)">❮</button>
                 <div class="carousel" id="gridMovies"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridMovies', 500)">❯</button>
             </div>
 
-            <div class="section-title" id="title-series">📺 Séries Incontournables</div>
+            <div class="section-title">📺 Séries Incontournables</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridSeries', -500)">❮</button>
                 <div class="carousel" id="gridSeries"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridSeries', 500)">❯</button>
             </div>
 
-            <div class="section-title" id="title-animes">✨ Animés & Mangas</div>
+            <div class="section-title">✨ Animés & Mangas</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridAnimes', -500)">❮</button>
                 <div class="carousel" id="gridAnimes"></div>
@@ -329,9 +329,8 @@
         </div>
     </div>
 
-    <!-- PAGE SAGA -->
     <div class="saga-page" id="sagaDetailView">
-        <div class="back-link" id="btn-back" onclick="closeSagaView()">❮ Retour aux collections</div>
+        <div class="back-link" onclick="closeSagaView()">❮ Retour aux collections</div>
         
         <div class="saga-header">
             <img class="saga-poster" id="sagaPoster" src="" alt="Poster">
@@ -348,10 +347,10 @@
             </div>
         </div>
 
-        <div class="section-title" id="title-saga-movies">Films de la <span class="red">collection</span></div>
+        <div class="section-title">Films de la <span class="red">collection</span></div>
         <div class="movie-grid" id="sagaMoviesList"></div>
 
-        <div class="section-title" id="title-saga-prod" style="margin-top: 40px;">🏢 Informations de <span class="red">production</span></div>
+        <div class="section-title" style="margin-top: 40px;">🏢 Informations de <span class="red">production</span></div>
         <div class="info-grid">
             <div class="info-card">
                 <div class="info-card-title">🏢 Sociétés de production</div>
@@ -371,7 +370,7 @@
             </div>
         </div>
 
-        <div class="section-title" id="title-saga-stats" style="margin-top: 40px;">📈 Statistiques <span class="red">globales</span></div>
+        <div class="section-title" style="margin-top: 40px;">📈 Statistiques <span class="red">globales</span></div>
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-card-title">💲 Budget total</div>
@@ -392,7 +391,6 @@
         </div>
     </div>
 
-    <!-- LECTEUR VIDÉO -->
     <div class="overlay" id="playerModal">
         <div class="modal-container">
             <button class="modal-close" onclick="closePlayer()">✕</button>
@@ -445,24 +443,43 @@
 
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
 
-        // BASE SAGA - FILTRAGE PARFAIT ET STRICT
+        function setLang(selectedLang) {
+            lang = selectedLang;
+            document.getElementById('flag-fr').classList.toggle('active', lang === 'fr');
+            document.getElementById('flag-en').classList.toggle('active', lang === 'en');
+            if (currentItem) {
+                openDetails(currentItem, false);
+            }
+        }
+
+        function slugify(text) {
+            return (text || '')
+                .toString()
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        // BASE SAGA STRICTEMENT FILTRÉE SELON LES DEMANDES
         const SAGAS_DATABASE = [
             {
                 id: "spider-man-mcu",
                 title: "Spider-Man (MCU) - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
-                exactMatch: [],
-                matchKeywords: ["homecoming", "far from home", "no way home", "brand new day"],
+                exactTitles: ["spider-man: homecoming", "spider-man: far from home", "spider-man: no way home", "spider-man: brand new day"],
                 desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU.",
                 budget: "760 000 000 $", revenue: "6 234 107 164 $", rating: "7.6", duration: "9h 20min",
-                producers: ["Marvel Studios", "Pascal Pictures", "Columbia Pictures"], countries: ["United States of America"], genres: ["Action", "Aventure", "Science-Fiction"]
+                producers: ["Marvel Studios", "Pascal Pictures", "Columbia Pictures"],
+                countries: ["United States of America"],
+                genres: ["Action", "Aventure", "Science-Fiction"]
             },
             {
                 id: "avengers",
                 title: "Avengers - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
-                exactMatch: ["avengers", "marvel's the avengers"],
-                matchKeywords: ["ère d'ultron", "age of ultron", "infinity war", "endgame", "doomsday", "secret wars"],
+                exactTitles: ["avengers", "avengers : l'ère d'ultron", "avengers : infinity war", "avengers : endgame"],
                 desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
                 budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
                 producers: ["Marvel Studios"], countries: ["United States of America"], genres: ["Action", "Science-Fiction"]
@@ -471,8 +488,7 @@
                 id: "matrix",
                 title: "Matrix - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
-                exactMatch: ["matrix", "the matrix"],
-                matchKeywords: ["reloaded", "revolutions", "resurrections"],
+                exactTitles: ["matrix", "matrix reloaded", "matrix revolutions", "matrix resurrections"],
                 desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
                 budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
                 producers: ["Warner Bros.", "Village Roadshow"], countries: ["United States of America"], genres: ["Science-Fiction", "Action"]
@@ -481,9 +497,8 @@
                 id: "star-wars",
                 title: "Star Wars - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
-                exactMatch: [],
-                matchKeywords: ["menace fantôme", "phantom menace", "attaque des clones", "attack of the clones", "revanche des sith", "revenge of the sith", "nouvel espoir", "new hope", "empire contre-attaque", "empire strikes back", "retour du jedi", "return of the jedi", "réveil de la force", "force awakens", "derniers jedi", "last jedi", "ascension de skywalker", "rise of skywalker"],
-                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes de la saga Skywalker.",
+                exactTitles: ["star wars : épisode i", "star wars : épisode ii", "star wars : épisode iii", "star wars : épisode iv", "star wars : épisode v", "star wars : épisode vi", "star wars : épisode vii", "star wars : épisode viii", "star wars : épisode ix"],
+                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes.",
                 budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
                 producers: ["Lucasfilm Ltd."], countries: ["United States of America"], genres: ["Action", "Aventure", "Sci-Fi"]
             },
@@ -491,8 +506,7 @@
                 id: "harry-potter",
                 title: "Harry Potter - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
-                exactMatch: [],
-                matchKeywords: ["école des sorciers", "sorcerer's stone", "philosopher's stone", "chambre des secrets", "chamber of secrets", "prisonnier d'azkaban", "prisoner of azkaban", "coupe de feu", "goblet of fire", "ordre du phénix", "order of the phoenix", "prince de sang-mêlé", "half-blood prince", "reliques de la mort", "deathly hallows"],
+                exactTitles: ["harry potter à l'école des sorciers", "harry potter et la chambre des secrets", "harry potter et le prisonnier d'azkaban", "harry potter et la coupe de feu", "harry potter et l'ordre du phénix", "harry potter et le prince de sang-mêlé", "harry potter et les reliques de la mort - 1ère partie", "harry potter et les reliques de la mort - 2ème partie"],
                 desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
                 budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
                 producers: ["Warner Bros. Pictures", "Heyday Films"], countries: ["United Kingdom", "United States"], genres: ["Fantastique", "Aventure"]
@@ -501,71 +515,17 @@
                 id: "seigneur-des-anneaux",
                 title: "Le Seigneur des Anneaux - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
-                exactMatch: [],
-                matchKeywords: ["communauté de l'anneau", "fellowship of the ring", "deux tours", "two towers", "retour du roi", "return of the king"],
+                exactTitles: ["le seigneur des anneaux : la communauté de l'anneau", "le seigneur des anneaux : les deux tours", "le seigneur des anneaux : le retour du roi"],
                 desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
                 budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
                 producers: ["New Line Cinema", "WingNut Films"], countries: ["New Zealand", "United States"], genres: ["Aventure", "Fantastique"]
             }
         ];
 
-        // TRADUCTION DE L'INTERFACE UI + DONNÉES
-        function setLang(selectedLang) {
-            lang = selectedLang;
-            document.getElementById('flag-fr').classList.toggle('active', lang === 'fr');
-            document.getElementById('flag-en').classList.toggle('active', lang === 'en');
-            
-            const t = {
-                'fr': {
-                    'nav-home': 'Accueil', 'nav-saga': 'Sagas', 'nav-watchlist': 'Ma Watchlist', 'nav-movie': 'Films', 'nav-tv': 'Séries', 'nav-anime': 'Anime',
-                    'search-ph': 'Rechercher...', 'hero-watch': '▶ REGARDER',
-                    'title-top10': '🔥 Top 10 des Tendances', 'title-sagas': '👑 Les Sagas Incontournables',
-                    'title-movies': '🎬 Films Populaires', 'title-series': '📺 Séries Incontournables', 'title-animes': '✨ Animés & Mangas',
-                    'filter-results': 'Résultats', 'btn-back': '❮ Retour aux collections',
-                    'saga-movies': 'Films de la <span class="red">collection</span>', 'saga-prod': '🏢 Informations de <span class="red">production</span>', 'saga-stats': '📈 Statistiques <span class="red">globales</span>'
-                },
-                'en': {
-                    'nav-home': 'Home', 'nav-saga': 'Sagas', 'nav-watchlist': 'My Watchlist', 'nav-movie': 'Movies', 'nav-tv': 'TV Shows', 'nav-anime': 'Anime',
-                    'search-ph': 'Search...', 'hero-watch': '▶ WATCH',
-                    'title-top10': '🔥 Top 10 Trending', 'title-sagas': '👑 Essential Sagas',
-                    'title-movies': '🎬 Popular Movies', 'title-series': '📺 Essential TV Shows', 'title-animes': '✨ Anime & Manga',
-                    'filter-results': 'Results', 'btn-back': '❮ Back to collections',
-                    'saga-movies': 'Movies in the <span class="red">collection</span>', 'saga-prod': '🏢 Production <span class="red">Information</span>', 'saga-stats': '📈 Global <span class="red">Statistics</span>'
-                }
-            }[lang];
-
-            document.querySelector('#btn-all span').textContent = t['nav-home'];
-            document.querySelector('#btn-saga span').textContent = t['nav-saga'];
-            document.querySelector('#btn-watchlist span').textContent = t['nav-watchlist'];
-            document.querySelector('#btn-movie span').textContent = t['nav-movie'];
-            document.querySelector('#btn-tv span').textContent = t['nav-tv'];
-            document.querySelector('#btn-anime span').textContent = t['nav-anime'];
-            
-            document.getElementById('searchInput').placeholder = t['search-ph'];
-            document.getElementById('heroWatchBtn').innerHTML = t['hero-watch'];
-            
-            document.getElementById('title-top10').innerHTML = t['title-top10'];
-            document.getElementById('title-sagas').innerHTML = t['title-sagas'];
-            document.getElementById('title-movies').innerHTML = t['title-movies'];
-            document.getElementById('title-series').innerHTML = t['title-series'];
-            document.getElementById('title-animes').innerHTML = t['title-animes'];
-            document.getElementById('btn-back').innerHTML = t['btn-back'];
-            
-            document.getElementById('title-saga-movies').innerHTML = t['saga-movies'];
-            document.getElementById('title-saga-prod').innerHTML = t['saga-prod'];
-            document.getElementById('title-saga-stats').innerHTML = t['saga-stats'];
-
-            if (!document.getElementById('searchInput').value.trim()) {
-                document.getElementById('filterTitle').innerHTML = t['filter-results'];
-            }
-
-            if (currentItem && document.getElementById('playerModal').style.display === 'block') {
-                openDetails(currentItem, false); // Relance l'appel TMDB dans la langue sélectionnée
-            }
-        }
-
-        function slugify(text) {
-            return (text || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 -]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+        function isAnimeItem(i) {
+            if (i.type === 'anime') return true;
+            const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
+            return animeKeywords.some(kw => text.includes(kw));
         }
 
         async function init() {
@@ -575,6 +535,7 @@
                 heroItems = catalog.slice(0, 10);
                 setupHeroSlider();
                 renderSections();
+
                 handleInitialUrl();
             } catch (e) { console.error("Erreur chargement:", e); }
         }
@@ -582,13 +543,16 @@
         function handleInitialUrl() {
             const hash = window.location.hash.replace('#', '');
             if (!hash) return;
+
             if (['home', 'all', 'saga', 'movie', 'tv', 'anime', 'watchlist'].includes(hash)) {
                 switchTab(hash === 'home' ? 'all' : hash, false);
             } else if (hash.startsWith('watch-')) {
                 const parts = hash.split('-');
                 const tmdbId = parts[parts.length - 1];
                 const foundItem = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
-                if (foundItem) { openDetails(foundItem, false); }
+                if (foundItem) {
+                    openDetails(foundItem, false);
+                }
             }
         }
 
@@ -622,15 +586,20 @@
             e.stopPropagation();
             let saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
             id = String(id);
-            if (saved.includes(id)) { saved = saved.filter(i => i !== id); } 
-            else { saved.push(id); }
+            if (saved.includes(id)) {
+                saved = saved.filter(i => i !== id);
+            } else {
+                saved.push(id);
+            }
             localStorage.setItem('sk_watchlist', JSON.stringify(saved));
             
             const star = e.currentTarget;
             if (saved.includes(id)) {
-                star.classList.add('active'); star.textContent = "★";
+                star.classList.add('active');
+                star.textContent = "★";
             } else {
-                star.classList.remove('active'); star.textContent = "☆";
+                star.classList.remove('active');
+                star.textContent = "☆";
             }
         }
 
@@ -710,12 +679,9 @@
             document.getElementById('infoLanguages').innerHTML = `<div class="info-list-item"><span>Français (VF)</span><span class="count">VF</span></div><div class="info-list-item"><span>English (VOSTFR)</span><span class="count">VOSTFR</span></div>`;
             document.getElementById('infoGenres').innerHTML = saga.genres.map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
 
-            // LOGIQUE DE FILTRE PARFAITE POUR LES SAGAS
             const sagaMovies = catalog.filter(item => {
-                const t = (item.title || '').toLowerCase();
-                const isExact = saga.exactMatch && saga.exactMatch.includes(t);
-                const hasKeyword = saga.matchKeywords && saga.matchKeywords.some(kw => t.includes(kw));
-                return isExact || hasKeyword;
+                const titleLower = (item.title || '').toLowerCase();
+                return saga.exactTitles.some(exact => titleLower.includes(exact.toLowerCase()));
             });
 
             document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} films`;
@@ -748,26 +714,32 @@
             closeSagaView();
             closePlayer();
 
-            if (updateUrl) { history.pushState(null, null, `#${type === 'all' ? 'home' : type}`); }
+            if (updateUrl) {
+                history.pushState(null, null, `#${type === 'all' ? 'home' : type}`);
+            }
 
             if (type === 'all') {
                 document.getElementById('heroBanner').style.display = 'flex';
                 document.getElementById('homeSections').style.display = 'block';
                 document.getElementById('filteredSection').style.display = 'none';
-                document.getElementById('searchInput').value = '';
             } else {
                 document.getElementById('heroBanner').style.display = 'none';
                 document.getElementById('homeSections').style.display = 'none';
                 document.getElementById('filteredSection').style.display = 'block';
 
-                if (type === 'saga') { currentFilteredList = SAGAS_DATABASE; } 
-                else if (type === 'movie') { currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i)); } 
-                else if (type === 'tv') { currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i)); } 
-                else if (type === 'anime') { currentFilteredList = catalog.filter(i => isAnimeItem(i)); } 
-                else if (type === 'watchlist') {
+                if (type === 'saga') {
+                    currentFilteredList = SAGAS_DATABASE;
+                } else if (type === 'movie') {
+                    currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i));
+                } else if (type === 'tv') {
+                    currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i));
+                } else if (type === 'anime') {
+                    currentFilteredList = catalog.filter(i => isAnimeItem(i));
+                } else if (type === 'watchlist') {
                     const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
                     currentFilteredList = catalog.filter(i => saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
                 }
+
                 applySorting();
             }
         }
@@ -789,9 +761,7 @@
             currentFilteredList = catalog.filter(i => (i.title || '').toLowerCase().includes(q));
             currentPage = 1;
 
-            const resText = lang === 'fr' ? `🔍 Recherche: "${query}"` : `🔍 Search: "${query}"`;
-            document.getElementById('filterTitle').textContent = `${resText} (${currentFilteredList.length})`;
-            
+            document.getElementById('filterTitle').textContent = `🔍 Recherche: "${query}" (${currentFilteredList.length})`;
             renderPaginatedGrid();
         }
 
@@ -799,10 +769,15 @@
             const sortVal = document.getElementById('sortSelect').value;
 
             if (currentCategoryType !== 'saga') {
-                if (sortVal === 'rating-desc') { currentFilteredList.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0)); } 
-                else if (sortVal === 'rating-asc') { currentFilteredList.sort((a, b) => parseFloat(a.rating || 0) - parseFloat(b.rating || 0)); } 
-                else if (sortVal === 'title-asc') { currentFilteredList.sort((a, b) => (a.title || '').localeCompare(b.title || '')); } 
-                else if (sortVal === 'year-desc') { currentFilteredList.sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0)); }
+                if (sortVal === 'rating-desc') {
+                    currentFilteredList.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
+                } else if (sortVal === 'rating-asc') {
+                    currentFilteredList.sort((a, b) => parseFloat(a.rating || 0) - parseFloat(b.rating || 0));
+                } else if (sortVal === 'title-asc') {
+                    currentFilteredList.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                } else if (sortVal === 'year-desc') {
+                    currentFilteredList.sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0));
+                }
             }
 
             currentPage = 1;
@@ -810,12 +785,12 @@
         }
 
         function renderPaginatedGrid() {
-            let catTitle = lang === 'fr' ? "Résultats" : "Results";
-            if (currentCategoryType === 'saga') catTitle = lang === 'fr' ? "👑 Les Sagas Incontournables" : "👑 Essential Sagas";
-            else if (currentCategoryType === 'movie') catTitle = lang === 'fr' ? "🎬 Tous les Films" : "🎬 All Movies";
-            else if (currentCategoryType === 'tv') catTitle = lang === 'fr' ? "📺 Toutes les Séries" : "📺 All TV Shows";
-            else if (currentCategoryType === 'anime') catTitle = lang === 'fr' ? "✨ Tous les Animés" : "✨ All Anime";
-            else if (currentCategoryType === 'watchlist') catTitle = lang === 'fr' ? "🔖 Ma Watchlist" : "🔖 My Watchlist";
+            let catTitle = "Résultats";
+            if (currentCategoryType === 'saga') catTitle = "👑 Les Sagas Incontournables";
+            else if (currentCategoryType === 'movie') catTitle = "🎬 Tous les Films";
+            else if (currentCategoryType === 'tv') catTitle = "📺 Toutes les Séries";
+            else if (currentCategoryType === 'anime') catTitle = "✨ Tous les Animés";
+            else if (currentCategoryType === 'watchlist') catTitle = "🔖 Ma Watchlist";
 
             const searchInput = document.getElementById('searchInput');
             if (!searchInput.value.trim()) {
@@ -831,12 +806,11 @@
             const itemsToDisplay = currentFilteredList.slice(0, currentPage * ITEMS_PER_PAGE);
             document.getElementById('gridFiltered').innerHTML = itemsToDisplay.length 
                 ? itemsToDisplay.map(createCardHtml).join('') 
-                : `<p style="color:#aaa; padding:30px;">${lang === 'fr' ? 'Aucun contenu disponible.' : 'No content available.'}</p>`;
+                : '<p style="color:#aaa; padding:30px;">Aucun contenu disponible.</p>';
 
             const btnLoad = document.getElementById('btnLoadMore');
             if (itemsToDisplay.length < currentFilteredList.length) {
                 btnLoad.style.display = 'block';
-                btnLoad.textContent = lang === 'fr' ? 'Charger la suite' : 'Load more';
             } else {
                 btnLoad.style.display = 'none';
             }
@@ -860,13 +834,13 @@
             document.getElementById('modalPoster').src = item.poster;
             document.getElementById('modalYear').textContent = item.year || '2026';
             document.getElementById('modalRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
-            document.getElementById('modalOverview').textContent = item.overview || (lang === 'fr' ? "Synopsis indisponible." : "Synopsis unavailable.");
+            document.getElementById('modalOverview').textContent = item.overview || "Synopsis indisponible.";
             
             updateWatchlistButton('btnModalWatchlist', String(idClean));
 
-            document.getElementById('castList').innerHTML = `<span style="color:#666; font-size:11px;">${lang === 'fr' ? 'Chargement...' : 'Loading...'}</span>`;
-            document.getElementById('movieProducersInfo').innerHTML = `<span style="color:#666; font-size:12px;">${lang === 'fr' ? 'Chargement...' : 'Loading...'}</span>`;
-            document.getElementById('trailerContainer').innerHTML = `<span style="padding: 20px; display: block; text-align: center; color: #666;">${lang === 'fr' ? 'Recherche...' : 'Searching...'}</span>`;
+            document.getElementById('castList').innerHTML = `<span style="color:#666; font-size:11px;">Chargement du casting...</span>`;
+            document.getElementById('movieProducersInfo').innerHTML = `<span style="color:#666; font-size:12px;">Chargement des données de production...</span>`;
+            document.getElementById('trailerContainer').innerHTML = `<span style="padding: 20px; display: block; text-align: center; color: #666;">Recherche...</span>`;
 
             loadSource('vf');
             document.getElementById('playerModal').style.display = 'block';
@@ -877,17 +851,13 @@
                 const res = await fetch(`https://api.themoviedb.org/3/${type}/${idClean}?api_key=${API_KEY}&append_to_response=credits,videos&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
                 const data = await res.json();
                 
-                if (data.overview) {
-                    document.getElementById('modalOverview').textContent = data.overview;
-                }
-
                 if(data.credits && data.credits.cast) {
                     const topCast = data.credits.cast.slice(0, 5);
                     document.getElementById('castList').innerHTML = topCast.map(actor => `
                         <div class="cast-item">
                             <img class="cast-img" src="${actor.profile_path ? 'https://image.tmdb.org/t/p/w92'+actor.profile_path : 'https://via.placeholder.com/55'}" alt="${actor.name}">
                             <div class="cast-name">${actor.name}</div>
-                            <div class="cast-role">${actor.character || (lang === 'fr' ? 'Rôle' : 'Role')}</div>
+                            <div class="cast-role">${actor.character || 'Rôle'}</div>
                         </div>
                     `).join('');
                 }
@@ -895,8 +865,8 @@
                 if (data.production_companies && data.production_companies.length) {
                     const prods = data.production_companies.map(p => p.name).join(', ');
                     document.getElementById('movieProducersInfo').innerHTML = `
-                        <div class="info-list-item"><span>${lang === 'fr' ? 'Sociétés:' : 'Studios:'}</span><span style="color:#fff;">${prods}</span></div>
-                        <div class="info-list-item"><span>${lang === 'fr' ? 'Pays:' : 'Countries:'}</span><span style="color:#fff;">${(data.production_countries || []).map(c=>c.name).join(', ') || 'USA'}</span></div>
+                        <div class="info-list-item"><span>Sociétés:</span><span style="color:#fff;">${prods}</span></div>
+                        <div class="info-list-item"><span>Pays:</span><span style="color:#fff;">${(data.production_countries || []).map(c=>c.name).join(', ') || 'USA'}</span></div>
                     `;
                 } else {
                     document.getElementById('movieProducersInfo').innerHTML = `<span style="color:#aaa; font-size:12px;">Production indépendante</span>`;
@@ -909,7 +879,7 @@
                 if(trailer) {
                     document.getElementById('trailerContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${trailer.key}?mute=1" allowfullscreen></iframe>`;
                 } else {
-                    document.getElementById('trailerContainer').innerHTML = `<span style="padding: 20px; display: block; text-align: center; color: #666;">${lang === 'fr' ? 'Aucune bande-annonce' : 'No trailer found'}</span>`;
+                    document.getElementById('trailerContainer').innerHTML = `<span style="padding: 20px; display: block; text-align: center; color: #666;">Aucune bande-annonce</span>`;
                 }
             } catch (e) {}
 
@@ -941,10 +911,10 @@
             if (!btn) return;
             const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
             if (saved.includes(itemId)) {
-                btn.innerHTML = lang === 'fr' ? "❌ Retirer de ma watchlist" : "❌ Remove from watchlist";
+                btn.innerHTML = "❌ Retirer de ma watchlist";
                 btn.classList.add('active');
             } else {
-                btn.innerHTML = lang === 'fr' ? "🔖 Ajouter à ma watchlist" : "🔖 Add to watchlist";
+                btn.innerHTML = "🔖 Ajouter à ma watchlist";
                 btn.classList.remove('active');
             }
         }
@@ -964,8 +934,11 @@
 
         function toggleWatchlistId(id) {
             let saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
-            if (saved.includes(id)) { saved = saved.filter(i => i !== id); } 
-            else { saved.push(id); }
+            if (saved.includes(id)) {
+                saved = saved.filter(i => i !== id);
+            } else {
+                saved.push(id);
+            }
             localStorage.setItem('sk_watchlist', JSON.stringify(saved));
         }
 
