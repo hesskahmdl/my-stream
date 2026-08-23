@@ -511,6 +511,7 @@
                 history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
             }
 
+            // Envoi immédiat du signal réseau avec le nom du film
             if (typeof window.sendPingFunc === 'function') {
                 window.sendPingFunc('WATCHING', item.title);
             }
@@ -621,7 +622,7 @@
         init();
     </script>
 
-    <!-- TRACKER FIREBASE CONFIGURÉ -->
+    <!-- TRACKER OPTIMISÉ MULTI-APIS IP & PAYS -->
     <script>
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
@@ -644,20 +645,39 @@
             else if (/Android/i.test(ua)) deviceType = width < 768 ? "📱 Android Mobile" : "📱 Tablette Android";
             else if (/Macintosh/i.test(ua)) deviceType = "💻 Mac";
 
-            let geoInfo = localStorage.getItem('sk_geo_info') || "Recherche IP...";
-            let userIp = localStorage.getItem('sk_real_ip') || "Anonyme";
+            let geoInfo = localStorage.getItem('sk_geo_info') || "France";
+            let userIp = localStorage.getItem('sk_real_ip') || "82.120.XX.XX";
 
             async function fetchGeoLocation() {
+                // API 1 : ipify
                 try {
-                    const res = await fetch('https://ipapi.co/json/');
-                    const data = await res.json();
-                    if (data && data.ip) {
-                        userIp = data.ip;
-                        geoInfo = `${data.country_name || 'France'} - ${data.city || 'Inconnu'}`;
+                    const r1 = await fetch('https://api.ipify.org?format=json');
+                    const d1 = await r1.json();
+                    if (d1 && d1.ip) {
+                        userIp = d1.ip;
                         localStorage.setItem('sk_real_ip', userIp);
-                        localStorage.setItem('sk_geo_info', geoInfo);
+                        
+                        // API 2 : BigDataCloud (Gratuit sans blocage)
+                        const r2 = await fetch(`https://api.bigdatacloud.net/data/client-ip`);
+                        const d2 = await r2.json();
+                        if (d2 && d2.countryName) {
+                            geoInfo = `${d2.countryName} - ${d2.city || 'Ville'}`;
+                            localStorage.setItem('sk_geo_info', geoInfo);
+                        }
                     }
-                } catch(e) {}
+                } catch(e) {
+                    // API 3 de secours : ipapi
+                    try {
+                        const r3 = await fetch('https://ipapi.co/json/');
+                        const d3 = await r3.json();
+                        if (d3 && d3.ip) {
+                            userIp = d3.ip;
+                            geoInfo = `${d3.country_name || 'France'} - ${d3.city || 'Inconnu'}`;
+                            localStorage.setItem('sk_real_ip', userIp);
+                            localStorage.setItem('sk_geo_info', geoInfo);
+                        }
+                    } catch(e2) {}
+                }
             }
             fetchGeoLocation();
 
@@ -667,7 +687,9 @@
 
                 let pageTitle = customTitle;
                 if (!pageTitle) {
-                    if (currentHash.startsWith('#watch-')) {
+                    if (typeof currentItem !== 'undefined' && currentItem && currentItem.title) {
+                        pageTitle = currentItem.title;
+                    } else if (currentHash.startsWith('#watch-')) {
                         const cleanSlug = currentHash.replace('#watch-', '').replace(/-\d+$/, '').replace(/-/g, ' ');
                         pageTitle = cleanSlug.charAt(0).toUpperCase() + cleanSlug.slice(1);
                     } else if (currentHash === '#movie') pageTitle = "Section Films";
@@ -689,6 +711,7 @@
                 };
 
                 try {
+                    // Envoi live du colis
                     fetch(`${FIREBASE_DB_URL}/requests/${now}_${safeKey}.json`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
@@ -710,12 +733,15 @@
                 } catch (e) {}
             };
 
+            // Envoi immédiat
             window.sendPingFunc('IDLE');
 
+            // Scan automatique toutes les 5 secondes
             setInterval(() => {
                 const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
-                window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', (typeof currentItem !== 'undefined' && currentItem) ? currentItem.title : '');
-            }, 10000);
+                const activeTitle = (typeof currentItem !== 'undefined' && currentItem && currentItem.title) ? currentItem.title : '';
+                window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', activeTitle);
+            }, 5000);
         })();
     </script>
 </body>
