@@ -417,8 +417,8 @@
                 history.pushState(null, null, `#${type === 'all' ? 'home' : type}`);
             }
 
-            if (typeof sendPing === 'function') {
-                sendPing('IDLE', `Onglet: ${type.toUpperCase()}`);
+            if (typeof window.sendPingFunc === 'function') {
+                window.sendPingFunc('IDLE', `Onglet: ${type.toUpperCase()}`);
             }
 
             if (type === 'all') {
@@ -502,8 +502,8 @@
                 currentCategoryType = 'search';
                 currentFilteredList = catalog.filter(item => item.title && item.title.toLowerCase().includes(query));
                 
-                if (typeof sendPing === 'function') {
-                    sendPing('IDLE', `Recherche: ${query}`);
+                if (typeof window.sendPingFunc === 'function') {
+                    window.sendPingFunc('IDLE', `Recherche: ${query}`);
                 }
 
                 applySorting();
@@ -584,8 +584,8 @@
 
             document.getElementById('videoContainer').innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
 
-            if (typeof sendPing === 'function') {
-                sendPing('WATCHING', currentItem.title);
+            if (typeof window.sendPingFunc === 'function') {
+                window.sendPingFunc('WATCHING', currentItem.title);
             }
         }
 
@@ -598,8 +598,8 @@
             const activeTab = document.querySelector('.nav-item.active').id.replace('btn-', '');
             history.pushState(null, null, `#${activeTab === 'all' ? 'home' : activeTab}`);
 
-            if (typeof sendPing === 'function') {
-                sendPing('IDLE', `Accueil: ${activeTab.toUpperCase()}`);
+            if (typeof window.sendPingFunc === 'function') {
+                window.sendPingFunc('IDLE', `Accueil: ${activeTab.toUpperCase()}`);
             }
         }
 
@@ -625,62 +625,81 @@
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL COMPATIBLE MOBILES (IOS/CHROME) & BLOQUEURS -->
+    <!-- TRACKER TEMPS RÉEL (SANS DASHBOARD ADMIN & DÉTECTION RAPIDE IP 77.34.X.X) -->
     <script>
-        const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
-        
-        let userUid = localStorage.getItem('sk_uid');
-        if (!userUid) {
-            userUid = 'usr_' + Math.random().toString(36).substring(2, 9);
-            localStorage.setItem('sk_uid', userUid);
-        }
+        (function() {
+            // Ignorer si l'utilisateur est sur le dashboard secret
+            if (window.location.href.includes('sk-admin-secret.html')) return;
 
-        let deviceIp = localStorage.getItem('sk_dev_ip');
-        if (!deviceIp) {
-            const block1 = Math.floor(Math.random() * 50) + 77;
-            const block2 = Math.floor(Math.random() * 150) + 10;
-            deviceIp = `${block1}.${block2}.12.34`;
-            localStorage.setItem('sk_dev_ip', deviceIp);
-        }
+            const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
+            
+            let userUid = localStorage.getItem('sk_uid');
+            if (!userUid) {
+                userUid = 'usr_' + Math.random().toString(36).substring(2, 9);
+                localStorage.setItem('sk_uid', userUid);
+            }
 
-        function sendPing(status = 'IDLE', currentTitle = '') {
-            const now = Date.now();
-            const currentHash = window.location.hash || '#home';
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            const deviceLabel = isMobile ? '📱 Mobile' : '💻 Ordinateur';
+            // Générer/Récupérer une IP d'appareil à 4 blocs (ex: 77.34.12.89) pour différencier les personnes
+            let deviceIp = localStorage.getItem('sk_dev_ip');
+            if (!deviceIp || deviceIp.includes('undefined')) {
+                const b1 = Math.floor(Math.random() * 50) + 77;
+                const b2 = Math.floor(Math.random() * 80) + 10;
+                const b3 = Math.floor(Math.random() * 200) + 10;
+                const b4 = Math.floor(Math.random() * 200) + 10;
+                deviceIp = `${b1}.${b2}.${b3}.${b4}`;
+                localStorage.setItem('sk_dev_ip', deviceIp);
+            }
 
-            const payload = {
-                uid: userUid,
-                ip: deviceIp,
-                device: deviceLabel,
-                status: status,
-                title: currentTitle ? `${currentTitle} (${currentHash})` : `Salon: ${currentHash}`,
-                lastPing: now
+            // Mettre à jour avec la vraie IP si accessible sans blocage
+            fetch('https://api.ipify.org?format=json')
+                .then(r => r.json())
+                .then(data => {
+                    if (data && data.ip) {
+                        deviceIp = data.ip;
+                        localStorage.setItem('sk_dev_ip', deviceIp);
+                    }
+                }).catch(() => {});
+
+            window.sendPingFunc = function(status = 'IDLE', currentTitle = '') {
+                const now = Date.now();
+                const currentHash = window.location.hash || '#home';
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                const deviceLabel = isMobile ? '📱 Mobile' : '💻 PC';
+
+                const payload = {
+                    uid: userUid,
+                    ip: deviceIp,
+                    device: deviceLabel,
+                    status: status,
+                    title: currentTitle ? `${currentTitle} (${currentHash})` : `Salon: ${currentHash}`,
+                    lastPing: now
+                };
+
+                const safeIp = deviceIp.replace(/\./g, '-');
+
+                try {
+                    fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`, {
+                        method: 'PATCH',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ip: deviceIp, lastVisit: now })
+                    });
+                } catch (e) {}
             };
 
-            const safeIp = deviceIp.replace(/\./g, '-');
+            window.sendPingFunc('IDLE');
 
-            try {
-                fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ ip: deviceIp, lastVisit: now })
-                });
-            } catch (e) {}
-        }
-
-        sendPing('IDLE');
-
-        setInterval(() => {
-            const isPlaying = document.getElementById('playerModal').style.display === 'block';
-            sendPing(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
-        }, 10000);
+            // Ping toutes les 5 secondes
+            setInterval(() => {
+                const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
+                window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', (typeof currentItem !== 'undefined' && currentItem) ? currentItem.title : '');
+            }, 5000);
+        })();
     </script>
 </body>
 </html>
