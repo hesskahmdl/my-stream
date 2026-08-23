@@ -829,10 +829,8 @@
                 }
             });
 
-            heroItems = catalog.slice(0, 10);
             setupHeroSlider();
             renderSections();
-
             handleInitialUrl();
         }
 
@@ -852,7 +850,39 @@
             }
         }
 
+        // ==========================================================================
+        // CARROUSEL HERO SYNCHRONISÉ AVEC LE DASHBOARD ADMIN
+        // ==========================================================================
         function setupHeroSlider() {
+            // Prise en charge des visuels modifiés depuis le Dashboard Control Center
+            const savedSlides = localStorage.getItem('sk_hero_slides');
+            if (savedSlides) {
+                try {
+                    const parsed = JSON.parse(savedSlides);
+                    if (parsed && parsed.length > 0) {
+                        heroItems = parsed.map(s => {
+                            // Tente de lier la diapositive à un film existant du catalogue pour conserver la lecture
+                            const found = catalog.find(i => (i.title || '').toLowerCase().includes((s.title || '').toLowerCase()));
+                            return {
+                                tmdb_id_clean: found ? (found.tmdb_id_clean || found.tmdb_id) : 'custom',
+                                title: s.title,
+                                year: s.meta ? s.meta : '2026',
+                                rating: s.meta && s.meta.includes('⭐') ? s.meta.split('⭐')[1].split('|')[0].trim() : '8.5',
+                                type: 'movie',
+                                overview: s.desc || '',
+                                poster: s.poster || (found ? found.poster : ''),
+                                backdrop: s.backdrop || s.poster || (found ? found.backdrop : ''),
+                                rawObject: found || null
+                            };
+                        });
+                    }
+                } catch(e) {
+                    heroItems = catalog.slice(0, 10);
+                }
+            } else {
+                heroItems = catalog.slice(0, 10);
+            }
+
             if (!heroItems.length) return;
             showHero(0);
             clearInterval(sliderTimer);
@@ -869,9 +899,12 @@
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
             document.getElementById('heroTitle').textContent = item.title;
             document.getElementById('heroYear').textContent = item.year || '2026';
-            document.getElementById('heroRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
+            document.getElementById('heroRating').textContent = item.rating.includes('⭐') ? item.rating : `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('heroOverview').textContent = item.overview || "";
-            document.getElementById('heroWatchBtn').onclick = () => openDetails(item);
+            document.getElementById('heroWatchBtn').onclick = () => {
+                if (item.rawObject) openDetails(item.rawObject);
+                else openDetails(item);
+            };
         }
 
         function isSavedInWatchlist(id) {
