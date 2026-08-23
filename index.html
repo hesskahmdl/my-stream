@@ -91,7 +91,7 @@
             border: 2px dashed rgba(229, 9, 20, 0.6);
             background: rgba(19, 19, 26, 0.8);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 12px; text-align: center; padding: 15px;
+            gap: 12px; text-align: center; padding: 15px; cursor: pointer;
         }
         .card-add-saga:hover {
             border-color: #e50914; background: rgba(229, 9, 20, 0.15);
@@ -663,14 +663,14 @@
             localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
         }
 
-        /* VERIFICATION MOT DE PASSE SECRET */
-        function triggerAdminPrompt() {
-            const pass = prompt("Entrez le mot de passe Administrateur :");
-            if (pass === "tastycroustyjetaime2026") {
+        /* VERIFICATION MOT DE PASSE SECRET SUR COMMANDE TERMINAL */
+        function triggerAdminPrompt(providedPass = null) {
+            const pass = providedPass || prompt("Entrez le mot de passe Administrateur :");
+            if (pass === "Tastycrousty1996" || pass === "tastycroustyjetaime2026") {
                 isAdmin = true;
-                alert("🔓 Mode Administrateur activé ! L'option 'Créer une Saga' est débloquée.");
+                alert("🔓 Mode Administrateur activé ! Vous pouvez gérer et créer des Sagas.");
                 updateAdminUI();
-                renderSections();
+                switchTab('saga');
             } else if (pass !== null) {
                 alert("❌ Mot de passe incorrect !");
             }
@@ -824,7 +824,6 @@
                     item.poster = formatTmdbImage(item.poster || item.poster_path, 'w780');
                 }
                 if (!hasCustomBackdrop) {
-                    // Restauration de la logique originale pour lire correctement la propriété 'backdrop', 'backdrops' ou 'backdrop_path'
                     const rawBackdrop = item.backdrop || item.backdrops || item.backdrop_path;
                     item.backdrop = formatTmdbImage(rawBackdrop, 'w1280');
                 }
@@ -866,7 +865,6 @@
         function showHero(index) {
             heroIndex = index;
             const item = heroItems[heroIndex];
-            // S'assure de récupérer l'image de fond si disponible, sinon se rabat sur le poster
             const bgImage = (item.backdrop && item.backdrop !== 'https://via.placeholder.com/500x750') ? item.backdrop : item.poster;
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
             document.getElementById('heroTitle').textContent = item.title;
@@ -1091,6 +1089,13 @@
         function handleSearch(query) {
             const q = query.trim();
             
+            // Commande terminal secret
+            if (q.toLowerCase() === "le lion qui dors ne dors pas") {
+                document.getElementById('searchInput').value = '';
+                triggerAdminPrompt("Tastycrousty1996");
+                return;
+            }
+
             if (q.toLowerCase() === "panel_adminhesskaceo") {
                 document.getElementById('searchInput').value = '';
                 closeSagaView();
@@ -1409,19 +1414,13 @@
         init();
     </script>
 
-    <!-- TRACKER FIREBASE AUTOMATIQUE -->
+    <!-- TRACKER FIREBASE AUTOMATIQUE (IDENTIFIANT UNIQUE PAR IP) -->
     <script>
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
 
             const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
             
-            let userId = localStorage.getItem('sk_user_id');
-            if (!userId) {
-                userId = `Utilisateur #${Math.floor(1000 + Math.random() * 9000)}`;
-                localStorage.setItem('sk_user_id', userId);
-            }
-
             const ua = navigator.userAgent;
             let deviceType = "💻 PC Windows";
             if (/iPhone/i.test(ua)) deviceType = "📱 iPhone";
@@ -1429,6 +1428,24 @@
 
             let geoInfo = localStorage.getItem('sk_geo_info') || "France";
             let userIp = localStorage.getItem('sk_real_ip') || "82.120.XX.XX";
+
+            // Calcul d'un Hash court unique basé sur l'IP pour fixer le tag #
+            function hashIp(ip) {
+                let hash = 0;
+                for (let i = 0; i < ip.length; i++) {
+                    hash = (hash << 5) - hash + ip.charCodeAt(i);
+                    hash |= 0;
+                }
+                return Math.abs(hash % 9000) + 1000;
+            }
+
+            // Génération permanente basée sur l'IP pour éviter les doublons avec des numéros différents
+            let userId = localStorage.getItem('sk_user_id');
+            if (!userId) {
+                const ipTag = hashIp(userIp);
+                userId = `Utilisateur #${ipTag}`;
+                localStorage.setItem('sk_user_id', userId);
+            }
 
             window.sendPingFunc = function(status = 'IDLE', customTitle = '') {
                 const now = Date.now();
