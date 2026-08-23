@@ -72,25 +72,45 @@
         }
 
         .carousel-wrapper { position: relative; }
-        .carousel { display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; }
+        .carousel { display: flex; gap: 16px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 18px; padding: 15px 0; }
 
-        .card { cursor: pointer; transition: transform 0.3s; background: #13131a; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); flex: 0 0 150px; position: relative; }
-        .movie-grid .card { flex: none; }
-        .card:hover { transform: translateY(-6px) scale(1.02); border-color: #e50914; z-index: 5; }
-        .card img { width: 100%; height: 220px; object-fit: cover; }
-        .card-info { padding: 8px; }
-        .card-title { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
-        .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; }
-        .card-rating { color: #ffc107; font-weight: bold; }
+        /* DESIGN CARTES MOVIX AVEC EFFET SURVOL ET SURIMPOSITION SUR TOUT LES CONTENUS */
+        .card {
+            cursor: pointer; transition: transform 0.3s; background: #13131a;
+            border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
+            flex: 0 0 160px; height: 240px; position: relative;
+        }
+        .movie-grid .card { flex: none; height: 240px; }
+        .card img.poster-img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12px; }
+
+        .card-hover-overlay {
+            position: absolute; inset: 0; background: rgba(11, 11, 14, 0.92);
+            padding: 12px; display: flex; flex-direction: column; justify-content: flex-end;
+            opacity: 0; transition: opacity 0.3s ease; border-radius: 12px; border: 1px solid #e50914;
+        }
+        .card:hover .card-hover-overlay { opacity: 1; }
+        .card:hover { transform: translateY(-6px) scale(1.02); z-index: 10; }
 
         .saga-badge {
-            position: absolute; top: 8px; left: 8px;
-            background: rgba(229, 9, 20, 0.9); color: #fff;
-            font-size: 9px; font-weight: 900; padding: 2px 6px;
-            border-radius: 4px; letter-spacing: 1px; z-index: 2;
+            position: absolute; top: 10px; left: 10px;
+            background: #000; color: #fff; font-size: 9px; font-weight: 900;
+            padding: 3px 8px; border-radius: 4px; letter-spacing: 1px; z-index: 5;
         }
+
+        .star-watchlist {
+            position: absolute; top: 8px; right: 8px; z-index: 20;
+            width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.6);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px; cursor: pointer; transition: transform 0.2s; border: 1px solid rgba(255,255,255,0.2);
+        }
+        .star-watchlist:hover { transform: scale(1.2); }
+        .star-watchlist.active { background: rgba(255, 193, 7, 0.2); border-color: #ffc107; color: #ffc107; }
+
+        .card-hover-title { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px; line-height: 1.2; }
+        .card-hover-rating { font-size: 11px; color: #ffc107; font-weight: bold; margin-bottom: 6px; }
+        .card-hover-desc { font-size: 10px; color: #aaa; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
         .carousel-top10 { gap: 35px; padding-left: 20px; }
         .card-top10 { flex: 0 0 160px; display: flex; align-items: flex-end; position: relative; cursor: pointer; transition: transform 0.3s; }
@@ -232,7 +252,7 @@
         
         <div class="right-header">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Rechercher...">
+                <input type="text" id="searchInput" placeholder="Rechercher..." oninput="handleSearch(this.value)">
             </div>
             <div class="lang-switch">
                 <img src="https://flagcdn.com/w20/fr.png" alt="FR" id="flag-fr" class="active" onclick="setLang('fr')">
@@ -423,6 +443,15 @@
 
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
 
+        function setLang(selectedLang) {
+            lang = selectedLang;
+            document.getElementById('flag-fr').classList.toggle('active', lang === 'fr');
+            document.getElementById('flag-en').classList.toggle('active', lang === 'en');
+            if (currentItem) {
+                openDetails(currentItem, false);
+            }
+        }
+
         function slugify(text) {
             return (text || '')
                 .toString()
@@ -433,13 +462,13 @@
                 .replace(/-+/g, '-');
         }
 
-        // AFFICHES POSTERS MOYENNE TAILE (PROPRES & DÉFINIES) + MOTS CLES EXACTS
+        // BASE SAGA STRICTEMENT FILTRÉE SELON LES DEMANDES
         const SAGAS_DATABASE = [
             {
                 id: "spider-man-mcu",
                 title: "Spider-Man (MCU) - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
-                keywords: ["homecoming", "far from home", "no way home", "brand new day"],
+                exactTitles: ["spider-man: homecoming", "spider-man: far from home", "spider-man: no way home", "spider-man: brand new day"],
                 desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU.",
                 budget: "760 000 000 $", revenue: "6 234 107 164 $", rating: "7.6", duration: "9h 20min",
                 producers: ["Marvel Studios", "Pascal Pictures", "Columbia Pictures"],
@@ -450,8 +479,8 @@
                 id: "avengers",
                 title: "Avengers - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
-                keywords: ["avengers: doomsday", "avengers: secret wars", "avengers: endgame", "avengers: infinity war", "l'ère d'ultron", "avengers"],
-                desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers face aux menaces d'Loki, Ultron et Thanos.",
+                exactTitles: ["avengers", "avengers : l'ère d'ultron", "avengers : infinity war", "avengers : endgame"],
+                desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
                 budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
                 producers: ["Marvel Studios"], countries: ["United States of America"], genres: ["Action", "Science-Fiction"]
             },
@@ -459,7 +488,7 @@
                 id: "matrix",
                 title: "Matrix - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
-                keywords: ["matrix reloaded", "matrix revolutions", "matrix resurrections", "matrix"],
+                exactTitles: ["matrix", "matrix reloaded", "matrix revolutions", "matrix resurrections"],
                 desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
                 budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
                 producers: ["Warner Bros.", "Village Roadshow"], countries: ["United States of America"], genres: ["Science-Fiction", "Action"]
@@ -468,8 +497,8 @@
                 id: "star-wars",
                 title: "Star Wars - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
-                keywords: ["la menace fantôme", "l'attaque des clones", "la revanche des sith", "un nouvel espoir", "l'empire contre-attaque", "le retour du jedi", "le réveil de la force", "les derniers jedi", "l'ascension de skywalker"],
-                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes de la saga Skywalker.",
+                exactTitles: ["star wars : épisode i", "star wars : épisode ii", "star wars : épisode iii", "star wars : épisode iv", "star wars : épisode v", "star wars : épisode vi", "star wars : épisode vii", "star wars : épisode viii", "star wars : épisode ix"],
+                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes.",
                 budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
                 producers: ["Lucasfilm Ltd."], countries: ["United States of America"], genres: ["Action", "Aventure", "Sci-Fi"]
             },
@@ -477,7 +506,7 @@
                 id: "harry-potter",
                 title: "Harry Potter - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
-                keywords: ["école des sorciers", "chambre des secrets", "prisonnier d'azkaban", "coupe de feu", "ordre du phénix", "prince de sang-mêlé", "reliques de la mort", "harry potter"],
+                exactTitles: ["harry potter à l'école des sorciers", "harry potter et la chambre des secrets", "harry potter et le prisonnier d'azkaban", "harry potter et la coupe de feu", "harry potter et l'ordre du phénix", "harry potter et le prince de sang-mêlé", "harry potter et les reliques de la mort - 1ère partie", "harry potter et les reliques de la mort - 2ème partie"],
                 desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
                 budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
                 producers: ["Warner Bros. Pictures", "Heyday Films"], countries: ["United Kingdom", "United States"], genres: ["Fantastique", "Aventure"]
@@ -486,7 +515,7 @@
                 id: "seigneur-des-anneaux",
                 title: "Le Seigneur des Anneaux - Saga",
                 poster: "https://image.tmdb.org/t/p/w500/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
-                keywords: ["la communauté de l'anneau", "les deux tours", "le retour du roi"],
+                exactTitles: ["le seigneur des anneaux : la communauté de l'anneau", "le seigneur des anneaux : les deux tours", "le seigneur des anneaux : le retour du roi"],
                 desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
                 budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
                 producers: ["New Line Cinema", "WingNut Films"], countries: ["New Zealand", "United States"], genres: ["Aventure", "Fantastique"]
@@ -548,29 +577,63 @@
             document.getElementById('heroWatchBtn').onclick = () => openDetails(item);
         }
 
+        function isSavedInWatchlist(id) {
+            const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
+            return saved.includes(String(id));
+        }
+
+        function toggleWatchlistEvent(e, id) {
+            e.stopPropagation();
+            let saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
+            id = String(id);
+            if (saved.includes(id)) {
+                saved = saved.filter(i => i !== id);
+            } else {
+                saved.push(id);
+            }
+            localStorage.setItem('sk_watchlist', JSON.stringify(saved));
+            
+            const star = e.currentTarget;
+            if (saved.includes(id)) {
+                star.classList.add('active');
+                star.textContent = "★";
+            } else {
+                star.classList.remove('active');
+                star.textContent = "☆";
+            }
+        }
+
         function createCardHtml(item) {
+            const id = String(item.tmdb_id_clean || item.tmdb_id);
+            const isSaved = isSavedInWatchlist(id);
             return `
                 <div class="card" onclick='openDetails(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
-                    <img src="${item.poster || 'https://via.placeholder.com/150x220'}" alt="${item.title}" loading="lazy">
-                    <div class="card-info">
-                        <div class="card-title">${item.title}</div>
-                        <div class="card-meta">
-                            <span>${item.year || 'N/A'}</span>
-                            <span class="card-rating">⭐ ${parseFloat(item.rating || 0).toFixed(1)}</span>
-                        </div>
+                    <div class="star-watchlist ${isSaved ? 'active' : ''}" onclick="toggleWatchlistEvent(event, '${id}')">
+                        ${isSaved ? '★' : '☆'}
+                    </div>
+                    <img class="poster-img" src="${item.poster || 'https://via.placeholder.com/150x220'}" alt="${item.title}" loading="lazy">
+                    <div class="card-hover-overlay">
+                        <div class="card-hover-title">${item.title}</div>
+                        <div class="card-hover-rating">⭐ ${parseFloat(item.rating || 0).toFixed(1)} (${item.year || 'N/A'})</div>
+                        <div class="card-hover-desc">${item.overview || "Regarder maintenant..."}</div>
                     </div>
                 </div>
             `;
         }
 
         function createSagaCardHtml(saga) {
+            const isSaved = isSavedInWatchlist(saga.id);
             return `
-                <div class="card" style="flex:0 0 160px;" onclick="openSagaView('${saga.id}')">
+                <div class="card" onclick="openSagaView('${saga.id}')">
                     <div class="saga-badge">SAGA</div>
-                    <img src="${saga.poster}" alt="${saga.title}">
-                    <div class="card-info">
-                        <div class="card-title" style="color:#e50914;">${saga.title}</div>
-                        <div class="card-meta"><span>Collection</span><span class="card-rating">⭐ ${saga.rating}</span></div>
+                    <div class="star-watchlist ${isSaved ? 'active' : ''}" onclick="toggleWatchlistEvent(event, '${saga.id}')">
+                        ${isSaved ? '★' : '☆'}
+                    </div>
+                    <img class="poster-img" src="${saga.poster}" alt="${saga.title}">
+                    <div class="card-hover-overlay">
+                        <div class="card-hover-title">${saga.title}</div>
+                        <div class="card-hover-rating">⭐ ${saga.rating}</div>
+                        <div class="card-hover-desc">${saga.desc}</div>
                     </div>
                 </div>
             `;
@@ -617,8 +680,8 @@
             document.getElementById('infoGenres').innerHTML = saga.genres.map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
 
             const sagaMovies = catalog.filter(item => {
-                const t = (item.title || '').toLowerCase();
-                return saga.keywords.some(kw => t.includes(kw));
+                const titleLower = (item.title || '').toLowerCase();
+                return saga.exactTitles.some(exact => titleLower.includes(exact.toLowerCase()));
             });
 
             document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} films`;
@@ -681,6 +744,27 @@
             }
         }
 
+        function handleSearch(query) {
+            const q = query.trim().toLowerCase();
+            if (!q) {
+                switchTab(currentCategoryType || 'all', false);
+                return;
+            }
+
+            closeSagaView();
+            closePlayer();
+
+            document.getElementById('heroBanner').style.display = 'none';
+            document.getElementById('homeSections').style.display = 'none';
+            document.getElementById('filteredSection').style.display = 'block';
+
+            currentFilteredList = catalog.filter(i => (i.title || '').toLowerCase().includes(q));
+            currentPage = 1;
+
+            document.getElementById('filterTitle').textContent = `🔍 Recherche: "${query}" (${currentFilteredList.length})`;
+            renderPaginatedGrid();
+        }
+
         function applySorting() {
             const sortVal = document.getElementById('sortSelect').value;
 
@@ -708,9 +792,12 @@
             else if (currentCategoryType === 'anime') catTitle = "✨ Tous les Animés";
             else if (currentCategoryType === 'watchlist') catTitle = "🔖 Ma Watchlist";
 
-            document.getElementById('filterTitle').textContent = `${catTitle} (${currentFilteredList.length.toLocaleString('fr-FR')})`;
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput.value.trim()) {
+                document.getElementById('filterTitle').textContent = `${catTitle} (${currentFilteredList.length.toLocaleString('fr-FR')})`;
+            }
 
-            if (currentCategoryType === 'saga') {
+            if (currentCategoryType === 'saga' && !searchInput.value.trim()) {
                 document.getElementById('gridFiltered').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('');
                 document.getElementById('btnLoadMore').style.display = 'none';
                 return;
