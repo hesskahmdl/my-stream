@@ -65,8 +65,14 @@
 
         /* Grille des contenus */
         .main-content { padding: 15px 30px; position: relative; z-index: 10; margin-top: -30px; }
-        .section-title { font-size: 18px; font-weight: 800; margin: 25px 0 12px; color: #fff; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px; flex-wrap: wrap; gap: 10px; }
+        .section-title { font-size: 18px; font-weight: 800; color: #fff; }
         
+        .filter-select {
+            background: #18181f; border: 1px solid #333; color: #fff; padding: 6px 12px;
+            border-radius: 8px; font-size: 13px; font-weight: 600; outline: none; cursor: pointer;
+        }
+
         .carousel-wrapper { position: relative; }
         .carousel { display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 8px 0; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
@@ -80,6 +86,12 @@
         .card-title { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
         .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; }
         .card-rating { color: #ffc107; font-weight: bold; }
+
+        .btn-load-more {
+            display: block; margin: 20px auto 40px; background: #1f1f2e; border: 1px solid #333;
+            color: #fff; padding: 12px 30px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-load-more:hover { background: #e50914; border-color: #e50914; }
 
         /* Flèches rond rouge */
         .arrow-btn {
@@ -229,8 +241,18 @@
         </div>
 
         <div id="filteredSection" style="display:none;">
-            <div class="section-title" id="filterTitle">Résultats</div>
+            <div class="section-header">
+                <div class="section-title" id="filterTitle">Résultats</div>
+                <select class="filter-select" id="sortSelect" onchange="applySorting()">
+                    <option value="rating-desc">⭐ Les mieux notés</option>
+                    <option value="rating-asc">⭐ Les moins bien notés</option>
+                    <option value="title-asc">🔤 Alphabétique (A-Z)</option>
+                    <option value="title-desc">🔤 Alphabétique (Z-A)</option>
+                    <option value="year-desc">📅 Plus récents</option>
+                </select>
+            </div>
             <div class="movie-grid" id="gridFiltered"></div>
+            <button class="btn-load-more" id="btnLoadMore" style="display:none;" onclick="loadMoreItems()">Charger la suite</button>
         </div>
     </div>
 
@@ -271,7 +293,11 @@
     <script>
         const API_KEY = "89dc647004be44c785266ccd4d69576a";
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null;
-        let lang = "fr";
+        let lang = "fr", searchTimeout = null;
+        
+        // Paginateur pour éviter de ramer
+        let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
+        const ITEMS_PER_PAGE = 60;
 
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
 
@@ -281,7 +307,6 @@
             return animeKeywords.some(kw => text.includes(kw));
         }
 
-        // Nettoie un titre pour l'URL (Spiderman Brand New Day -> spiderman-brand-new-day)
         function slugify(text) {
             return (text || '')
                 .toString()
@@ -309,12 +334,10 @@
                 setTimeout(() => { setupHeroSlider(); }, 800);
                 renderSections();
 
-                // Gestion des URLs automatiques au chargement de la page
                 handleInitialUrl();
             } catch (e) { console.error("Erreur:", e); }
         }
 
-        // Analyse l'URL au chargement pour ouvrir la bonne section ou le bon film
         function handleInitialUrl() {
             const hash = window.location.hash.replace('#', '');
             if (!hash) return;
@@ -323,7 +346,7 @@
                 switchTab(hash, false);
             } else if (hash.startsWith('watch-')) {
                 const parts = hash.split('-');
-                const tmdbId = parts[parts.length - 1]; // Récupère le dernier identifiant
+                const tmdbId = parts[parts.length - 1];
                 const foundItem = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
                 if (foundItem) {
                     openDetails(foundItem, false);
@@ -385,14 +408,18 @@
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        // Changement d'onglet + mise à jour d'URL automatique (#home, #movie, #tv, #anime)
         function switchTab(type, updateUrl = true) {
+            currentCategoryType = type;
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${type}`).classList.add('active');
             document.getElementById('searchInput').value = '';
 
             if (updateUrl) {
                 history.pushState(null, null, `#${type === 'all' ? 'home' : type}`);
+            }
+
+            if (typeof sendPing === 'function') {
+                sendPing('IDLE', `Onglet: ${type.toUpperCase()}`);
             }
 
             if (type === 'all') {
@@ -404,40 +431,89 @@
                 document.getElementById('homeSections').style.display = 'none';
                 document.getElementById('filteredSection').style.display = 'block';
 
-                let list = []; let title = "";
                 if (type === 'movie') { 
-                    list = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i)); 
-                    title = lang === 'fr' ? "🎬 Tous les Films" : "🎬 All Movies"; 
-                }
-                else if (type === 'tv') { 
-                    list = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i)); 
-                    title = lang === 'fr' ? "📺 Toutes les Séries" : "📺 All TV Shows"; 
-                }
-                else if (type === 'anime') { 
-                    list = catalog.filter(i => isAnimeItem(i)); 
-                    title = lang === 'fr' ? "✨ Tous les Animés" : "✨ All Anime"; 
+                    currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i)); 
+                } else if (type === 'tv') { 
+                    currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i)); 
+                } else if (type === 'anime') { 
+                    currentFilteredList = catalog.filter(i => isAnimeItem(i)); 
                 }
 
-                document.getElementById('filterTitle').textContent = `${title} (${list.length})`;
-                document.getElementById('gridFiltered').innerHTML = list.length 
-                    ? list.map(createCardHtml).join('') 
-                    : '<p style="color:#aaa; padding:20px;">Chargement...</p>';
+                applySorting();
             }
         }
 
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const query = this.value.toLowerCase().trim();
-            if (!query) { switchTab('all'); return; }
-            document.getElementById('heroBanner').style.display = 'none';
-            document.getElementById('homeSections').style.display = 'none';
-            document.getElementById('filteredSection').style.display = 'block';
+        // Tri dynamique
+        function applySorting() {
+            const sortVal = document.getElementById('sortSelect').value;
 
-            const results = catalog.filter(item => item.title && item.title.toLowerCase().includes(query));
-            document.getElementById('filterTitle').textContent = `🔍 Résultats pour "${query}" (${results.length})`;
-            document.getElementById('gridFiltered').innerHTML = results.length ? results.map(createCardHtml).join('') : '<p style="color:#aaa; padding:20px;">Aucun résultat.</p>';
+            if (sortVal === 'rating-desc') {
+                currentFilteredList.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
+            } else if (sortVal === 'rating-asc') {
+                currentFilteredList.sort((a, b) => parseFloat(a.rating || 0) - parseFloat(b.rating || 0));
+            } else if (sortVal === 'title-asc') {
+                currentFilteredList.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+            } else if (sortVal === 'title-desc') {
+                currentFilteredList.sort((a, b) => (b.title || '').localeCompare(a.title || ''));
+            } else if (sortVal === 'year-desc') {
+                currentFilteredList.sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0));
+            }
+
+            currentPage = 1;
+            renderPaginatedGrid();
+        }
+
+        // Rendu fluide par paquets de 60 éléments
+        function renderPaginatedGrid() {
+            let catTitle = "";
+            if (currentCategoryType === 'movie') catTitle = lang === 'fr' ? "🎬 Tous les Films" : "🎬 All Movies";
+            else if (currentCategoryType === 'tv') catTitle = lang === 'fr' ? "📺 Toutes les Séries" : "📺 All TV Shows";
+            else if (currentCategoryType === 'anime') catTitle = lang === 'fr' ? "✨ Tous les Animés" : "✨ All Anime";
+            else catTitle = "🔍 Recherche";
+
+            document.getElementById('filterTitle').textContent = `${catTitle} (${currentFilteredList.length.toLocaleString('fr-FR')})`;
+
+            const itemsToDisplay = currentFilteredList.slice(0, currentPage * ITEMS_PER_PAGE);
+            document.getElementById('gridFiltered').innerHTML = itemsToDisplay.length 
+                ? itemsToDisplay.map(createCardHtml).join('') 
+                : '<p style="color:#aaa; padding:20px;">Aucun contenu trouvé.</p>';
+
+            const btnLoad = document.getElementById('btnLoadMore');
+            if (itemsToDisplay.length < currentFilteredList.length) {
+                btnLoad.style.display = 'block';
+            } else {
+                btnLoad.style.display = 'none';
+            }
+        }
+
+        function loadMoreItems() {
+            currentPage++;
+            renderPaginatedGrid();
+        }
+
+        // Recherche fluide avec Debounce de 300 ms
+        document.getElementById('searchInput').addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.toLowerCase().trim();
+
+            if (!query) { switchTab('all'); return; }
+
+            searchTimeout = setTimeout(() => {
+                document.getElementById('heroBanner').style.display = 'none';
+                document.getElementById('homeSections').style.display = 'none';
+                document.getElementById('filteredSection').style.display = 'block';
+
+                currentCategoryType = 'search';
+                currentFilteredList = catalog.filter(item => item.title && item.title.toLowerCase().includes(query));
+                
+                if (typeof sendPing === 'function') {
+                    sendPing('IDLE', `Recherche: ${query}`);
+                }
+
+                applySorting();
+            }, 300);
         });
 
-        // Ouverture de film + URL dynamique (#watch-titre-id)
         async function openDetails(item, updateUrl = true) {
             currentItem = item;
             const idClean = item.tmdb_id_clean || item.tmdb_id;
@@ -523,12 +599,11 @@
             document.getElementById('trailerContainer').innerHTML = '';
             document.body.style.overflow = 'auto';
 
-            // Remet l'URL sur l'onglet d'origine au lieu de garder le film
             const activeTab = document.querySelector('.nav-item.active').id.replace('btn-', '');
             history.pushState(null, null, `#${activeTab === 'all' ? 'home' : activeTab}`);
 
             if (typeof sendPing === 'function') {
-                sendPing('IDLE');
+                sendPing('IDLE', `Accueil: ${activeTab.toUpperCase()}`);
             }
         }
 
@@ -549,13 +624,12 @@
             document.querySelector('.t-pop-anime').textContent = l === 'fr' ? 'Animés & Mangas' : 'Anime';
         }
 
-        // Ecouteur pour la navigation retour/avant du navigateur
         window.addEventListener('popstate', handleInitialUrl);
 
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL (ENVOI AUTOMATIQUE IP ET SESSIONS) -->
+    <!-- TRACKER TEMPS RÉEL (AVEC ENVOI DU POSITIONNEMENT D'URL DU VISITEUR) -->
     <script>
         const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
         let userUid = localStorage.getItem('sk_uid');
@@ -586,15 +660,17 @@
                 const userIP = await getRealUserIP();
                 const now = Date.now();
                 const safeIp = userIP.replace(/\./g, '-');
+                const currentHash = window.location.hash || '#home';
 
                 const payload = {
                     uid: userUid,
                     ip: userIP,
                     device: /Android|iPhone|iPad/i.test(navigator.userAgent) ? '📱 Mobile' : '💻 Ordinateur PC',
                     status: status,
-                    title: currentTitle,
+                    title: currentTitle ? `${currentTitle} (${currentHash})` : `Salon: ${currentHash}`,
                     lastPing: now
                 };
+                
                 fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
