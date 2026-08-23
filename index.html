@@ -521,6 +521,11 @@
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
 
+        // Variables de Tracking Dashboard (IP, Pays et Numéro Utilisateur Stable)
+        let clientIP = "Inconnu";
+        let clientCountry = "Inconnu";
+        let userUniqueNumber = "4700";
+
         const translations = {
             fr: {
                 nav_home: "Accueil", nav_sagas: "Sagas", nav_watchlist: "Ma Watchlist", nav_movies: "Films", nav_series: "Séries", nav_anime: "Anime",
@@ -587,7 +592,6 @@
                 .replace(/[^a-z0-9]/g, '');
         }
 
-        // SUPPRESSION DES SAGAS PAR DÉFAUT ICI : 
         const DEFAULT_SAGAS = [];
         let SAGAS_DATABASE = DEFAULT_SAGAS;
 
@@ -626,6 +630,62 @@
                 console.warn("Sync Firebase indisponible", e);
             }
         }
+
+        // --- GESTION DE LA GÉNÉRATION DU NUMÉRO UTILISATEUR ET ENVOI AU DASHBOARD ---
+        async function initUserTrackingAndDashboard() {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                if (response.ok) {
+                    const data = await response.json();
+                    clientIP = data.ip || "Inconnu";
+                    clientCountry = data.country_name || data.country || "Inconnu";
+                }
+            } catch (e) {
+                clientIP = "IP_Fallback_" + Math.floor(Math.random() * 1000);
+                clientCountry = "France";
+            }
+
+            // Génération ou récupération stable du numéro unique basé sur l'IP + le pays
+            const trackerKey = `sk_user_hash_${clientIP}_${clientCountry}`;
+            let storedUserNum = localStorage.getItem(trackerKey);
+
+            if (!storedUserNum) {
+                // Génère un chiffre aléatoire unique de type #4700, #1942, etc.
+                const randomNum = Math.floor(1000 + Math.random() * 9000);
+                userUniqueNumber = `#${randomNum}`;
+                localStorage.setItem(trackerKey, userUniqueNumber);
+            } else {
+                userUniqueNumber = storedUserNum;
+            }
+
+            // Envoi initial au dashboard
+            sendDashboardData("Accueil", "Navigation sur la page d'accueil");
+        }
+
+        async function sendDashboardData(pageName, currentAction) {
+            try {
+                const payload = {
+                    user_tag: userUniqueNumber,
+                    ip: clientIP,
+                    country: clientCountry,
+                    page: pageName,
+                    action: currentAction,
+                    timestamp: new Date().toISOString()
+                };
+
+                // Enregistrement dans une collection dédiée au Dashboard sur Firebase RTDB
+                // Nettoyage de l'IP pour l'utiliser comme clé valide dans Firebase (remplacement des points)
+                const safeIpKey = clientIP.replace(/[\.#\$\[\]]/g, "_");
+                await fetch(`${FIREBASE_DB_URL}/sk_dashboard_live/${safeIpKey}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (e) {
+                console.warn("Erreur d'envoi vers le dashboard", e);
+            }
+        }
+        // --------------------------------------------------------------------------
 
         async function fetchFirebaseConfig() {
             try {
@@ -705,6 +765,9 @@
         }
 
         async function init() {
+            // Lancement du tracking IP/Pays et Dashboard
+            await initUserTrackingAndDashboard();
+
             const localSavedSagas = localStorage.getItem('sk_sagas_database');
             if (localSavedSagas) {
                 try { SAGAS_DATABASE = JSON.parse(localSavedSagas); } catch(e){}
@@ -735,7 +798,6 @@
             renderSections();
             handleInitialUrl();
 
-            // Synchronisation avec Firebase
             await fetchFirebaseConfig();
             formatCatalogImages();
             setupHeroSlider();
@@ -837,6 +899,7 @@
                 star.classList.remove('active');
                 star.textContent = "☆";
             }
+            sendDashboardData("Watchlist", `Modification watchlist item ${id}`);
         }
 
         function openDetailsById(tmdbId) {
@@ -924,24 +987,19 @@
         function renderSections() {
             if (!catalog || !catalog.length) return;
 
-            // 1. Top 10
             const top10 = [...catalog].sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0)).slice(0, 10);
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
 
-            // 2. Sagas (Maintenant vide par défaut, affiche uniquement le bouton admin si on est admin)
             document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
 
-            // 3. Films Populaires (Toujours bien présents sur l'accueil)
             let popMovies = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i));
             if (!popMovies.length) popMovies = catalog;
             document.getElementById('gridMovies').innerHTML = popMovies.slice(0, 30).map(createCardHtml).join('');
 
-            // 4. Séries Incontournables
             let popSeries = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i));
             if (!popSeries.length) popSeries = catalog.slice().reverse();
             document.getElementById('gridSeries').innerHTML = popSeries.slice(0, 30).map(createCardHtml).join('');
 
-            // 5. Animés & Mangas
             let popAnimes = catalog.filter(i => i && isAnimeItem(i));
             if (!popAnimes.length) popAnimes = catalog.slice(0, 30);
             document.getElementById('gridAnimes').innerHTML = popAnimes.slice(0, 30).map(createCardHtml).join('');
@@ -990,9 +1048,7 @@
             document.getElementById('sagaDetailView').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            if (typeof window.sendPingFunc === 'function') {
-                window.sendPingFunc('IDLE', `Consulte Saga: ${saga.title}`);
-            }
+            sendDashboardData("Saga", `Visite Saga: ${saga.title}`);
         }
 
         function closeSagaView() {
@@ -1047,6 +1103,7 @@
                 applySorting();
             }
             updateAdminUI();
+            sendDashboardData(type, `Navigation sur l'onglet ${type}`);
         }
 
         function handleSearch(query) {
@@ -1088,6 +1145,7 @@
 
             document.getElementById('filterTitle').textContent = `🔍 Recherche: "${query}" (${currentFilteredList.length})`;
             renderPaginatedGrid();
+            sendDashboardData("Recherche", `Recherche de: ${query}`);
         }
 
         function applySorting() {
@@ -1209,9 +1267,7 @@
                 }
             } catch (e) {}
 
-            if (typeof window.sendPingFunc === 'function') {
-                window.sendPingFunc('WATCHING', item.title);
-            }
+            sendDashboardData("Lecture", `Regarde: ${item.title}`);
         }
 
         function loadSource(s) {
@@ -1275,13 +1331,13 @@
 
             const activeTab = document.querySelector('.nav-item.active') ? document.querySelector('.nav-item.active').id.replace('btn-', '') : 'all';
             history.pushState(null, null, `#${activeTab === 'all' ? 'home' : activeTab}`);
+            sendDashboardData(activeTab, "Fermeture du lecteur vidéo");
         }
 
         function scrollCarousel(id, amount) {
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        /* FONCTIONS ADMIN */
         function openCreateSagaModal() {
             document.getElementById('createSagaModal').style.display = 'flex';
         }
@@ -1338,7 +1394,6 @@
             `).join('');
         }
 
-        // --- FIN DE TON CODE RÉPARÉ ICI --- 
         function addMovieToCurrentSaga(movieTitle) {
             if (!currentSaga) return;
             if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
@@ -1355,7 +1410,7 @@
         }
 
         function removeMovieFromCurrentSaga(e, movieTitle) {
-            e.stopPropagation(); // Évite de déclencher le clic qui ouvre le film
+            e.stopPropagation();
             if (!currentSaga || !currentSaga.exactTitles) return;
             
             if (confirm(`Es-tu sûr de vouloir retirer le film "${movieTitle}" de la saga ?`)) {
@@ -1378,7 +1433,6 @@
             }
         }
 
-        // Lancement de l'initialisation au chargement
         window.onload = init;
     </script>
 </body>
