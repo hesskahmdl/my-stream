@@ -384,10 +384,10 @@
         <div class="saga-header">
             <img class="saga-poster" id="sagaPoster" src="" alt="Poster">
             <div class="saga-details">
-                <h1 class="saga-title" id="sagaTitle">Spider-Man (MCU) - <span class="red">Saga</span></h1>
+                <h1 class="saga-title" id="sagaTitle">Saga - <span class="red">Saga</span></h1>
                 <div class="saga-stats-bar">
-                    <span id="sagaMovieCount">🎬 4 films</span>
-                    <span id="sagaYears">📅 2017 - 2026</span>
+                    <span id="sagaMovieCount">🎬 0 films</span>
+                    <span id="sagaYears">📅 2026</span>
                 </div>
                 <p class="saga-desc" id="sagaDesc">Description...</p>
                 <div class="btn-group-actions">
@@ -425,19 +425,19 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_budget">💲 Budget total</div>
-                <div class="stat-card-value" id="statBudget">760 000 000 $</div>
+                <div class="stat-card-value" id="statBudget">0 $</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_revenue">💰 Revenus totaux</div>
-                <div class="stat-card-value" id="statRevenue">6 234 107 164 $</div>
+                <div class="stat-card-value" id="statRevenue">0 $</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_rating">⭐ Note moyenne</div>
-                <div class="stat-card-value" id="statRating">7.6 / 10</div>
+                <div class="stat-card-value" id="statRating">0 / 10</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_duration">⏱️ Durée totale</div>
-                <div class="stat-card-value" id="statDuration">9h 20min</div>
+                <div class="stat-card-value" id="statDuration">0h 0min</div>
             </div>
         </div>
     </div>
@@ -587,65 +587,8 @@
                 .replace(/[^a-z0-9]/g, '');
         }
 
-        const DEFAULT_SAGAS = [
-            {
-                id: "spider-man-mcu",
-                title: "Spider-Man (MCU) - Saga",
-                poster: "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
-                exactTitles: ["spider-man: homecoming", "spider-man: far from home", "spider-man: no way home", "spider-man: brand new day"],
-                desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU.",
-                budget: "760 000 000 $", revenue: "6 234 107 164 $", rating: "7.6", duration: "9h 20min",
-                producers: ["Marvel Studios", "Pascal Pictures", "Columbia Pictures"],
-                countries: ["United States of America"],
-                genres: ["Action", "Aventure", "Science-Fiction"]
-            },
-            {
-                id: "avengers",
-                title: "Avengers - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
-                exactTitles: ["avengers", "avengers : l'ère d'ultron", "avengers : infinity war", "avengers : endgame"],
-                desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
-                budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
-                producers: ["Marvel Studios"], countries: ["United States of America"], genres: ["Action", "Science-Fiction"]
-            },
-            {
-                id: "matrix",
-                title: "Matrix - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
-                exactTitles: ["matrix", "matrix reloaded", "matrix revolutions", "matrix resurrections"],
-                desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
-                budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
-                producers: ["Warner Bros.", "Village Roadshow"], countries: ["United States of America"], genres: ["Science-Fiction", "Action"]
-            },
-            {
-                id: "star-wars",
-                title: "Star Wars - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
-                exactTitles: ["star wars : épisode i", "star wars : épisode ii", "star wars : épisode iii", "star wars : épisode iv", "star wars : épisode v", "star wars : épisode vi", "star wars : épisode vii", "star wars : épisode viii", "star wars : épisode ix"],
-                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes.",
-                budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
-                producers: ["Lucasfilm Ltd."], countries: ["United States of America"], genres: ["Action", "Aventure", "Sci-Fi"]
-            },
-            {
-                id: "harry-potter",
-                title: "Harry Potter - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
-                exactTitles: ["harry potter à l'école des sorciers", "harry potter et la chambre des secrets", "harry potter et le prisonnier d'azkaban", "harry potter et la coupe de feu", "harry potter et l'ordre du phénix", "harry potter et le prince de sang-mêlé", "harry potter et les reliques de la mort - 1ère partie", "harry potter et les reliques de la mort - 2ème partie"],
-                desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
-                budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
-                producers: ["Warner Bros. Pictures", "Heyday Films"], countries: ["United Kingdom", "United States"], genres: ["Fantastique", "Aventure"]
-            },
-            {
-                id: "seigneur-des-anneaux",
-                title: "Le Seigneur des Anneaux - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
-                exactTitles: ["le seigneur des anneaux : la communauté de l'anneau", "le seigneur des anneaux : les deux tours", "le seigneur des anneaux : le retour du roi"],
-                desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
-                budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
-                producers: ["New Line Cinema", "WingNut Films"], countries: ["New Zealand", "United States"], genres: ["Aventure", "Fantastique"]
-            }
-        ];
-
+        // SUPPRESSION DES SAGAS PAR DÉFAUT ICI : 
+        const DEFAULT_SAGAS = [];
         let SAGAS_DATABASE = DEFAULT_SAGAS;
 
         const fallbackCatalog = [
@@ -985,10 +928,10 @@
             const top10 = [...catalog].sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0)).slice(0, 10);
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
 
-            // 2. Sagas
+            // 2. Sagas (Maintenant vide par défaut, affiche uniquement le bouton admin si on est admin)
             document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
 
-            // 3. Films Populaires
+            // 3. Films Populaires (Toujours bien présents sur l'accueil)
             let popMovies = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i));
             if (!popMovies.length) popMovies = catalog;
             document.getElementById('gridMovies').innerHTML = popMovies.slice(0, 30).map(createCardHtml).join('');
@@ -1395,101 +1338,48 @@
             `).join('');
         }
 
+        // --- FIN DE TON CODE RÉPARÉ ICI --- 
         function addMovieToCurrentSaga(movieTitle) {
             if (!currentSaga) return;
-            if (!currentSaga.exactTitles.includes(movieTitle.toLowerCase())) {
-                currentSaga.exactTitles.push(movieTitle.toLowerCase());
+            if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
+            
+            if (!currentSaga.exactTitles.includes(movieTitle)) {
+                currentSaga.exactTitles.push(movieTitle);
                 saveSagasToStorage();
-                openSagaView(currentSaga.id);
-                closeAdminModals();
-                alert(`Film "${movieTitle}" ajouté à la saga !`);
+                renderSagaMovies();
+                alert(`Le film "${movieTitle}" a bien été ajouté à la saga !`);
             } else {
-                alert("Ce film est déjà présent dans la saga.");
+                alert(`Le film "${movieTitle}" est déjà présent dans cette saga.`);
             }
+            closeAdminModals();
         }
 
         function removeMovieFromCurrentSaga(e, movieTitle) {
-            e.stopPropagation();
-            if (!currentSaga || !isAdmin) return;
-            if (confirm(`Voulez-vous vraiment retirer "${movieTitle}" de cette saga ?`)) {
-                currentSaga.exactTitles = currentSaga.exactTitles.filter(t => t !== movieTitle.toLowerCase());
+            e.stopPropagation(); // Évite de déclencher le clic qui ouvre le film
+            if (!currentSaga || !currentSaga.exactTitles) return;
+            
+            if (confirm(`Es-tu sûr de vouloir retirer le film "${movieTitle}" de la saga ?`)) {
+                currentSaga.exactTitles = currentSaga.exactTitles.filter(title => title !== movieTitle);
                 saveSagasToStorage();
-                openSagaView(currentSaga.id);
+                renderSagaMovies();
             }
         }
 
         function deleteCurrentSaga() {
-            if (!currentSaga || !isAdmin) return;
-            if (confirm(`Êtes-vous sûr de vouloir SUPPRIMER définitivement la saga "${currentSaga.title}" ?`)) {
+            if (!currentSaga) return;
+            if (confirm(`⚠️ Es-tu sûr de vouloir supprimer définitivement la saga "${currentSaga.title}" ?`)) {
                 SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
                 saveSagasToStorage();
                 closeSagaView();
-                switchTab('saga');
-                alert("Saga supprimée !");
+                renderSections();
+                if (currentCategoryType === 'saga') {
+                    switchTab('saga');
+                }
             }
         }
 
-        window.addEventListener('popstate', handleInitialUrl);
-
-        init();
-    </script>
-
-    <!-- TRACKER FIREBASE AUTOMATIQUE (IDENTIFIANT UNIQUE PAR IP) -->
-    <script>
-        (function() {
-            if (window.location.href.includes('sk-admin-secret.html')) return;
-
-            const ua = navigator.userAgent;
-            let deviceType = "💻 PC Windows";
-            if (/iPhone/i.test(ua)) deviceType = "📱 iPhone";
-            else if (/Android/i.test(ua)) deviceType = "📱 Android";
-
-            let geoInfo = localStorage.getItem('sk_geo_info') || "France";
-            let userIp = localStorage.getItem('sk_real_ip') || "82.120.XX.XX";
-
-            function hashIp(ip) {
-                let hash = 0;
-                for (let i = 0; i < ip.length; i++) {
-                    hash = (hash << 5) - hash + ip.charCodeAt(i);
-                    hash |= 0;
-                }
-                return Math.abs(hash % 9000) + 1000;
-            }
-
-            let userId = localStorage.getItem('sk_user_id');
-            if (!userId) {
-                const ipTag = hashIp(userIp);
-                userId = `Utilisateur #${ipTag}`;
-                localStorage.setItem('sk_user_id', userId);
-            }
-
-            window.sendPingFunc = function(status = 'IDLE', customTitle = '') {
-                const now = Date.now();
-                const safeKey = userId.replace('#', 'ID_');
-
-                const payload = {
-                    uid: userId, ip: userIp, geo: geoInfo, device: deviceType,
-                    status: status, title: customTitle || (currentItem ? currentItem.title : "Page d'Accueil"), lastPing: now
-                };
-
-                try {
-                    fetch(`${FIREBASE_DB_URL}/requests/${now}_${safeKey}.json`, {
-                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
-                        method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ uid: userId, ip: userIp, geo: geoInfo, device: deviceType, lastVisit: now, lastPage: payload.title })
-                    });
-                } catch (e) {}
-            };
-
-            window.sendPingFunc('IDLE');
-            setInterval(() => {
-                const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
-                window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
-            }, 5000);
-        })();
+        // Lancement de l'initialisation au chargement
+        window.onload = init;
     </script>
 </body>
 </html>
