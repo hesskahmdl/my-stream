@@ -729,13 +729,11 @@
         }
 
         async function init() {
-            // 1. Récupération préalable locale si disponible
             const localSavedSagas = localStorage.getItem('sk_sagas_database');
             if (localSavedSagas) {
                 try { SAGAS_DATABASE = JSON.parse(localSavedSagas); } catch(e){}
             }
 
-            // 2. Catalogue universel de secours (garantit zéro écran noir)
             const fallbackCatalog = [
                 {
                     tmdb_id_clean: "1001",
@@ -809,7 +807,6 @@
                 }
             ];
 
-            // 3. Essai de chargement avec expiration rapide à 1.5s
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 1500);
@@ -878,12 +875,10 @@
                 }
             });
 
-            // 4. Rendu immédiat des éléments
             setupHeroSlider();
             renderSections();
             handleInitialUrl();
 
-            // 5. Synchronisation asynchrone Firebase
             fetchFirebaseConfig().then(() => {
                 renderSections();
             });
@@ -1070,18 +1065,29 @@
         }
 
         function renderSections() {
-            const top10 = [...catalog].sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0)).slice(0, 10);
-            const popMovies = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i)).slice(0, 30);
-            const popSeries = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i)).slice(0, 30);
-            const popAnimes = catalog.filter(i => i && isAnimeItem(i)).slice(0, 30);
+            if (!catalog || !catalog.length) return;
 
+            // 1. Top 10
+            const top10 = [...catalog].sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0)).slice(0, 10);
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
-            
+
+            // 2. Sagas
             document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
-            
-            document.getElementById('gridMovies').innerHTML = popMovies.map(createCardHtml).join('');
-            document.getElementById('gridSeries').innerHTML = popSeries.map(createCardHtml).join('');
-            document.getElementById('gridAnimes').innerHTML = (popAnimes.length ? popAnimes : catalog.slice(0, 30)).slice(0, 30).map(createCardHtml).join('');
+
+            // 3. Films Populaires (Fallback automatique sur tout le catalogue si aucun match strict)
+            let popMovies = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i));
+            if (!popMovies.length) popMovies = catalog;
+            document.getElementById('gridMovies').innerHTML = popMovies.slice(0, 30).map(createCardHtml).join('');
+
+            // 4. Séries Incontournables
+            let popSeries = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i));
+            if (!popSeries.length) popSeries = catalog.slice().reverse();
+            document.getElementById('gridSeries').innerHTML = popSeries.slice(0, 30).map(createCardHtml).join('');
+
+            // 5. Animés & Mangas
+            let popAnimes = catalog.filter(i => i && isAnimeItem(i));
+            if (!popAnimes.length) popAnimes = catalog.slice(0, 30);
+            document.getElementById('gridAnimes').innerHTML = popAnimes.slice(0, 30).map(createCardHtml).join('');
         }
 
         function renderSagaMovies() {
@@ -1154,6 +1160,7 @@
                 document.getElementById('heroBanner').style.display = 'flex';
                 document.getElementById('homeSections').style.display = 'block';
                 document.getElementById('filteredSection').style.display = 'none';
+                renderSections();
             } else {
                 document.getElementById('heroBanner').style.display = 'none';
                 document.getElementById('homeSections').style.display = 'none';
@@ -1163,10 +1170,13 @@
                     currentFilteredList = SAGAS_DATABASE;
                 } else if (type === 'movie') {
                     currentFilteredList = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i));
+                    if (!currentFilteredList.length) currentFilteredList = catalog;
                 } else if (type === 'tv') {
                     currentFilteredList = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i));
+                    if (!currentFilteredList.length) currentFilteredList = catalog;
                 } else if (type === 'anime') {
                     currentFilteredList = catalog.filter(i => i && isAnimeItem(i));
+                    if (!currentFilteredList.length) currentFilteredList = catalog;
                 } else if (type === 'watchlist') {
                     const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
                     currentFilteredList = catalog.filter(i => i && saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
