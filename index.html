@@ -604,7 +604,7 @@
             {
                 id: "avengers",
                 title: "Avengers - Saga",
-                poster: "/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
+                poster: "https://image.tmdb.org/t/p/w780/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
                 exactTitles: ["avengers", "avengers : l'ère d'ultron", "avengers : infinity war", "avengers : endgame"],
                 desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
                 budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
@@ -613,7 +613,7 @@
             {
                 id: "matrix",
                 title: "Matrix - Saga",
-                poster: "/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
+                poster: "https://image.tmdb.org/t/p/w780/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
                 exactTitles: ["matrix", "matrix reloaded", "matrix revolutions", "matrix resurrections"],
                 desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
                 budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
@@ -622,7 +622,7 @@
             {
                 id: "star-wars",
                 title: "Star Wars - Saga",
-                poster: "/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
+                poster: "https://image.tmdb.org/t/p/w780/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
                 exactTitles: ["star wars : épisode i", "star wars : épisode ii", "star wars : épisode iii", "star wars : épisode iv", "star wars : épisode v", "star wars : épisode vi", "star wars : épisode vii", "star wars : épisode viii", "star wars : épisode ix"],
                 desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes.",
                 budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
@@ -631,7 +631,7 @@
             {
                 id: "harry-potter",
                 title: "Harry Potter - Saga",
-                poster: "/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
+                poster: "https://image.tmdb.org/t/p/w780/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
                 exactTitles: ["harry potter à l'école des sorciers", "harry potter et la chambre des secrets", "harry potter et le prisonnier d'azkaban", "harry potter et la coupe de feu", "harry potter et l'ordre du phénix", "harry potter et le prince de sang-mêlé", "harry potter et les reliques de la mort - 1ère partie", "harry potter et les reliques de la mort - 2ème partie"],
                 desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
                 budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
@@ -640,7 +640,7 @@
             {
                 id: "seigneur-des-anneaux",
                 title: "Le Seigneur des Anneaux - Saga",
-                poster: "/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
+                poster: "https://image.tmdb.org/t/p/w780/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
                 exactTitles: ["le seigneur des anneaux : la communauté de l'anneau", "le seigneur des anneaux : les deux tours", "le seigneur des anneaux : le retour du roi"],
                 desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
                 budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
@@ -655,7 +655,6 @@
             syncWithFirebase();
         }
 
-        // SYNCHRONISATION MULTI-APPAREILS VIA FIREBASE
         async function syncWithFirebase() {
             try {
                 const savedSlides = localStorage.getItem('sk_hero_slides');
@@ -693,7 +692,6 @@
             }
         }
 
-        /* VERIFICATION MOT DE PASSE SECRET SUR COMMANDE TERMINAL */
         function triggerAdminPrompt(providedPass = null) {
             const pass = providedPass || prompt("Entrez le mot de passe Administrateur :");
             if (pass === "Tastycrousty1996" || pass === "tastycroustyjetaime2026") {
@@ -731,15 +729,13 @@
         }
 
         async function init() {
-            // Repli local en premier pour affichage immédiat sans attendre le réseau
+            // 1. Récupération préalable locale si disponible
             const localSavedSagas = localStorage.getItem('sk_sagas_database');
             if (localSavedSagas) {
                 try { SAGAS_DATABASE = JSON.parse(localSavedSagas); } catch(e){}
             }
 
-            // Récupère en parallèle la version Cloud Firebase officielle
-            await fetchFirebaseConfig();
-
+            // 2. Catalogue universel de secours (garantit zéro écran noir)
             const fallbackCatalog = [
                 {
                     tmdb_id_clean: "1001",
@@ -813,12 +809,24 @@
                 }
             ];
 
+            // 3. Essai de chargement avec expiration rapide à 1.5s
             try {
-                const res = await fetch('data.json');
-                if (!res.ok) throw new Error("Fichier data.json non trouvé");
-                catalog = await res.json();
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 1500);
+                const res = await fetch('data.json', { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        catalog = data;
+                    } else {
+                        catalog = fallbackCatalog;
+                    }
+                } else {
+                    catalog = fallbackCatalog;
+                }
             } catch (e) {
-                console.warn("data.json non trouvé. Chargement du catalogue de secours.", e);
                 catalog = fallbackCatalog;
             }
 
@@ -870,9 +878,15 @@
                 }
             });
 
+            // 4. Rendu immédiat des éléments
             setupHeroSlider();
             renderSections();
             handleInitialUrl();
+
+            // 5. Synchronisation asynchrone Firebase
+            fetchFirebaseConfig().then(() => {
+                renderSections();
+            });
         }
 
         function handleInitialUrl() {
@@ -884,7 +898,7 @@
             } else if (hash.startsWith('watch-')) {
                 const parts = hash.split('-');
                 const tmdbId = parts[parts.length - 1];
-                const foundItem = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+                const foundItem = catalog.find(i => i && String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
                 if (foundItem) {
                     openDetails(foundItem, false);
                 }
@@ -974,7 +988,7 @@
         }
 
         function openDetailsById(tmdbId) {
-            const found = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+            const found = catalog.find(i => i && String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
             if (found) {
                 openDetails(found);
             }
@@ -1056,7 +1070,7 @@
         }
 
         function renderSections() {
-            const top10 = [...catalog].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0)).slice(0, 10);
+            const top10 = [...catalog].sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0)).slice(0, 10);
             const popMovies = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i)).slice(0, 30);
             const popSeries = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i)).slice(0, 30);
             const popAnimes = catalog.filter(i => i && isAnimeItem(i)).slice(0, 30);
@@ -1209,13 +1223,13 @@
 
             if (currentCategoryType !== 'saga') {
                 if (sortVal === 'rating-desc') {
-                    currentFilteredList.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
+                    currentFilteredList.sort((a, b) => parseFloat((b && b.rating) || 0) - parseFloat((a && a.rating) || 0));
                 } else if (sortVal === 'rating-asc') {
-                    currentFilteredList.sort((a, b) => parseFloat(a.rating || 0) - parseFloat(b.rating || 0));
+                    currentFilteredList.sort((a, b) => parseFloat((a && a.rating) || 0) - parseFloat((b && b.rating) || 0));
                 } else if (sortVal === 'title-asc') {
-                    currentFilteredList.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                    currentFilteredList.sort((a, b) => ((a && a.title) || '').localeCompare((b && b.title) || ''));
                 } else if (sortVal === 'year-desc') {
-                    currentFilteredList.sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0));
+                    currentFilteredList.sort((a, b) => parseInt((b && b.year) || 0) - parseInt((a && a.year) || 0));
                 }
             }
 
