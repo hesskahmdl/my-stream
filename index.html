@@ -124,7 +124,6 @@
         .player-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; position: relative; margin-bottom: 40px; }
         .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; inset: 0; }
 
-        /* VERSION TÉLÉPHONE (< 768px) */
         @media (max-width: 768px) {
             header { padding: 10px 15px; }
             .logo { font-size: 18px; }
@@ -132,17 +131,14 @@
             .nav-item { font-size: 13px; }
             .search-box input { width: 110px; padding: 5px 10px; font-size: 12px; }
             .search-box input:focus { width: 140px; }
-            
             .hero-container { height: 60vh; padding: 0 20px; margin-top: 50px; }
             .hero-title { font-size: 28px; }
             .hero-overview { -webkit-line-clamp: 2; font-size: 12px; }
-            
             .main-content { padding: 10px 15px; }
             .card { flex: 0 0 110px; }
             .card img { height: 160px; }
             .card-title { font-size: 12px; }
             .arrow-btn { display: none; }
-
             .modal-container { padding: 10px; }
             .detail-top { gap: 15px; margin-top: 20px; }
             .detail-poster { width: 120px; }
@@ -254,7 +250,6 @@
                         <span class="badge" id="modalType">TYPE</span>
                     </div>
                     <p class="detail-synopsis" id="modalOverview">Synopsis...</p>
-                    
                     <div class="cast-list" id="castList"></div>
                 </div>
 
@@ -264,13 +259,11 @@
                 </div>
             </div>
 
-            <!-- Boutons Lecteurs -->
             <div class="source-buttons">
                 <button class="btn-source active" id="btn-vf" onclick="loadSource('vf')">▶ VF (Frembed)</button>
                 <button class="btn-source" id="btn-vostfr" onclick="loadSource('vostfr')">▶ VOSTFR (2embed)</button>
             </div>
 
-            <!-- Lecteur du Film/Série -->
             <div class="player-wrapper" id="videoContainer"></div>
         </div>
     </div>
@@ -286,6 +279,17 @@
             if (i.type === 'anime') return true;
             const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
             return animeKeywords.some(kw => text.includes(kw));
+        }
+
+        // Nettoie un titre pour l'URL (Spiderman Brand New Day -> spiderman-brand-new-day)
+        function slugify(text) {
+            return (text || '')
+                .toString()
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
         }
 
         async function init() {
@@ -304,7 +308,27 @@
 
                 setTimeout(() => { setupHeroSlider(); }, 800);
                 renderSections();
+
+                // Gestion des URLs automatiques au chargement de la page
+                handleInitialUrl();
             } catch (e) { console.error("Erreur:", e); }
+        }
+
+        // Analyse l'URL au chargement pour ouvrir la bonne section ou le bon film
+        function handleInitialUrl() {
+            const hash = window.location.hash.replace('#', '');
+            if (!hash) return;
+
+            if (['all', 'movie', 'tv', 'anime'].includes(hash)) {
+                switchTab(hash, false);
+            } else if (hash.startsWith('watch-')) {
+                const parts = hash.split('-');
+                const tmdbId = parts[parts.length - 1]; // Récupère le dernier identifiant
+                const foundItem = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+                if (foundItem) {
+                    openDetails(foundItem, false);
+                }
+            }
         }
 
         function setupHeroSlider() {
@@ -361,10 +385,15 @@
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        function switchTab(type) {
+        // Changement d'onglet + mise à jour d'URL automatique (#home, #movie, #tv, #anime)
+        function switchTab(type, updateUrl = true) {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             document.getElementById(`btn-${type}`).classList.add('active');
             document.getElementById('searchInput').value = '';
+
+            if (updateUrl) {
+                history.pushState(null, null, `#${type === 'all' ? 'home' : type}`);
+            }
 
             if (type === 'all') {
                 document.getElementById('heroBanner').style.display = 'flex';
@@ -408,8 +437,15 @@
             document.getElementById('gridFiltered').innerHTML = results.length ? results.map(createCardHtml).join('') : '<p style="color:#aaa; padding:20px;">Aucun résultat.</p>';
         });
 
-        async function openDetails(item) {
+        // Ouverture de film + URL dynamique (#watch-titre-id)
+        async function openDetails(item, updateUrl = true) {
             currentItem = item;
+            const idClean = item.tmdb_id_clean || item.tmdb_id;
+            
+            if (updateUrl) {
+                const slugTitle = slugify(item.title);
+                history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
+            }
             
             document.getElementById('modalTitle').textContent = item.title;
             document.getElementById('modalPoster').src = item.poster;
@@ -427,10 +463,9 @@
             document.body.style.overflow = 'hidden';
 
             const type = (isAnimeItem(item) || item.type === 'tv') ? 'tv' : 'movie';
-            const id = item.tmdb_id_clean || item.tmdb_id;
             
             try {
-                const res = await fetch(`https://api.themoviedb.org/3/${type}/${id}?api_key=${API_KEY}&append_to_response=credits,videos&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
+                const res = await fetch(`https://api.themoviedb.org/3/${type}/${idClean}?api_key=${API_KEY}&append_to_response=credits,videos&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
                 const data = await res.json();
                 
                 if(data.credits && data.credits.cast) {
@@ -477,7 +512,6 @@
 
             document.getElementById('videoContainer').innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
 
-            // Signalement de visionnage en direct au serveur centralisé
             if (typeof sendPing === 'function') {
                 sendPing('WATCHING', currentItem.title);
             }
@@ -488,6 +522,10 @@
             document.getElementById('videoContainer').innerHTML = '';
             document.getElementById('trailerContainer').innerHTML = '';
             document.body.style.overflow = 'auto';
+
+            // Remet l'URL sur l'onglet d'origine au lieu de garder le film
+            const activeTab = document.querySelector('.nav-item.active').id.replace('btn-', '');
+            history.pushState(null, null, `#${activeTab === 'all' ? 'home' : activeTab}`);
 
             if (typeof sendPing === 'function') {
                 sendPing('IDLE');
@@ -511,10 +549,13 @@
             document.querySelector('.t-pop-anime').textContent = l === 'fr' ? 'Animés & Mangas' : 'Anime';
         }
 
+        // Ecouteur pour la navigation retour/avant du navigateur
+        window.addEventListener('popstate', handleInitialUrl);
+
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL (ENVOI AUTOMATIQUE DES DEUX PREMIERS BLOCS D'IP) -->
+    <!-- TRACKER TEMPS RÉEL (ENVOI AUTOMATIQUE IP ET SESSIONS) -->
     <script>
         const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
         let userUid = localStorage.getItem('sk_uid');
@@ -534,7 +575,6 @@
                         localStorage.setItem('sk_u_ip', userIP);
                     }
                 } catch (e) {
-                    // Generer une clé unique si bloqueur
                     userIP = "82.126.10.5";
                 }
             }
@@ -547,7 +587,6 @@
                 const now = Date.now();
                 const safeIp = userIP.replace(/\./g, '-');
 
-                // 1. Mise à jour Session Live
                 const payload = {
                     uid: userUid,
                     ip: userIP,
@@ -562,7 +601,6 @@
                     body: JSON.stringify(payload)
                 });
 
-                // 2. Compteur de visites uniques et d'IP
                 if (!window.ipTracked) {
                     window.ipTracked = true;
                     fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`)
