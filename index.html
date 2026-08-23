@@ -515,7 +515,7 @@
                 history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
             }
 
-            // Signal Réseau immédiat pour l'Admin
+            // Envoi immédiat du signal réseau avec le nom du film
             if (typeof window.sendPingFunc === 'function') {
                 window.sendPingFunc('WATCHING', item.title);
             }
@@ -626,76 +626,107 @@
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL UNIFIÉ (NOM DU FILM + IDENTIFIANT VISITEUR UNIQUE) -->
+    <!-- TRACKER TEMPS RÉEL ROBUSTE (PAYS / VILLE / VRAI TYPE APPAREIL / COLIS 10s) -->
     <script>
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
 
             const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
             
-            // ID unique fixe par navigateur
-            let userUid = localStorage.getItem('sk_uid');
-            if (!userUid) {
-                userUid = 'usr_' + Math.floor(100000 + Math.random() * 900000);
-                localStorage.setItem('sk_uid', userUid);
-            }
-
-            // Identifiant Visiteur propre (ex: Visiteur #4819 (France))
-            let userLabel = localStorage.getItem('sk_user_label');
-            if (!userLabel) {
+            // 1. Identifiant unique utilisateur fixe (#0001, #0002, etc.)
+            let userId = localStorage.getItem('sk_user_id');
+            if (!userId) {
                 const randomNum = Math.floor(1000 + Math.random() * 9000);
-                userLabel = `Visiteur #${randomNum} (France)`;
-                localStorage.setItem('sk_user_label', userLabel);
+                userId = `Utilisateur #${randomNum}`;
+                localStorage.setItem('sk_user_id', userId);
             }
 
-            // Tente de récupérer la vraie IP en arrière-plan sans bloquer
-            fetch('https://api.ipify.org?format=json')
-                .then(r => r.json())
-                .then(data => {
-                    if (data && data.ip) {
-                        localStorage.setItem('sk_user_label', data.ip);
-                        userLabel = data.ip;
-                    }
-                }).catch(() => {});
+            // 2. Détection réelle de l'appareil (PC vs Mobile)
+            const width = window.innerWidth;
+            const ua = navigator.userAgent;
+            let deviceType = "💻 PC Windows";
 
+            if (/iPhone/i.test(ua)) deviceType = "📱 iPhone";
+            else if (/iPad/i.test(ua)) deviceType = "📱 iPad";
+            else if (/Android/i.test(ua)) deviceType = width < 768 ? "📱 Android Mobile" : "📱 Tablette Android";
+            else if (/Macintosh/i.test(ua)) deviceType = "💻 Mac";
+
+            // 3. Récupération Géolocalisation IPv4 (Pays - Ville - IP)
+            let geoInfo = localStorage.getItem('sk_geo_info') || "Recherche IP...";
+            let userIp = localStorage.getItem('sk_real_ip') || "Anonyme";
+
+            async function fetchGeoLocation() {
+                try {
+                    const res = await fetch('https://ipapi.co/json/');
+                    const data = await res.json();
+                    if (data && data.ip) {
+                        userIp = data.ip;
+                        geoInfo = `${data.country_name || 'France'} - ${data.city || 'Inconnu'}`;
+                        localStorage.setItem('sk_real_ip', userIp);
+                        localStorage.setItem('sk_geo_info', geoInfo);
+                    }
+                } catch(e) {
+                    // Secours secondaire
+                    try {
+                        const res2 = await fetch('https://ip-api.com/json/');
+                        const data2 = await res2.json();
+                        if (data2 && data2.query) {
+                            userIp = data2.query;
+                            geoInfo = `${data2.country || 'France'} - ${data2.city || 'Inconnu'}`;
+                            localStorage.setItem('sk_real_ip', userIp);
+                            localStorage.setItem('sk_geo_info', geoInfo);
+                        }
+                    } catch(e2) {}
+                }
+            }
+            fetchGeoLocation();
+
+            // 4. Envoi du Colis de PING vers Firebase
             window.sendPingFunc = function(status = 'IDLE', customTitle = '') {
                 const now = Date.now();
                 const currentHash = window.location.hash || '#home';
-                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                const deviceLabel = isMobile ? '📱 Mobile' : '💻 PC';
 
                 let pageTitle = customTitle;
                 if (!pageTitle) {
                     if (currentHash.startsWith('#watch-')) {
                         const cleanSlug = currentHash.replace('#watch-', '').replace(/-\d+$/, '').replace(/-/g, ' ');
                         pageTitle = cleanSlug.charAt(0).toUpperCase() + cleanSlug.slice(1);
-                    } else {
-                        pageTitle = `Salon: ${currentHash}`;
-                    }
+                    } else if (currentHash === '#movie') pageTitle = "Section Films";
+                    else if (currentHash === '#tv') pageTitle = "Section Séries";
+                    else if (currentHash === '#anime') pageTitle = "Section Animés";
+                    else pageTitle = "Page d'Accueil";
                 }
 
+                // Nettoyage de la clé Firebase
+                const safeKey = userId.replace('#', 'ID_');
+
                 const payload = {
-                    uid: userUid,
-                    ip: userLabel,
-                    device: deviceLabel,
+                    uid: userId,
+                    ip: userIp,
+                    geo: geoInfo,
+                    device: deviceType,
                     status: status,
                     title: pageTitle,
                     lastPing: now
                 };
 
                 try {
-                    // Mettre à jour Firebase immédiatement
-                    fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
+                    // PING Direct Live Session
+                    fetch(`${FIREBASE_DB_URL}/sessions/${safeKey}.json`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
-                    fetch(`${FIREBASE_DB_URL}/ip_stats/${userUid}.json`, {
+                    // PING Historique
+                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ 
-                            ip: userLabel, 
+                            uid: userId,
+                            ip: userIp, 
+                            geo: geoInfo,
+                            device: deviceType,
                             lastVisit: now, 
                             lastPage: pageTitle 
                         })
@@ -703,14 +734,14 @@
                 } catch (e) {}
             };
 
-            // Ping initial au chargement
+            // Premier envoi immédiat
             window.sendPingFunc('IDLE');
 
-            // Ping automatique toutes les 3 secondes
+            // Envoi automatique d'un colis toutes les 10 secondes
             setInterval(() => {
                 const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
                 window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', (typeof currentItem !== 'undefined' && currentItem) ? currentItem.title : '');
-            }, 3000);
+            }, 10000);
         })();
     </script>
 </body>
