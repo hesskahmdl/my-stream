@@ -74,7 +74,7 @@
         }
 
         .carousel-wrapper { position: relative; }
-        .carousel { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; }
+        .carousel { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; min-height: 270px; }
         .carousel::-webkit-scrollbar { display: none; }
         
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 15px 0; }
@@ -574,14 +574,9 @@
                 if (translations[lang][key]) el.placeholder = translations[lang][key];
             });
 
-            if (currentItem) {
-                openDetails(currentItem, false);
-            }
-            if (currentSaga) {
-                openSagaView(currentSaga.id);
-            } else if (currentCategoryType !== 'all') {
-                renderPaginatedGrid();
-            }
+            if (currentItem) openDetails(currentItem, false);
+            if (currentSaga) openSagaView(currentSaga.id);
+            else if (currentCategoryType !== 'all') renderPaginatedGrid();
         }
 
         function slugify(text) {
@@ -653,13 +648,7 @@
             }
         ];
 
-        let SAGAS_DATABASE = JSON.parse(localStorage.getItem('sk_sagas_database')) || DEFAULT_SAGAS;
-
-        // Force l'affiche Spider-Man Saga avec le bon lien
-        const spideySaga = SAGAS_DATABASE.find(s => s.id === "spider-man-mcu");
-        if (spideySaga) {
-            spideySaga.poster = "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg";
-        }
+        let SAGAS_DATABASE = DEFAULT_SAGAS;
 
         function saveSagasToStorage() {
             localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
@@ -700,7 +689,7 @@
                     }
                 }
             } catch(e) {
-                console.warn("Impossible de charger la config globale Firebase", e);
+                console.warn("Chargement configuration globale Firebase", e);
             }
         }
 
@@ -735,13 +724,20 @@
         }
 
         function isAnimeItem(i) {
+            if (!i) return false;
             if (i.type === 'anime') return true;
             const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
             return animeKeywords.some(kw => text.includes(kw));
         }
 
         async function init() {
-            // Charge la dernière synchronisation Cloud Firebase pour tous les appareils
+            // Repli local en premier pour affichage immédiat sans attendre le réseau
+            const localSavedSagas = localStorage.getItem('sk_sagas_database');
+            if (localSavedSagas) {
+                try { SAGAS_DATABASE = JSON.parse(localSavedSagas); } catch(e){}
+            }
+
+            // Récupère en parallèle la version Cloud Firebase officielle
             await fetchFirebaseConfig();
 
             const fallbackCatalog = [
@@ -771,7 +767,7 @@
                     rating: "8.5",
                     year: "2026",
                     type: "movie",
-                    overview: "L'adaptation spectaculaire et éblouissante de la célèbres épopée d'Ulysse.",
+                    overview: "L'adaptation spectaculaire et éblouissante de la célèbre épopée d'Ulysse.",
                     poster: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
                     backdrop: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg"
                 },
@@ -845,6 +841,7 @@
             };
 
             catalog.forEach(item => {
+                if (!item) return;
                 const titleLower = (item.title || '').toLowerCase().trim();
                 let hasCustom = false;
                 for (let key in customPosters) {
@@ -904,7 +901,7 @@
                     const parsed = JSON.parse(savedSlides);
                     if (parsed && parsed.length > 0) {
                         heroItems = parsed.map(s => {
-                            const found = catalog.find(i => (i.title || '').toLowerCase().includes((s.title || '').toLowerCase()));
+                            const found = catalog.find(i => i && (i.title || '').toLowerCase().includes((s.title || '').toLowerCase()));
                             return {
                                 tmdb_id_clean: found ? (found.tmdb_id_clean || found.tmdb_id) : 'custom',
                                 title: s.title,
@@ -937,11 +934,12 @@
         function showHero(index) {
             heroIndex = index;
             const item = heroItems[heroIndex];
+            if (!item) return;
             const bgImage = (item.backdrop && item.backdrop !== 'https://via.placeholder.com/500x750') ? item.backdrop : item.poster;
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
-            document.getElementById('heroTitle').textContent = item.title;
+            document.getElementById('heroTitle').textContent = item.title || '---';
             document.getElementById('heroYear').textContent = item.year || '2026';
-            document.getElementById('heroRating').textContent = item.rating.includes('⭐') ? item.rating : `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
+            document.getElementById('heroRating').textContent = (item.rating && item.rating.includes('⭐')) ? item.rating : `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('heroOverview').textContent = item.overview || "";
             document.getElementById('heroWatchBtn').onclick = () => {
                 if (item.rawObject) openDetails(item.rawObject);
@@ -983,9 +981,10 @@
         }
 
         function createCardHtml(item, isInSagaView = false) {
+            if (!item) return '';
             const id = String(item.tmdb_id_clean || item.tmdb_id);
             const isSaved = isSavedInWatchlist(id);
-            const removeBtn = (isAdmin && isInSagaView) ? `<button class="btn-remove-movie" onclick="removeMovieFromCurrentSaga(event, '${item.title.replace(/'/g, "\\'")}')">✕</button>` : '';
+            const removeBtn = (isAdmin && isInSagaView) ? `<button class="btn-remove-movie" onclick="removeMovieFromCurrentSaga(event, '${(item.title || '').replace(/'/g, "\\'")}')">✕</button>` : '';
 
             return `
                 <div class="card movie-saga-item" onclick="openDetailsById('${id}')">
@@ -993,9 +992,9 @@
                     <div class="star-watchlist ${isSaved ? 'active' : ''}" onclick="toggleWatchlistEvent(event, '${id}')">
                         ${isSaved ? '★' : '☆'}
                     </div>
-                    <img class="poster-img" src="${item.poster || 'https://via.placeholder.com/500x750'}" alt="${item.title.replace(/"/g, '&quot;')}" loading="lazy">
+                    <img class="poster-img" src="${item.poster || 'https://via.placeholder.com/500x750'}" alt="${(item.title || '').replace(/"/g, '&quot;')}" loading="lazy">
                     <div class="card-hover-overlay">
-                        <div class="card-hover-title">${item.title}</div>
+                        <div class="card-hover-title">${item.title || ''}</div>
                         <div class="card-hover-rating">⭐ ${parseFloat(item.rating || 0).toFixed(1)} (${item.year || 'N/A'})</div>
                         <div class="card-hover-desc">${item.overview || "Regarder maintenant..."}</div>
                     </div>
@@ -1018,6 +1017,7 @@
         }
 
         function createSagaCardHtml(saga) {
+            if (!saga) return '';
             const isSaved = isSavedInWatchlist(saga.id);
             return `
                 <div class="card" onclick="openSagaView('${saga.id}')">
@@ -1028,8 +1028,8 @@
                     <img class="poster-img" src="${formatTmdbImage(saga.poster, 'w780')}" alt="${saga.title}">
                     <div class="card-hover-overlay">
                         <div class="card-hover-title">${saga.title}</div>
-                        <div class="card-hover-rating">⭐ ${saga.rating}</div>
-                        <div class="card-hover-desc">${saga.desc}</div>
+                        <div class="card-hover-rating">⭐ ${saga.rating || 'N/A'}</div>
+                        <div class="card-hover-desc">${saga.desc || ''}</div>
                     </div>
                 </div>
             `;
@@ -1045,20 +1045,21 @@
         }
 
         function createTop10CardHtml(item, rank) {
+            if (!item) return '';
             const id = String(item.tmdb_id_clean || item.tmdb_id);
             return `
                 <div class="card-top10" onclick="openDetailsById('${id}')">
                     <div class="top10-number">${rank}</div>
-                    <img src="${item.poster}" alt="${item.title.replace(/"/g, '&quot;')}" loading="lazy">
+                    <img src="${item.poster || 'https://via.placeholder.com/500x750'}" alt="${(item.title || '').replace(/"/g, '&quot;')}" loading="lazy">
                 </div>
             `;
         }
 
         function renderSections() {
             const top10 = [...catalog].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0)).slice(0, 10);
-            const popMovies = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i)).slice(0, 30);
-            const popSeries = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i)).slice(0, 30);
-            const popAnimes = catalog.filter(i => isAnimeItem(i)).slice(0, 30);
+            const popMovies = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i)).slice(0, 30);
+            const popSeries = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i)).slice(0, 30);
+            const popAnimes = catalog.filter(i => i && isAnimeItem(i)).slice(0, 30);
 
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
             
@@ -1072,6 +1073,7 @@
         function renderSagaMovies() {
             if (!currentSaga) return;
             const sagaMovies = catalog.filter(item => {
+                if (!item) return false;
                 const titleLower = (item.title || '').toLowerCase();
                 return currentSaga.exactTitles.some(exact => titleLower.includes(exact.toLowerCase()));
             });
@@ -1087,10 +1089,10 @@
             document.getElementById('sagaTitle').innerHTML = `${saga.title}`;
             document.getElementById('sagaPoster').src = formatTmdbImage(saga.poster, 'w780');
             document.getElementById('sagaDesc').textContent = saga.desc;
-            document.getElementById('statBudget').textContent = saga.budget;
-            document.getElementById('statRevenue').textContent = saga.revenue;
-            document.getElementById('statRating').textContent = `${saga.rating} / 10`;
-            document.getElementById('statDuration').textContent = saga.duration;
+            document.getElementById('statBudget').textContent = saga.budget || "N/A";
+            document.getElementById('statRevenue').textContent = saga.revenue || "N/A";
+            document.getElementById('statRating').textContent = `${saga.rating || 'N/A'} / 10`;
+            document.getElementById('statDuration').textContent = saga.duration || "N/A";
 
             document.getElementById('infoProducers').innerHTML = (saga.producers || []).map(p => `<div class="info-list-item"><span>${p}</span><span class="count">Collection</span></div>`).join('');
             document.getElementById('infoCountries').innerHTML = (saga.countries || []).map(c => `<div class="info-list-item"><span>${c}</span><span class="count">Officiel</span></div>`).join('');
@@ -1146,14 +1148,14 @@
                 if (type === 'saga') {
                     currentFilteredList = SAGAS_DATABASE;
                 } else if (type === 'movie') {
-                    currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i));
+                    currentFilteredList = catalog.filter(i => i && (i.type === 'movie' || !i.type) && !isAnimeItem(i));
                 } else if (type === 'tv') {
-                    currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i));
+                    currentFilteredList = catalog.filter(i => i && i.type === 'tv' && !isAnimeItem(i));
                 } else if (type === 'anime') {
-                    currentFilteredList = catalog.filter(i => isAnimeItem(i));
+                    currentFilteredList = catalog.filter(i => i && isAnimeItem(i));
                 } else if (type === 'watchlist') {
                     const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
-                    currentFilteredList = catalog.filter(i => saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
+                    currentFilteredList = catalog.filter(i => i && saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
                 }
 
                 applySorting();
@@ -1195,7 +1197,7 @@
             document.getElementById('homeSections').style.display = 'none';
             document.getElementById('filteredSection').style.display = 'block';
 
-            currentFilteredList = catalog.filter(i => (i.title || '').toLowerCase().includes(q.toLowerCase()));
+            currentFilteredList = catalog.filter(i => i && (i.title || '').toLowerCase().includes(q.toLowerCase()));
             currentPage = 1;
 
             document.getElementById('filterTitle').textContent = `🔍 Recherche: "${query}" (${currentFilteredList.length})`;
@@ -1259,6 +1261,7 @@
         }
 
         async function openDetails(item, updateUrl = true) {
+            if (!item) return;
             currentItem = item;
             const idClean = item.tmdb_id_clean || item.tmdb_id;
             
@@ -1267,7 +1270,7 @@
                 history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
             }
 
-            document.getElementById('modalTitle').textContent = item.title;
+            document.getElementById('modalTitle').textContent = item.title || 'Inconnu';
             document.getElementById('modalPoster').src = formatTmdbImage(item.poster, 'w780');
             document.getElementById('modalYear').textContent = item.year || '2026';
             document.getElementById('modalRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
@@ -1439,10 +1442,10 @@
         function filterMoviesForSaga(query) {
             const listDiv = document.getElementById('movieSelectList');
             const q = query.toLowerCase();
-            const filtered = catalog.filter(m => (m.title || '').toLowerCase().includes(q)).slice(0, 15);
+            const filtered = catalog.filter(m => m && (m.title || '').toLowerCase().includes(q)).slice(0, 15);
 
             listDiv.innerHTML = filtered.map(m => `
-                <div style="padding:6px; cursor:pointer; border-bottom:1px solid #222; font-size:13px; display:flex; justify-content:space-between;" onclick="addMovieToCurrentSaga('${m.title.replace(/'/g, "\\'")}')">
+                <div style="padding:6px; cursor:pointer; border-bottom:1px solid #222; font-size:13px; display:flex; justify-content:space-between;" onclick="addMovieToCurrentSaga('${(m.title || '').replace(/'/g, "\\'")}')">
                     <span>${m.title} (${m.year || 'N/A'})</span>
                     <span style="color:#e50914; font-weight:bold;">+ Ajouter</span>
                 </div>
