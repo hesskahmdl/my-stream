@@ -513,6 +513,8 @@
 
     <script>
         const API_KEY = "89dc647004be44c785266ccd4d69576a";
+        const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
+
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null, currentSaga = null;
         let lang = "fr";
         let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
@@ -661,6 +663,45 @@
 
         function saveSagasToStorage() {
             localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
+            syncWithFirebase();
+        }
+
+        // SYNCHRONISATION MULTI-APPAREILS VIA FIREBASE
+        async function syncWithFirebase() {
+            try {
+                const savedSlides = localStorage.getItem('sk_hero_slides');
+                const heroSlides = savedSlides ? JSON.parse(savedSlides) : null;
+                await fetch(`${FIREBASE_DB_URL}/sk_config.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sagas: SAGAS_DATABASE,
+                        hero_slides: heroSlides
+                    })
+                });
+            } catch (e) {
+                console.warn("Sync Firebase indisponible", e);
+            }
+        }
+
+        async function fetchFirebaseConfig() {
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/sk_config.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data) {
+                        if (data.sagas && Array.isArray(data.sagas) && data.sagas.length > 0) {
+                            SAGAS_DATABASE = data.sagas;
+                            localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
+                        }
+                        if (data.hero_slides && Array.isArray(data.hero_slides)) {
+                            localStorage.setItem('sk_hero_slides', JSON.stringify(data.hero_slides));
+                        }
+                    }
+                }
+            } catch(e) {
+                console.warn("Impossible de charger la config globale Firebase", e);
+            }
         }
 
         /* VERIFICATION MOT DE PASSE SECRET SUR COMMANDE TERMINAL */
@@ -700,6 +741,9 @@
         }
 
         async function init() {
+            // Charge la dernière synchronisation Cloud Firebase pour tous les appareils
+            await fetchFirebaseConfig();
+
             const fallbackCatalog = [
                 {
                     tmdb_id_clean: "1001",
@@ -778,7 +822,7 @@
                 if (!res.ok) throw new Error("Fichier data.json non trouvé");
                 catalog = await res.json();
             } catch (e) {
-                console.warn("data.json non trouvé. Chargement du catalogue d'images personnalisées.", e);
+                console.warn("data.json non trouvé. Chargement du catalogue de secours.", e);
                 catalog = fallbackCatalog;
             }
 
@@ -851,17 +895,15 @@
         }
 
         // ==========================================================================
-        // CARROUSEL HERO SYNCHRONISÉ AVEC LE DASHBOARD ADMIN
+        // CARROUSEL HERO SYNCHRONISÉ
         // ==========================================================================
         function setupHeroSlider() {
-            // Prise en charge des visuels modifiés depuis le Dashboard Control Center
             const savedSlides = localStorage.getItem('sk_hero_slides');
             if (savedSlides) {
                 try {
                     const parsed = JSON.parse(savedSlides);
                     if (parsed && parsed.length > 0) {
                         heroItems = parsed.map(s => {
-                            // Tente de lier la diapositive à un film existant du catalogue pour conserver la lecture
                             const found = catalog.find(i => (i.title || '').toLowerCase().includes((s.title || '').toLowerCase()));
                             return {
                                 tmdb_id_clean: found ? (found.tmdb_id_clean || found.tmdb_id) : 'custom',
@@ -1050,10 +1092,10 @@
             document.getElementById('statRating').textContent = `${saga.rating} / 10`;
             document.getElementById('statDuration').textContent = saga.duration;
 
-            document.getElementById('infoProducers').innerHTML = saga.producers.map(p => `<div class="info-list-item"><span>${p}</span><span class="count">Collection</span></div>`).join('');
-            document.getElementById('infoCountries').innerHTML = saga.countries.map(c => `<div class="info-list-item"><span>${c}</span><span class="count">Officiel</span></div>`).join('');
+            document.getElementById('infoProducers').innerHTML = (saga.producers || []).map(p => `<div class="info-list-item"><span>${p}</span><span class="count">Collection</span></div>`).join('');
+            document.getElementById('infoCountries').innerHTML = (saga.countries || []).map(c => `<div class="info-list-item"><span>${c}</span><span class="count">Officiel</span></div>`).join('');
             document.getElementById('infoLanguages').innerHTML = `<div class="info-list-item"><span>Français (VF)</span><span class="count">VF</span></div><div class="info-list-item"><span>English (VOSTFR)</span><span class="count">VOSTFR</span></div>`;
-            document.getElementById('infoGenres').innerHTML = saga.genres.map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
+            document.getElementById('infoGenres').innerHTML = (saga.genres || []).map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
 
             renderSagaMovies();
             updateWatchlistButton('btnWatchlistSaga', saga.id);
@@ -1122,7 +1164,6 @@
         function handleSearch(query) {
             const q = query.trim();
             
-            // Commande terminal secret
             if (q.toLowerCase() === "le lion qui dors ne dors pas") {
                 document.getElementById('searchInput').value = '';
                 triggerAdminPrompt("Tastycrousty1996");
@@ -1452,8 +1493,6 @@
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
 
-            const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
-            
             const ua = navigator.userAgent;
             let deviceType = "💻 PC Windows";
             if (/iPhone/i.test(ua)) deviceType = "📱 iPhone";
@@ -1462,7 +1501,6 @@
             let geoInfo = localStorage.getItem('sk_geo_info') || "France";
             let userIp = localStorage.getItem('sk_real_ip') || "82.120.XX.XX";
 
-            // Calcul d'un Hash court unique basé sur l'IP pour fixer le tag #
             function hashIp(ip) {
                 let hash = 0;
                 for (let i = 0; i < ip.length; i++) {
@@ -1472,7 +1510,6 @@
                 return Math.abs(hash % 9000) + 1000;
             }
 
-            // Génération permanente basée sur l'IP pour éviter les doublons avec des numéros différents
             let userId = localStorage.getItem('sk_user_id');
             if (!userId) {
                 const ipTag = hashIp(userIp);
