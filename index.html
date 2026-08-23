@@ -33,10 +33,11 @@
 
         .search-box input {
             background: #18181f; border: 1px solid #2a2a35; color: #fff; padding: 6px 12px;
-            border-radius: 20px; outline: none; font-size: 13px; width: 160px; transition: width 0.3s;
+            border-radius: 20px; outline: none; font-size: 13px; width: 180px; transition: width 0.3s;
         }
-        .search-box input:focus { width: 220px; border-color: #e50914; }
+        .search-box input:focus { width: 240px; border-color: #e50914; }
 
+        /* HERO BANNER */
         .hero-container {
             position: relative; width: 100%; height: 75vh; min-height: 480px;
             background-size: cover; background-position: center; transition: background-image 0.8s ease-in-out;
@@ -56,14 +57,15 @@
         .hero-overview { font-size: 14px; color: #ccc; line-height: 1.5; margin-bottom: 20px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-shadow: 1px 1px 5px rgba(0,0,0,0.8); }
 
         .btn-watch {
-            background: #e50914; color: #fff; border: none; padding: 12px 30px; border-radius: 30px;
+            background: #e50914; color: #fff; border: none; padding: 12px 32px; border-radius: 30px;
             font-size: 15px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
+            box-shadow: 0 4px 20px rgba(229, 9, 20, 0.4);
         }
         .btn-watch:hover { background: #ff0f1a; transform: scale(1.05); }
 
-        .main-content { padding: 15px 30px; position: relative; z-index: 10; margin-top: -30px; }
+        .main-content { padding: 15px 35px; position: relative; z-index: 10; margin-top: -30px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px; flex-wrap: wrap; gap: 10px; }
-        .section-title { font-size: 18px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+        .section-title { font-size: 20px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
         .section-title span.red { color: #e50914; }
 
         .filter-select {
@@ -72,25 +74,45 @@
         }
 
         .carousel-wrapper { position: relative; }
-        .carousel { display: flex; gap: 16px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; }
+        .carousel { display: flex; gap: 18px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
-        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 18px; padding: 15px 0; }
+        
+        .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; padding: 15px 0; }
 
         .card {
-            cursor: pointer; transition: transform 0.3s; background: #13131a;
+            cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; background: #13131a;
             border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);
-            flex: 0 0 160px; height: 240px; position: relative;
+            flex: 0 0 180px; height: 270px; position: relative;
         }
-        .movie-grid .card { flex: none; height: 240px; }
-        .card img.poster-img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12px; }
+        .movie-grid .card { flex: none; height: 270px; }
+        .card img.poster-img { width: 100%; height: 100%; object-fit: cover; display: block; border-radius: 12px; image-rendering: -webkit-optimize-contrast; }
+
+        .card-add-saga {
+            border: 2px dashed rgba(229, 9, 20, 0.6);
+            background: rgba(19, 19, 26, 0.8);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 12px; text-align: center; padding: 15px;
+        }
+        .card-add-saga:hover {
+            border-color: #e50914; background: rgba(229, 9, 20, 0.15);
+            transform: translateY(-6px) scale(1.02);
+        }
+        .add-saga-circle {
+            width: 55px; height: 55px; border-radius: 50%; background: #e50914;
+            color: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; font-weight: bold; box-shadow: 0 4px 15px rgba(229, 9, 20, 0.5);
+            transition: transform 0.2s;
+        }
+        .card-add-saga:hover .add-saga-circle { transform: scale(1.1); }
+        .add-saga-text { font-size: 13px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .card-hover-overlay {
             position: absolute; inset: 0; background: rgba(11, 11, 14, 0.92);
-            padding: 12px; display: flex; flex-direction: column; justify-content: flex-end;
+            padding: 14px; display: flex; flex-direction: column; justify-content: flex-end;
             opacity: 0; transition: opacity 0.3s ease; border-radius: 12px; border: 1px solid #e50914;
         }
         .card:hover .card-hover-overlay { opacity: 1; }
-        .card:hover { transform: translateY(-6px) scale(1.02); z-index: 10; }
+        .card:hover { transform: translateY(-6px) scale(1.03); z-index: 10; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
 
         .saga-badge {
             position: absolute; top: 10px; left: 10px;
@@ -107,21 +129,20 @@
         .star-watchlist:hover { transform: scale(1.2); }
         .star-watchlist.active { background: rgba(255, 193, 7, 0.2); border-color: #ffc107; color: #ffc107; }
 
-        .card-hover-title { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 4px; line-height: 1.2; }
-        .card-hover-rating { font-size: 11px; color: #ffc107; font-weight: bold; margin-bottom: 6px; }
-        .card-hover-desc { font-size: 10px; color: #aaa; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        .card-hover-title { font-size: 14px; font-weight: 800; color: #fff; margin-bottom: 4px; line-height: 1.2; }
+        .card-hover-rating { font-size: 12px; color: #ffc107; font-weight: bold; margin-bottom: 6px; }
+        .card-hover-desc { font-size: 11px; color: #aaa; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
         .carousel-top10 { gap: 35px; padding-left: 20px; }
-        .card-top10 { flex: 0 0 160px; display: flex; align-items: flex-end; position: relative; cursor: pointer; transition: transform 0.3s; }
+        .card-top10 { flex: 0 0 180px; display: flex; align-items: flex-end; position: relative; cursor: pointer; transition: transform 0.3s; }
         .card-top10:hover { transform: translateY(-6px) scale(1.03); }
-        .card-top10 img { width: 140px; height: 210px; z-index: 2; position: relative; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); object-fit: cover; }
+        .card-top10 img { width: 155px; height: 235px; z-index: 2; position: relative; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); object-fit: cover; image-rendering: -webkit-optimize-contrast; }
         .top10-number {
             position: absolute; left: -28px; bottom: -15px;
             font-size: 130px; font-weight: 900; line-height: 0.8;
             color: rgba(11, 11, 14, 0.85);
             -webkit-text-stroke: 4px #e50914;
-            z-index: 3;
-            user-select: none;
+            z-index: 3; user-select: none;
             font-family: 'Impact', 'Arial Black', sans-serif;
             text-shadow: 0 0 15px rgba(229, 9, 20, 0.6);
             pointer-events: none;
@@ -135,7 +156,7 @@
 
         .saga-page { padding: 80px 40px 40px; display: none; }
         .saga-header { display: flex; gap: 35px; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; }
-        .saga-poster { width: 240px; height: 350px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); }
+        .saga-poster { width: 250px; height: 360px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); image-rendering: -webkit-optimize-contrast; }
         .saga-details { flex: 1; min-width: 300px; }
         .saga-title { font-size: 36px; font-weight: 900; margin-bottom: 10px; }
         .saga-title span.red { color: #e50914; }
@@ -184,14 +205,14 @@
         .modal-close:hover { background: #e50914; border-color: #e50914; }
 
         .detail-top { display: flex; gap: 30px; margin-top: 10px; flex-wrap: wrap; }
-        .detail-poster { width: 220px; height: 330px; object-fit: cover; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); flex-shrink: 0; }
+        .detail-poster { width: 230px; height: 340px; object-fit: cover; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); flex-shrink: 0; image-rendering: -webkit-optimize-contrast; }
         .detail-info { flex: 1; min-width: 280px; }
         .detail-title { font-size: 32px; font-weight: 900; margin-bottom: 10px; }
         .detail-synopsis { font-size: 14px; color: #bbb; line-height: 1.5; margin: 15px 0; }
         
         .cast-list { display: flex; gap: 12px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px; }
         .cast-item { display: flex; flex-direction: column; align-items: center; text-align: center; width: 80px; flex-shrink: 0; }
-        .cast-img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; background: #333; margin-bottom: 5px; }
+        .cast-img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; background: #333; margin-bottom: 5px; image-rendering: -webkit-optimize-contrast; }
         .cast-name { font-size: 10px; font-weight: bold; line-height: 1.1; }
         .cast-role { font-size: 9px; color: #888; }
         
@@ -237,16 +258,18 @@
             .logo { font-size: 18px; }
             nav { gap: 12px; }
             .nav-item { font-size: 13px; }
-            .search-box input { width: 110px; padding: 5px 10px; font-size: 12px; }
+            .search-box input { width: 120px; padding: 5px 10px; font-size: 12px; }
             .hero-container { height: 60vh; padding: 0 20px; margin-top: 50px; }
             .hero-title { font-size: 28px; }
+            .hero-overview { -webkit-line-clamp: 2; font-size: 12px; }
             .main-content { padding: 10px 15px; }
             .saga-header { flex-direction: column; }
-            .saga-poster { width: 160px; height: 240px; }
+            .saga-poster { width: 180px; height: 260px; }
             .saga-title { font-size: 26px; }
-            .card-top10 { flex: 0 0 130px; }
-            .card-top10 img { width: 110px; height: 160px; }
+            .card-top10 { flex: 0 0 140px; }
+            .card-top10 img { width: 120px; height: 180px; }
             .top10-number { font-size: 90px; left: -20px; }
+            .trailer-box { width: 100%; }
         }
     </style>
 </head>
@@ -256,28 +279,28 @@
         <div class="logo" onclick="switchTab('all')">SK STREAM</div>
         <nav>
             <button class="nav-item active" id="btn-all" onclick="switchTab('all')">
-                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> <span>Accueil</span>
+                <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> <span data-i18n="nav_home">Accueil</span>
             </button>
             <button class="nav-item" id="btn-saga" onclick="switchTab('saga')">
-                <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> <span>Sagas</span>
+                <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> <span data-i18n="nav_sagas">Sagas</span>
             </button>
             <button class="nav-item" id="btn-watchlist" onclick="switchTab('watchlist')">
-                <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg> <span>Ma Watchlist</span>
+                <svg viewBox="0 0 24 24"><path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg> <span data-i18n="nav_watchlist">Ma Watchlist</span>
             </button>
             <button class="nav-item" id="btn-movie" onclick="switchTab('movie')">
-                <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg> <span>Films</span>
+                <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg> <span data-i18n="nav_movies">Films</span>
             </button>
             <button class="nav-item" id="btn-tv" onclick="switchTab('tv')">
-                <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg> <span>Séries</span>
+                <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5v2h8v-2h5c1.1 0 1.99-.9 1.99-2L23 5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/></svg> <span data-i18n="nav_series">Séries</span>
             </button>
             <button class="nav-item" id="btn-anime" onclick="switchTab('anime')">
-                <svg viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61z"/></svg> <span>Anime</span>
+                <svg viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61z"/></svg> <span data-i18n="nav_anime">Anime</span>
             </button>
         </nav>
         
         <div class="right-header">
             <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Rechercher..." oninput="handleSearch(this.value)">
+                <input type="text" id="searchInput" placeholder="Rechercher..." data-i18n-ph="search_ph" oninput="handleSearch(this.value)">
             </div>
             <div class="lang-switch">
                 <img src="https://flagcdn.com/w20/fr.png" alt="FR" id="flag-fr" class="active" onclick="setLang('fr')">
@@ -289,7 +312,7 @@
     <div class="hero-container" id="heroBanner">
         <div class="hero-overlay"></div>
         <div class="hero-content">
-            <div class="hero-tag">🔥 TENDANCE ACTUELLE</div>
+            <div class="hero-tag" data-i18n="hero_tag">🔥 TENDANCE ACTUELLE</div>
             <h1 class="hero-title" id="heroTitle">---</h1>
             <div class="hero-meta">
                 <span class="badge" id="heroType">FILM</span>
@@ -297,41 +320,41 @@
                 <span class="badge badge-rating" id="heroRating">⭐ 8.5</span>
             </div>
             <p class="hero-overview" id="heroOverview">...</p>
-            <button class="btn-watch" id="heroWatchBtn">▶ REGARDER</button>
+            <button class="btn-watch" id="heroWatchBtn" data-i18n="btn_watch">▶ REGARDER</button>
         </div>
     </div>
 
     <div class="main-content" id="homeMainView">
         <div id="homeSections">
-            <div class="section-title">🔥 Top 10 des Tendances</div>
+            <div class="section-title" data-i18n="sec_top10">🔥 Top 10 des Tendances</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridTop10', -500)">❮</button>
                 <div class="carousel carousel-top10" id="gridTop10"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridTop10', 500)">❯</button>
             </div>
 
-            <div class="section-title" style="margin-top: 35px;">👑 Les Sagas Incontournables</div>
+            <div class="section-title" style="margin-top: 35px;" data-i18n="sec_sagas">👑 Les Sagas Incontournables</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridSagas', -500)">❮</button>
                 <div class="carousel" id="gridSagas"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridSagas', 500)">❯</button>
             </div>
 
-            <div class="section-title" style="margin-top: 25px;">🎬 Films Populaires</div>
+            <div class="section-title" style="margin-top: 25px;" data-i18n="sec_movies">🎬 Films Populaires</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridMovies', -500)">❮</button>
                 <div class="carousel" id="gridMovies"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridMovies', 500)">❯</button>
             </div>
 
-            <div class="section-title">📺 Séries Incontournables</div>
+            <div class="section-title" data-i18n="sec_series">📺 Séries Incontournables</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridSeries', -500)">❮</button>
                 <div class="carousel" id="gridSeries"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridSeries', 500)">❯</button>
             </div>
 
-            <div class="section-title">✨ Animés & Mangas</div>
+            <div class="section-title" data-i18n="sec_animes">✨ Animés & Mangas</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridAnimes', -500)">❮</button>
                 <div class="carousel" id="gridAnimes"></div>
@@ -344,19 +367,19 @@
                 <div class="section-title" id="filterTitle">Résultats</div>
                 <button id="adminAddSagaBtn" class="btn-saga-action" style="display:none;" onclick="openCreateSagaModal()">➕ Créer une Saga</button>
                 <select class="filter-select" id="sortSelect" onchange="applySorting()">
-                    <option value="rating-desc">⭐ Les mieux notés</option>
-                    <option value="rating-asc">⭐ Les moins bien notés</option>
-                    <option value="title-asc">🔤 Alphabétique (A-Z)</option>
-                    <option value="year-desc">📅 Plus récents</option>
+                    <option value="rating-desc" data-i18n="sort_rating_desc">⭐ Les mieux notés</option>
+                    <option value="rating-asc" data-i18n="sort_rating_asc">⭐ Les moins bien notés</option>
+                    <option value="title-asc" data-i18n="sort_title_asc">🔤 Alphabétique (A-Z)</option>
+                    <option value="year-desc" data-i18n="sort_year_desc">📅 Plus récents</option>
                 </select>
             </div>
             <div class="movie-grid" id="gridFiltered"></div>
-            <button class="btn-load-more" id="btnLoadMore" style="display:none;" onclick="loadMoreItems()">Charger la suite</button>
+            <button class="btn-load-more" id="btnLoadMore" style="display:none;" onclick="loadMoreItems()" data-i18n="btn_load_more">Charger la suite</button>
         </div>
     </div>
 
     <div class="saga-page" id="sagaDetailView">
-        <div class="back-link" onclick="closeSagaView()">❮ Retour aux collections</div>
+        <div class="back-link" onclick="closeSagaView()" data-i18n="back_sagas">❮ Retour aux collections</div>
         
         <div class="saga-header">
             <img class="saga-poster" id="sagaPoster" src="" alt="Poster">
@@ -375,45 +398,45 @@
             </div>
         </div>
 
-        <div class="section-title">Films de la <span class="red">collection</span></div>
+        <div class="section-title"><span data-i18n="saga_sec_movies">Films de la</span> <span class="red">collection</span></div>
         <div class="movie-grid" id="sagaMoviesList"></div>
 
-        <div class="section-title" style="margin-top: 40px;">🏢 Informations de <span class="red">production</span></div>
+        <div class="section-title" style="margin-top: 40px;"><span data-i18n="saga_sec_prod">Informations de</span> <span class="red">production</span></div>
         <div class="info-grid">
             <div class="info-card">
-                <div class="info-card-title">🏢 Sociétés de production</div>
+                <div class="info-card-title" data-i18n="info_producers">🏢 Sociétés de production</div>
                 <div id="infoProducers"></div>
             </div>
             <div class="info-card">
-                <div class="info-card-title">📍 Pays de production</div>
+                <div class="info-card-title" data-i18n="info_countries">📍 Pays de production</div>
                 <div id="infoCountries"></div>
             </div>
             <div class="info-card">
-                <div class="info-card-title">🌐 Langues</div>
+                <div class="info-card-title" data-i18n="info_languages">🌐 Langues</div>
                 <div id="infoLanguages"></div>
             </div>
             <div class="info-card">
-                <div class="info-card-title">🎬 Genres principaux</div>
+                <div class="info-card-title" data-i18n="info_genres">🎬 Genres principaux</div>
                 <div id="infoGenres"></div>
             </div>
         </div>
 
-        <div class="section-title" style="margin-top: 40px;">📈 Statistiques <span class="red">globales</span></div>
+        <div class="section-title" style="margin-top: 40px;"><span data-i18n="saga_sec_stats">Statistiques</span> <span class="red">globales</span></div>
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-card-title">💲 Budget total</div>
+                <div class="stat-card-title" data-i18n="stat_budget">💲 Budget total</div>
                 <div class="stat-card-value" id="statBudget">760 000 000 $</div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-title">💰 Revenus totaux</div>
+                <div class="stat-card-title" data-i18n="stat_revenue">💰 Revenus totaux</div>
                 <div class="stat-card-value" id="statRevenue">6 234 107 164 $</div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-title">⭐ Note moyenne</div>
+                <div class="stat-card-title" data-i18n="stat_rating">⭐ Note moyenne</div>
                 <div class="stat-card-value" id="statRating">7.6 / 10</div>
             </div>
             <div class="stat-card">
-                <div class="stat-card-title">⏱️ Durée totale</div>
+                <div class="stat-card-title" data-i18n="stat_duration">⏱️ Durée totale</div>
                 <div class="stat-card-value" id="statDuration">9h 20min</div>
             </div>
         </div>
@@ -441,14 +464,14 @@
                 </div>
 
                 <div class="trailer-box">
-                    <h3>🎬 Bande-annonce</h3>
+                    <h3 data-i18n="modal_trailer">🎬 Bande-annonce</h3>
                     <div class="trailer-embed" id="trailerContainer"></div>
                 </div>
             </div>
 
             <div class="info-grid" style="margin-top: 20px;">
                 <div class="info-card">
-                    <div class="info-card-title">🏢 Production & Détails</div>
+                    <div class="info-card-title" data-i18n="modal_prod_details">🏢 Production & Détails</div>
                     <div id="movieProducersInfo"><span style="color:#666; font-size:12px;">Chargement des données...</span></div>
                 </div>
             </div>
@@ -496,16 +519,40 @@
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
 
+        const translations = {
+            fr: {
+                nav_home: "Accueil", nav_sagas: "Sagas", nav_watchlist: "Ma Watchlist", nav_movies: "Films", nav_series: "Séries", nav_anime: "Anime",
+                search_ph: "Rechercher...", hero_tag: "🔥 TENDANCE ACTUELLE", btn_watch: "▶ REGARDER",
+                sec_top10: "🔥 Top 10 des Tendances", sec_sagas: "👑 Les Sagas Incontournables", sec_movies: "🎬 Films Populaires",
+                sec_series: "📺 Séries Incontournables", sec_animes: "✨ Animés & Mangas",
+                sort_rating_desc: "⭐ Les mieux notés", sort_rating_asc: "⭐ Les moins bien notés", sort_title_asc: "🔤 Alphabétique (A-Z)", sort_year_desc: "📅 Plus récents",
+                btn_load_more: "Charger la suite", back_sagas: "❮ Retour aux collections", saga_sec_movies: "Films de la", saga_sec_prod: "Informations de",
+                info_producers: "🏢 Sociétés de production", info_countries: "📍 Pays de production", info_languages: "🌐 Langues", info_genres: "🎬 Genres principaux",
+                saga_sec_stats: "Statistiques", stat_budget: "💲 Budget total", stat_revenue: "💰 Revenus totaux", stat_rating: "⭐ Note moyenne", stat_duration: "⏱️ Durée totale",
+                modal_trailer: "🎬 Bande-annonce", modal_prod_details: "🏢 Production & Détails", add_wl: "🔖 Ajouter à ma watchlist", rem_wl: "❌ Retirer de ma watchlist"
+            },
+            en: {
+                nav_home: "Home", nav_sagas: "Sagas", nav_watchlist: "My Watchlist", nav_movies: "Movies", nav_series: "TV Shows", nav_anime: "Anime",
+                search_ph: "Search...", hero_tag: "🔥 TRENDING NOW", btn_watch: "▶ WATCH NOW",
+                sec_top10: "🔥 Top 10 Trending", sec_sagas: "👑 Must-Watch Sagas", sec_movies: "🎬 Popular Movies",
+                sec_series: "📺 Must-Watch Series", sec_animes: "✨ Anime & Manga",
+                sort_rating_desc: "⭐ Highest Rated", sort_rating_asc: "⭐ Lowest Rated", sort_title_asc: "🔤 Alphabetical (A-Z)", sort_year_desc: "📅 Newest",
+                btn_load_more: "Load More", back_sagas: "❮ Back to collections", saga_sec_movies: "Movies in this", saga_sec_prod: "Production",
+                info_producers: "🏢 Production Companies", info_countries: "📍 Production Countries", info_languages: "🌐 Languages", info_genres: "🎬 Main Genres",
+                saga_sec_stats: "Global", stat_budget: "💲 Total Budget", stat_revenue: "💰 Total Revenue", stat_rating: "⭐ Average Rating", stat_duration: "⏱️ Total Runtime",
+                modal_trailer: "🎬 Trailer", modal_prod_details: "🏢 Production & Details", add_wl: "🔖 Add to Watchlist", rem_wl: "❌ Remove from Watchlist"
+            }
+        };
+
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
 
-        // Rendu net des images TMDB en dimensions w780
-        function formatTmdbImage(url) {
+        function formatTmdbImage(url, size = 'w780') {
             if (!url) return 'https://via.placeholder.com/500x750';
             if (url.startsWith('http://') || url.startsWith('https://')) {
-                return url.replace(/\/t\/p\/w[0-9]+_and_h[0-9]+_face\//, '/t/p/w780/').replace(/\/t\/p\/w[0-9]+\//, '/t/p/w780/');
+                return url;
             }
             if (url.startsWith('/')) {
-                return 'https://image.tmdb.org/t/p/w780' + url;
+                return `https://image.tmdb.org/t/p/${size}${url}`;
             }
             return url;
         }
@@ -514,8 +561,24 @@
             lang = selectedLang;
             document.getElementById('flag-fr').classList.toggle('active', lang === 'fr');
             document.getElementById('flag-en').classList.toggle('active', lang === 'en');
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) el.textContent = translations[lang][key];
+            });
+
+            document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+                const key = el.getAttribute('data-i18n-ph');
+                if (translations[lang][key]) el.placeholder = translations[lang][key];
+            });
+
             if (currentItem) {
                 openDetails(currentItem, false);
+            }
+            if (currentSaga) {
+                openSagaView(currentSaga.id);
+            } else if (currentCategoryType !== 'all') {
+                renderPaginatedGrid();
             }
         }
 
@@ -529,12 +592,11 @@
                 .replace(/-+/g, '-');
         }
 
-        // BASE DE DONNÉES DES SAGAS INITIALE
         const DEFAULT_SAGAS = [
             {
                 id: "spider-man-mcu",
                 title: "Spider-Man (MCU) - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
+                poster: "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
                 exactTitles: ["spider-man: homecoming", "spider-man: far from home", "spider-man: no way home", "spider-man: brand new day"],
                 desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU.",
                 budget: "760 000 000 $", revenue: "6 234 107 164 $", rating: "7.6", duration: "9h 20min",
@@ -545,7 +607,7 @@
             {
                 id: "avengers",
                 title: "Avengers - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
+                poster: "/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
                 exactTitles: ["avengers", "avengers : l'ère d'ultron", "avengers : infinity war", "avengers : endgame"],
                 desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
                 budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
@@ -554,7 +616,7 @@
             {
                 id: "matrix",
                 title: "Matrix - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
+                poster: "/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
                 exactTitles: ["matrix", "matrix reloaded", "matrix revolutions", "matrix resurrections"],
                 desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
                 budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
@@ -563,7 +625,7 @@
             {
                 id: "star-wars",
                 title: "Star Wars - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
+                poster: "/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
                 exactTitles: ["star wars : épisode i", "star wars : épisode ii", "star wars : épisode iii", "star wars : épisode iv", "star wars : épisode v", "star wars : épisode vi", "star wars : épisode vii", "star wars : épisode viii", "star wars : épisode ix"],
                 desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes.",
                 budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
@@ -572,7 +634,7 @@
             {
                 id: "harry-potter",
                 title: "Harry Potter - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
+                poster: "/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
                 exactTitles: ["harry potter à l'école des sorciers", "harry potter et la chambre des secrets", "harry potter et le prisonnier d'azkaban", "harry potter et la coupe de feu", "harry potter et l'ordre du phénix", "harry potter et le prince de sang-mêlé", "harry potter et les reliques de la mort - 1ère partie", "harry potter et les reliques de la mort - 2ème partie"],
                 desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
                 budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
@@ -581,7 +643,7 @@
             {
                 id: "seigneur-des-anneaux",
                 title: "Le Seigneur des Anneaux - Saga",
-                poster: "https://image.tmdb.org/t/p/w780/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
+                poster: "/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
                 exactTitles: ["le seigneur des anneaux : la communauté de l'anneau", "le seigneur des anneaux : les deux tours", "le seigneur des anneaux : le retour du roi"],
                 desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
                 budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
@@ -591,43 +653,35 @@
 
         let SAGAS_DATABASE = JSON.parse(localStorage.getItem('sk_sagas_database')) || DEFAULT_SAGAS;
 
+        // Force l'affiche Spider-Man Saga avec le bon lien
+        const spideySaga = SAGAS_DATABASE.find(s => s.id === "spider-man-mcu");
+        if (spideySaga) {
+            spideySaga.poster = "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg";
+        }
+
         function saveSagasToStorage() {
             localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
         }
 
-        // ECOUTEUR F12 POUR LE CODE D'ADMINISTRATION
-        window.addEventListener('keydown', function(e) {
-            if (e.key === 'F12') {
-                console.log("Tapez votre commande administrateur ici.");
-            }
-        });
-
-        // Détection de la saisie de la commande admin dans la console F12
-        let consoleBuffer = "";
-        window.administration_tool_mdp_hesskaadmin67saga_EX = function() {
-            if (currentCategoryType === 'saga') {
+        /* VERIFICATION MOT DE PASSE SECRET */
+        function triggerAdminPrompt() {
+            const pass = prompt("Entrez le mot de passe Administrateur :");
+            if (pass === "tastycroustyjetaime2026") {
                 isAdmin = true;
-                alert("🔓 Mode Administrateur activé ! Vous pouvez maintenant ajouter/supprimer des sagas et des films.");
+                alert("🔓 Mode Administrateur activé ! L'option 'Créer une Saga' est débloquée.");
                 updateAdminUI();
-            } else {
-                alert("⚠️ Veuillez vous rendre sur l'onglet Sagas pour vous authentifier !");
+                renderSections();
+            } else if (pass !== null) {
+                alert("❌ Mot de passe incorrect !");
             }
-        };
-
-        // Redirection property console pour capter la saisie texte brute
-        Object.defineProperty(window, 'administration_tool_mdp_hesskaadmin67saga!?', {
-            get: function() {
-                window.administration_tool_mdp_hesskaadmin67saga_EX();
-                return "Admin déverrouillé.";
-            }
-        });
+        }
 
         function updateAdminUI() {
             const addSagaBtn = document.getElementById('adminAddSagaBtn');
             const addMovieBtn = document.getElementById('adminAddMovieToSagaBtn');
             const delSagaBtn = document.getElementById('adminDeleteSagaBtn');
 
-            if (isAdmin && currentCategoryType === 'saga') {
+            if (isAdmin) {
                 if (addSagaBtn) addSagaBtn.style.display = 'inline-flex';
                 if (addMovieBtn) addMovieBtn.style.display = 'inline-flex';
                 if (delSagaBtn) delSagaBtn.style.display = 'inline-flex';
@@ -636,7 +690,7 @@
                 if (addMovieBtn) addMovieBtn.style.display = 'none';
                 if (delSagaBtn) delSagaBtn.style.display = 'none';
             }
-            if (currentSaga) openSagaView(currentSaga.id);
+            if (currentSaga) renderSagaMovies();
         }
 
         function isAnimeItem(i) {
@@ -646,21 +700,141 @@
         }
 
         async function init() {
+            const fallbackCatalog = [
+                {
+                    tmdb_id_clean: "1001",
+                    title: "Spider-Man: Brand New Day",
+                    rating: "8.8",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Peter Parker entame un tout nouveau chapitre sous le costume de l'araignée.",
+                    poster: "https://image.tmdb.org/t/p/original/5cY4DgCWhABURo3Kedt5hBwhzxF.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg"
+                },
+                {
+                    tmdb_id_clean: "1002",
+                    title: "Mutiny",
+                    rating: "8.1",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Un thriller d'action intense au cœur d'une mutinerie à haut risque.",
+                    poster: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg"
+                },
+                {
+                    tmdb_id_clean: "1003",
+                    title: "L'Odyssée",
+                    rating: "8.5",
+                    year: "2026",
+                    type: "movie",
+                    overview: "L'adaptation spectaculaire et éblouissante de la célèbres épopée d'Ulysse.",
+                    poster: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg"
+                },
+                {
+                    tmdb_id_clean: "1004",
+                    title: "Toy Story 5",
+                    rating: "8.3",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Woody, Buzz et toute la bande reviennent pour de nouvelles aventures captivantes.",
+                    poster: "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg"
+                },
+                {
+                    tmdb_id_clean: "1005",
+                    title: "Colony",
+                    rating: "7.9",
+                    year: "2026",
+                    type: "movie",
+                    overview: "La lutte acharnée pour la survie d'une colonie dans un futur mystérieux et hostile.",
+                    poster: "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg"
+                },
+                {
+                    tmdb_id_clean: "1006",
+                    title: "Vaiana (Moana)",
+                    rating: "8.4",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Une grande aventure océanique guidée par le destin et la découverte de soi.",
+                    poster: "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg"
+                },
+                {
+                    tmdb_id_clean: "1007",
+                    title: "Obsession",
+                    rating: "8.0",
+                    year: "2026",
+                    type: "movie",
+                    overview: "Un thriller psychologique haletant où le désir devient une véritable obsession.",
+                    poster: "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg",
+                    backdrop: "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg"
+                }
+            ];
+
             try {
                 const res = await fetch('data.json');
+                if (!res.ok) throw new Error("Fichier data.json non trouvé");
                 catalog = await res.json();
+            } catch (e) {
+                console.warn("data.json non trouvé. Chargement du catalogue d'images personnalisées.", e);
+                catalog = fallbackCatalog;
+            }
 
-                // Nettoyage de la qualité d'image du catalogue complet
-                catalog.forEach(item => {
-                    item.poster = formatTmdbImage(item.poster);
-                });
+            const customPosters = {
+                "spider-man: brand new day": "https://image.tmdb.org/t/p/original/5cY4DgCWhABURo3Kedt5hBwhzxF.jpg",
+                "mutiny": "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg",
+                "l'odyssée": "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
+                "l'odyssee": "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
+                "toy story 5": "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg",
+                "colony": "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg",
+                "vaiana": "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+                "moana": "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
+                "obsession": "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg"
+            };
 
-                heroItems = catalog.slice(0, 10);
-                setupHeroSlider();
-                renderSections();
+            const customBackdrops = {
+                "spider-man: brand new day": "https://image.tmdb.org/t/p/original/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg",
+                "minion": "https://image.tmdb.org/t/p/original/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg",
+                "monster": "https://image.tmdb.org/t/p/original/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg"
+            };
 
-                handleInitialUrl();
-            } catch (e) { console.error("Erreur chargement:", e); }
+            catalog.forEach(item => {
+                const titleLower = (item.title || '').toLowerCase().trim();
+                let hasCustom = false;
+                for (let key in customPosters) {
+                    if (titleLower.includes(key)) {
+                        item.poster = customPosters[key];
+                        hasCustom = true;
+                        break;
+                    }
+                }
+                
+                let hasCustomBackdrop = false;
+                for (let key in customBackdrops) {
+                    if (titleLower.includes(key)) {
+                        item.backdrop = customBackdrops[key];
+                        hasCustomBackdrop = true;
+                        break;
+                    }
+                }
+
+                if (!hasCustom) {
+                    item.poster = formatTmdbImage(item.poster || item.poster_path, 'w780');
+                }
+                if (!hasCustomBackdrop) {
+                    // Restauration de la logique originale pour lire correctement la propriété 'backdrop', 'backdrops' ou 'backdrop_path'
+                    const rawBackdrop = item.backdrop || item.backdrops || item.backdrop_path;
+                    item.backdrop = formatTmdbImage(rawBackdrop, 'w1280');
+                }
+            });
+
+            heroItems = catalog.slice(0, 10);
+            setupHeroSlider();
+            renderSections();
+
+            handleInitialUrl();
         }
 
         function handleInitialUrl() {
@@ -692,7 +866,9 @@
         function showHero(index) {
             heroIndex = index;
             const item = heroItems[heroIndex];
-            document.getElementById('heroBanner').style.backgroundImage = `url('${item.poster}')`;
+            // S'assure de récupérer l'image de fond si disponible, sinon se rabat sur le poster
+            const bgImage = (item.backdrop && item.backdrop !== 'https://via.placeholder.com/500x750') ? item.backdrop : item.poster;
+            document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
             document.getElementById('heroTitle').textContent = item.title;
             document.getElementById('heroYear').textContent = item.year || '2026';
             document.getElementById('heroRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
@@ -726,22 +902,43 @@
             }
         }
 
+        function openDetailsById(tmdbId) {
+            const found = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+            if (found) {
+                openDetails(found);
+            }
+        }
+
         function createCardHtml(item, isInSagaView = false) {
             const id = String(item.tmdb_id_clean || item.tmdb_id);
             const isSaved = isSavedInWatchlist(id);
             const removeBtn = (isAdmin && isInSagaView) ? `<button class="btn-remove-movie" onclick="removeMovieFromCurrentSaga(event, '${item.title.replace(/'/g, "\\'")}')">✕</button>` : '';
 
             return `
-                <div class="card movie-saga-item" onclick='openDetails(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                <div class="card movie-saga-item" onclick="openDetailsById('${id}')">
                     ${removeBtn}
                     <div class="star-watchlist ${isSaved ? 'active' : ''}" onclick="toggleWatchlistEvent(event, '${id}')">
                         ${isSaved ? '★' : '☆'}
                     </div>
-                    <img class="poster-img" src="${item.poster || 'https://via.placeholder.com/150x220'}" alt="${item.title}" loading="lazy">
+                    <img class="poster-img" src="${item.poster || 'https://via.placeholder.com/500x750'}" alt="${item.title.replace(/"/g, '&quot;')}" loading="lazy">
                     <div class="card-hover-overlay">
                         <div class="card-hover-title">${item.title}</div>
                         <div class="card-hover-rating">⭐ ${parseFloat(item.rating || 0).toFixed(1)} (${item.year || 'N/A'})</div>
                         <div class="card-hover-desc">${item.overview || "Regarder maintenant..."}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function createAdminCardHtml() {
+            return `
+                <div class="card" onclick="triggerAdminPrompt()" style="border: 1px solid #e50914;">
+                    <div class="saga-badge" style="background:#e50914;">ADMIN</div>
+                    <img class="poster-img" src="https://image.tmdb.org/t/p/w780/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg" alt="Panel Admin">
+                    <div class="card-hover-overlay">
+                        <div class="card-hover-title" style="color:#e50914;">Panneau d'administration</div>
+                        <div class="card-hover-rating">🔐 Accès Sécurisé</div>
+                        <div class="card-hover-desc">Cliquez pour vous authentifier et débloquer les fonctionnalités d'administration.</div>
                     </div>
                 </div>
             `;
@@ -755,7 +952,7 @@
                     <div class="star-watchlist ${isSaved ? 'active' : ''}" onclick="toggleWatchlistEvent(event, '${saga.id}')">
                         ${isSaved ? '★' : '☆'}
                     </div>
-                    <img class="poster-img" src="${formatTmdbImage(saga.poster)}" alt="${saga.title}">
+                    <img class="poster-img" src="${formatTmdbImage(saga.poster, 'w780')}" alt="${saga.title}">
                     <div class="card-hover-overlay">
                         <div class="card-hover-title">${saga.title}</div>
                         <div class="card-hover-rating">⭐ ${saga.rating}</div>
@@ -765,11 +962,21 @@
             `;
         }
 
-        function createTop10CardHtml(item, rank) {
+        function createAddSagaCardHtml() {
             return `
-                <div class="card-top10" onclick='openDetails(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                <div class="card card-add-saga" onclick="openCreateSagaModal()">
+                    <div class="add-saga-circle">+</div>
+                    <div class="add-saga-text">Créer une Saga</div>
+                </div>
+            `;
+        }
+
+        function createTop10CardHtml(item, rank) {
+            const id = String(item.tmdb_id_clean || item.tmdb_id);
+            return `
+                <div class="card-top10" onclick="openDetailsById('${id}')">
                     <div class="top10-number">${rank}</div>
-                    <img src="${item.poster}" alt="${item.title}" loading="lazy">
+                    <img src="${item.poster}" alt="${item.title.replace(/"/g, '&quot;')}" loading="lazy">
                 </div>
             `;
         }
@@ -781,10 +988,22 @@
             const popAnimes = catalog.filter(i => isAnimeItem(i)).slice(0, 30);
 
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
-            document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('');
+            
+            document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
+            
             document.getElementById('gridMovies').innerHTML = popMovies.map(createCardHtml).join('');
             document.getElementById('gridSeries').innerHTML = popSeries.map(createCardHtml).join('');
             document.getElementById('gridAnimes').innerHTML = (popAnimes.length ? popAnimes : catalog.slice(0, 30)).slice(0, 30).map(createCardHtml).join('');
+        }
+
+        function renderSagaMovies() {
+            if (!currentSaga) return;
+            const sagaMovies = catalog.filter(item => {
+                const titleLower = (item.title || '').toLowerCase();
+                return currentSaga.exactTitles.some(exact => titleLower.includes(exact.toLowerCase()));
+            });
+            document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} films`;
+            document.getElementById('sagaMoviesList').innerHTML = sagaMovies.map(item => createCardHtml(item, true)).join('');
         }
 
         function openSagaView(sagaId) {
@@ -793,7 +1012,7 @@
             currentSaga = saga;
 
             document.getElementById('sagaTitle').innerHTML = `${saga.title}`;
-            document.getElementById('sagaPoster').src = formatTmdbImage(saga.poster);
+            document.getElementById('sagaPoster').src = formatTmdbImage(saga.poster, 'w780');
             document.getElementById('sagaDesc').textContent = saga.desc;
             document.getElementById('statBudget').textContent = saga.budget;
             document.getElementById('statRevenue').textContent = saga.revenue;
@@ -805,14 +1024,7 @@
             document.getElementById('infoLanguages').innerHTML = `<div class="info-list-item"><span>Français (VF)</span><span class="count">VF</span></div><div class="info-list-item"><span>English (VOSTFR)</span><span class="count">VOSTFR</span></div>`;
             document.getElementById('infoGenres').innerHTML = saga.genres.map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
 
-            const sagaMovies = catalog.filter(item => {
-                const titleLower = (item.title || '').toLowerCase();
-                return saga.exactTitles.some(exact => titleLower.includes(exact.toLowerCase()));
-            });
-
-            document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} films`;
-            document.getElementById('sagaMoviesList').innerHTML = sagaMovies.map(item => createCardHtml(item, true)).join('');
-
+            renderSagaMovies();
             updateWatchlistButton('btnWatchlistSaga', saga.id);
             updateAdminUI();
 
@@ -877,7 +1089,21 @@
         }
 
         function handleSearch(query) {
-            const q = query.trim().toLowerCase();
+            const q = query.trim();
+            
+            if (q.toLowerCase() === "panel_adminhesskaceo") {
+                document.getElementById('searchInput').value = '';
+                closeSagaView();
+                closePlayer();
+                document.getElementById('heroBanner').style.display = 'none';
+                document.getElementById('homeSections').style.display = 'none';
+                document.getElementById('filteredSection').style.display = 'block';
+                document.getElementById('filterTitle').textContent = "🔒 Panneau Administrateur Sécurisé";
+                document.getElementById('gridFiltered').innerHTML = createAdminCardHtml();
+                document.getElementById('btnLoadMore').style.display = 'none';
+                return;
+            }
+
             if (!q) {
                 switchTab(currentCategoryType || 'all', false);
                 return;
@@ -890,7 +1116,7 @@
             document.getElementById('homeSections').style.display = 'none';
             document.getElementById('filteredSection').style.display = 'block';
 
-            currentFilteredList = catalog.filter(i => (i.title || '').toLowerCase().includes(q));
+            currentFilteredList = catalog.filter(i => (i.title || '').toLowerCase().includes(q.toLowerCase()));
             currentPage = 1;
 
             document.getElementById('filterTitle').textContent = `🔍 Recherche: "${query}" (${currentFilteredList.length})`;
@@ -918,11 +1144,11 @@
 
         function renderPaginatedGrid() {
             let catTitle = "Résultats";
-            if (currentCategoryType === 'saga') catTitle = "👑 Les Sagas Incontournables";
-            else if (currentCategoryType === 'movie') catTitle = "🎬 Tous les Films";
-            else if (currentCategoryType === 'tv') catTitle = "📺 Toutes les Séries";
-            else if (currentCategoryType === 'anime') catTitle = "✨ Tous les Animés";
-            else if (currentCategoryType === 'watchlist') catTitle = "🔖 Ma Watchlist";
+            if (currentCategoryType === 'saga') catTitle = translations[lang].sec_sagas;
+            else if (currentCategoryType === 'movie') catTitle = translations[lang].sec_movies;
+            else if (currentCategoryType === 'tv') catTitle = translations[lang].sec_series;
+            else if (currentCategoryType === 'anime') catTitle = translations[lang].sec_animes;
+            else if (currentCategoryType === 'watchlist') catTitle = translations[lang].nav_watchlist;
 
             const searchInput = document.getElementById('searchInput');
             if (!searchInput.value.trim()) {
@@ -930,7 +1156,7 @@
             }
 
             if (currentCategoryType === 'saga' && !searchInput.value.trim()) {
-                document.getElementById('gridFiltered').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('');
+                document.getElementById('gridFiltered').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
                 document.getElementById('btnLoadMore').style.display = 'none';
                 return;
             }
@@ -963,7 +1189,7 @@
             }
 
             document.getElementById('modalTitle').textContent = item.title;
-            document.getElementById('modalPoster').src = formatTmdbImage(item.poster);
+            document.getElementById('modalPoster').src = formatTmdbImage(item.poster, 'w780');
             document.getElementById('modalYear').textContent = item.year || '2026';
             document.getElementById('modalRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('modalOverview').textContent = item.overview || "Synopsis indisponible.";
@@ -987,7 +1213,7 @@
                     const topCast = data.credits.cast.slice(0, 5);
                     document.getElementById('castList').innerHTML = topCast.map(actor => `
                         <div class="cast-item">
-                            <img class="cast-img" src="${actor.profile_path ? formatTmdbImage(actor.profile_path) : 'https://via.placeholder.com/55'}" alt="${actor.name}">
+                            <img class="cast-img" src="${actor.profile_path ? formatTmdbImage(actor.profile_path, 'w185') : 'https://via.placeholder.com/55'}" alt="${actor.name}">
                             <div class="cast-name">${actor.name}</div>
                             <div class="cast-role">${actor.character || 'Rôle'}</div>
                         </div>
@@ -1043,10 +1269,10 @@
             if (!btn) return;
             const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
             if (saved.includes(itemId)) {
-                btn.innerHTML = "❌ Retirer de ma watchlist";
+                btn.innerHTML = translations[lang].rem_wl;
                 btn.classList.add('active');
             } else {
-                btn.innerHTML = "🔖 Ajouter à ma watchlist";
+                btn.innerHTML = translations[lang].add_wl;
                 btn.classList.remove('active');
             }
         }
@@ -1087,7 +1313,7 @@
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        /* FONCTIONS D'ADMINISTRATION */
+        /* FONCTIONS ADMIN */
         function openCreateSagaModal() {
             document.getElementById('createSagaModal').style.display = 'flex';
         }
@@ -1110,7 +1336,7 @@
             const newSaga = {
                 id: slugify(name),
                 title: `${name} - Saga`,
-                poster: formatTmdbImage(poster),
+                poster: formatTmdbImage(poster, 'w780'),
                 exactTitles: [],
                 desc: desc || "Aucune description fournie.",
                 budget: "N/A", revenue: "N/A", rating: "8.0", duration: "N/A",
