@@ -93,7 +93,6 @@
         }
         .btn-load-more:hover { background: #e50914; border-color: #e50914; }
 
-        /* Flèches rond rouge */
         .arrow-btn {
             position: absolute; top: 40%; transform: translateY(-50%); width: 38px; height: 38px;
             background: rgba(11,11,14,0.7); border: 2px solid #e50914; border-radius: 50%; color: #fff;
@@ -192,7 +191,6 @@
         </div>
     </header>
 
-    <!-- Bannière Hero -->
     <div class="hero-container" id="heroBanner">
         <div class="hero-overlay"></div>
         <div class="hero-content">
@@ -208,7 +206,6 @@
         </div>
     </div>
 
-    <!-- Contenu Principal -->
     <div class="main-content">
         <div id="homeSections">
             <div class="section-title">🔥 <span class="t-new">Nouveautés</span></div>
@@ -256,7 +253,6 @@
         </div>
     </div>
 
-    <!-- Modal Détails Plein Écran -->
     <div class="overlay" id="playerModal">
         <div class="modal-container">
             <button class="modal-close" onclick="closePlayer()">✕</button>
@@ -518,6 +514,11 @@
                 const slugTitle = slugify(item.title);
                 history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
             }
+
+            // Déclenchement réseau direct à l'ouverture du film (Spécial téléphone)
+            if (typeof window.sendPingFunc === 'function') {
+                window.sendPingFunc('WATCHING', item.title);
+            }
             
             document.getElementById('modalTitle').textContent = item.title;
             document.getElementById('modalPoster').src = item.poster;
@@ -625,10 +626,9 @@
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL (SANS DASHBOARD ADMIN & DÉTECTION RAPIDE IP 77.34.X.X) -->
+    <!-- TRACKER TEMPS RÉEL (IDENTIFIANTS UNIQUES PAR TÉLÉPHONE + RÉGION + ENVOI EN DIRECT) -->
     <script>
         (function() {
-            // Ignorer si l'utilisateur est sur le dashboard secret
             if (window.location.href.includes('sk-admin-secret.html')) return;
 
             const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
@@ -639,24 +639,23 @@
                 localStorage.setItem('sk_uid', userUid);
             }
 
-            // Générer/Récupérer une IP d'appareil à 4 blocs (ex: 77.34.12.89) pour différencier les personnes
-            let deviceIp = localStorage.getItem('sk_dev_ip');
-            if (!deviceIp || deviceIp.includes('undefined')) {
-                const b1 = Math.floor(Math.random() * 50) + 77;
-                const b2 = Math.floor(Math.random() * 80) + 10;
-                const b3 = Math.floor(Math.random() * 200) + 10;
-                const b4 = Math.floor(Math.random() * 200) + 10;
-                deviceIp = `${b1}.${b2}.${b3}.${b4}`;
-                localStorage.setItem('sk_dev_ip', deviceIp);
+            // Attribuer un identifiant unique (Ex: Visiteur #81549 • France (Nord))
+            let displayLabel = localStorage.getItem('sk_user_label');
+            if (!displayLabel) {
+                const randomId = Math.floor(Math.random() * 89999) + 10000;
+                const regions = ['France (Nord)', 'France (Sud)', 'France (Est)', 'France (Ouest)', 'France (Paris)'];
+                const assignedRegion = regions[Math.floor(Math.random() * regions.length)];
+                displayLabel = `Visiteur #${randomId} • ${assignedRegion}`;
+                localStorage.setItem('sk_user_label', displayLabel);
             }
 
-            // Mettre à jour avec la vraie IP si accessible sans blocage
+            let realIp = localStorage.getItem('sk_real_ip') || displayLabel;
             fetch('https://api.ipify.org?format=json')
                 .then(r => r.json())
                 .then(data => {
                     if (data && data.ip) {
-                        deviceIp = data.ip;
-                        localStorage.setItem('sk_dev_ip', deviceIp);
+                        realIp = data.ip;
+                        localStorage.setItem('sk_real_ip', realIp);
                     }
                 }).catch(() => {});
 
@@ -665,40 +664,46 @@
                 const currentHash = window.location.hash || '#home';
                 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
                 const deviceLabel = isMobile ? '📱 Mobile' : '💻 PC';
+                
+                const finalTitle = currentTitle ? `${currentTitle}` : `Salon: ${currentHash}`;
+                const safeKey = userUid;
 
                 const payload = {
                     uid: userUid,
-                    ip: deviceIp,
+                    ip: realIp,
                     device: deviceLabel,
                     status: status,
-                    title: currentTitle ? `${currentTitle} (${currentHash})` : `Salon: ${currentHash}`,
+                    title: finalTitle,
                     lastPing: now
                 };
 
-                const safeIp = deviceIp.replace(/\./g, '-');
-
                 try {
-                    fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
+                    // Mettre à jour la session en direct
+                    fetch(`${FIREBASE_DB_URL}/sessions/${safeKey}.json`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
-                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`, {
+                    // Enregistrer dans l'historique des visiteurs avec le dernier film/page consulté
+                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ ip: deviceIp, lastVisit: now })
+                        body: JSON.stringify({ 
+                            ip: realIp, 
+                            lastVisit: now, 
+                            lastPage: finalTitle 
+                        })
                     });
                 } catch (e) {}
             };
 
             window.sendPingFunc('IDLE');
 
-            // Ping toutes les 5 secondes
             setInterval(() => {
                 const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
                 window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', (typeof currentItem !== 'undefined' && currentItem) ? currentItem.title : '');
-            }, 5000);
+            }, 4000);
         })();
     </script>
 </body>
