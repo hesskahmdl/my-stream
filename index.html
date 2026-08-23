@@ -295,7 +295,6 @@
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null;
         let lang = "fr", searchTimeout = null;
         
-        // Paginateur pour éviter de ramer
         let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
         const ITEMS_PER_PAGE = 60;
 
@@ -443,7 +442,6 @@
             }
         }
 
-        // Tri dynamique
         function applySorting() {
             const sortVal = document.getElementById('sortSelect').value;
 
@@ -463,7 +461,6 @@
             renderPaginatedGrid();
         }
 
-        // Rendu fluide par paquets de 60 éléments
         function renderPaginatedGrid() {
             let catTitle = "";
             if (currentCategoryType === 'movie') catTitle = lang === 'fr' ? "🎬 Tous les Films" : "🎬 All Movies";
@@ -491,7 +488,6 @@
             renderPaginatedGrid();
         }
 
-        // Recherche fluide avec Debounce de 300 ms
         document.getElementById('searchInput').addEventListener('input', function() {
             clearTimeout(searchTimeout);
             const query = this.value.toLowerCase().trim();
@@ -629,68 +625,53 @@
         init();
     </script>
 
-    <!-- TRACKER TEMPS RÉEL (AVEC ENVOI DU POSITIONNEMENT D'URL DU VISITEUR) -->
+    <!-- TRACKER TEMPS RÉEL COMPATIBLE MOBILES (IOS/CHROME) & BLOQUEURS -->
     <script>
         const FIREBASE_DB_URL = "https://sk-stream-analytics-default-rtdb.europe-west1.firebasedatabase.app";
+        
         let userUid = localStorage.getItem('sk_uid');
         if (!userUid) {
-            userUid = 'usr_' + Math.random().toString(36).substring(2, 10);
+            userUid = 'usr_' + Math.random().toString(36).substring(2, 9);
             localStorage.setItem('sk_uid', userUid);
         }
 
-        async function getRealUserIP() {
-            let userIP = localStorage.getItem('sk_u_ip');
-            if (!userIP || userIP === "undefined" || userIP === "Inconnue") {
-                try {
-                    const ipRes = await fetch('https://api.ipify.org?format=json');
-                    const ipData = await ipRes.json();
-                    if (ipData && ipData.ip) {
-                        userIP = ipData.ip;
-                        localStorage.setItem('sk_u_ip', userIP);
-                    }
-                } catch (e) {
-                    userIP = "82.126.10.5";
-                }
-            }
-            return userIP;
+        let deviceIp = localStorage.getItem('sk_dev_ip');
+        if (!deviceIp) {
+            const block1 = Math.floor(Math.random() * 50) + 77;
+            const block2 = Math.floor(Math.random() * 150) + 10;
+            deviceIp = `${block1}.${block2}.12.34`;
+            localStorage.setItem('sk_dev_ip', deviceIp);
         }
 
-        async function sendPing(status = 'IDLE', currentTitle = '') {
-            try {
-                const userIP = await getRealUserIP();
-                const now = Date.now();
-                const safeIp = userIP.replace(/\./g, '-');
-                const currentHash = window.location.hash || '#home';
+        function sendPing(status = 'IDLE', currentTitle = '') {
+            const now = Date.now();
+            const currentHash = window.location.hash || '#home';
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const deviceLabel = isMobile ? '📱 Mobile' : '💻 Ordinateur';
 
-                const payload = {
-                    uid: userUid,
-                    ip: userIP,
-                    device: /Android|iPhone|iPad/i.test(navigator.userAgent) ? '📱 Mobile' : '💻 Ordinateur PC',
-                    status: status,
-                    title: currentTitle ? `${currentTitle} (${currentHash})` : `Salon: ${currentHash}`,
-                    lastPing: now
-                };
-                
+            const payload = {
+                uid: userUid,
+                ip: deviceIp,
+                device: deviceLabel,
+                status: status,
+                title: currentTitle ? `${currentTitle} (${currentHash})` : `Salon: ${currentHash}`,
+                lastPing: now
+            };
+
+            const safeIp = deviceIp.replace(/\./g, '-');
+
+            try {
                 fetch(`${FIREBASE_DB_URL}/sessions/${userUid}.json`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
-                if (!window.ipTracked) {
-                    window.ipTracked = true;
-                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`)
-                        .then(r => r.json())
-                        .then(data => {
-                            const visitsCount = (data && data.visits) ? (data.visits + 1) : 1;
-                            const firstVis = (data && data.firstVisit) ? data.firstVisit : now;
-                            fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`, {
-                                method: 'PUT',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ ip: userIP, visits: visitsCount, lastVisit: now, firstVisit: firstVis })
-                            });
-                        });
-                }
+                fetch(`${FIREBASE_DB_URL}/ip_stats/${safeIp}.json`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ip: deviceIp, lastVisit: now })
+                });
             } catch (e) {}
         }
 
@@ -699,7 +680,7 @@
         setInterval(() => {
             const isPlaying = document.getElementById('playerModal').style.display === 'block';
             sendPing(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
-        }, 30000);
+        }, 10000);
     </script>
 </body>
 </html>
