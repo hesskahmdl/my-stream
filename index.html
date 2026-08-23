@@ -63,7 +63,7 @@
 
         .main-content { padding: 15px 30px; position: relative; z-index: 10; margin-top: -30px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px; flex-wrap: wrap; gap: 10px; }
-        .section-title { font-size: 18px; font-weight: 800; color: #fff; }
+        .section-title { font-size: 18px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
         
         .filter-select {
             background: #18181f; border: 1px solid #333; color: #fff; padding: 6px 12px;
@@ -71,11 +71,11 @@
         }
 
         .carousel-wrapper { position: relative; }
-        .carousel { display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 8px 0; scrollbar-width: none; }
+        .carousel { display: flex; gap: 14px; overflow-x: auto; scroll-behavior: smooth; padding: 15px 0; scrollbar-width: none; }
         .carousel::-webkit-scrollbar { display: none; }
         .movie-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 18px; padding: 15px 0; }
 
-        .card { cursor: pointer; transition: transform 0.3s; background: transparent; flex: 0 0 140px; }
+        .card { cursor: pointer; transition: transform 0.3s; background: transparent; flex: 0 0 140px; position: relative; }
         .movie-grid .card { flex: none; }
         .card:hover { transform: translateY(-6px) scale(1.02); z-index: 5; }
         .card img { width: 100%; height: 210px; object-fit: cover; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -83,6 +83,30 @@
         .card-title { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
         .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: #aaa; }
         .card-rating { color: #ffc107; font-weight: bold; }
+
+        /* BADGE SAGA SUR LA CARTE */
+        .saga-badge {
+            position: absolute; top: 8px; left: 8px;
+            background: rgba(229, 9, 20, 0.9); color: #fff;
+            font-size: 9px; font-weight: 900; padding: 2px 6px;
+            border-radius: 4px; letter-spacing: 1px; z-index: 2;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+        }
+
+        /* NUMÉROTATION GÉANTE TOP 10 NETFLIX STYLE */
+        .carousel-top10 { gap: 30px; }
+        .card-top10 { flex: 0 0 180px; display: flex; align-items: flex-end; position: relative; margin-left: 20px; }
+        .card-top10 img { width: 140px; height: 210px; z-index: 2; position: relative; }
+        .top10-number {
+            position: absolute; left: -35px; bottom: -10px;
+            font-size: 120px; font-weight: 900; line-height: 0.8;
+            color: #0b0b0e;
+            -webkit-text-stroke: 4px #e50914;
+            z-index: 1;
+            user-select: none;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            text-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
 
         .btn-load-more {
             display: block; margin: 20px auto 40px; background: #1f1f2e; border: 1px solid #333;
@@ -144,7 +168,9 @@
             .main-content { padding: 10px 15px; }
             .card { flex: 0 0 110px; }
             .card img { height: 160px; }
-            .card-title { font-size: 12px; }
+            .card-top10 { flex: 0 0 140px; margin-left: 15px; }
+            .card-top10 img { width: 110px; height: 160px; }
+            .top10-number { font-size: 80px; left: -25px; }
             .arrow-btn { display: none; }
             .modal-container { padding: 10px; }
             .detail-top { gap: 15px; margin-top: 20px; }
@@ -164,6 +190,9 @@
         <nav>
             <button class="nav-item active" id="btn-all" onclick="switchTab('all')">
                 <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> <span class="t-home">Accueil</span>
+            </button>
+            <button class="nav-item" id="btn-saga" onclick="switchTab('saga')">
+                <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> <span>Sagas</span>
             </button>
             <button class="nav-item" id="btn-movie" onclick="switchTab('movie')">
                 <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg> <span class="t-movies">Films</span>
@@ -204,14 +233,23 @@
 
     <div class="main-content">
         <div id="homeSections">
-            <div class="section-title">🔥 <span class="t-new">Nouveautés</span></div>
+            <!-- TOP 10 TENDANCES AVEC CHIFFRES GEANTS NETFLIX -->
+            <div class="section-title">🔥 Top 10 des Tendances</div>
             <div class="carousel-wrapper">
-                <button class="arrow-btn left" onclick="scrollCarousel('gridNew', -500)">❮</button>
-                <div class="carousel" id="gridNew"></div>
-                <button class="arrow-btn right" onclick="scrollCarousel('gridNew', 500)">❯</button>
+                <button class="arrow-btn left" onclick="scrollCarousel('gridTop10', -500)">❮</button>
+                <div class="carousel carousel-top10" id="gridTop10"></div>
+                <button class="arrow-btn right" onclick="scrollCarousel('gridTop10', 500)">❯</button>
             </div>
 
-            <div class="section-title">🎬 <span class="t-pop-movies">Films Populaires</span></div>
+            <!-- SAGAS INCONTOURNABLES -->
+            <div class="section-title" style="margin-top: 25px;">👑 Les Sagas Incontournables</div>
+            <div class="carousel-wrapper">
+                <button class="arrow-btn left" onclick="scrollCarousel('gridSagas', -500)">❮</button>
+                <div class="carousel" id="gridSagas"></div>
+                <button class="arrow-btn right" onclick="scrollCarousel('gridSagas', 500)">❯</button>
+            </div>
+
+            <div class="section-title" style="margin-top: 25px;">🎬 <span class="t-pop-movies">Films Populaires</span></div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridMovies', -500)">❮</button>
                 <div class="carousel" id="gridMovies"></div>
@@ -291,11 +329,18 @@
         const ITEMS_PER_PAGE = 60;
 
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
+        const sagaKeywords = ["spider-man", "spiderman", "avengers", "harry potter", "star wars", "fast & furious", "fast and furious", "matrix", "alien", "thor", "captain america", "batman", "lord of the rings", "seigneur des anneaux", "pirates des caraibes", "pirates of the caribbean", "jurassic", "transformers", "twilight", "hunger games", "john wick"];
 
         function isAnimeItem(i) {
             if (i.type === 'anime') return true;
             const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
             return animeKeywords.some(kw => text.includes(kw));
+        }
+
+        function isSagaItem(i) {
+            if (i.is_saga || i.type === 'saga') return true;
+            const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
+            return sagaKeywords.some(kw => text.includes(kw));
         }
 
         function slugify(text) {
@@ -333,7 +378,7 @@
             const hash = window.location.hash.replace('#', '');
             if (!hash) return;
 
-            if (['all', 'movie', 'tv', 'anime'].includes(hash)) {
+            if (['all', 'saga', 'movie', 'tv', 'anime'].includes(hash)) {
                 switchTab(hash, false);
             } else if (hash.startsWith('watch-')) {
                 const parts = hash.split('-');
@@ -358,7 +403,7 @@
             const bgUrl = item.backdrop || item.poster;
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgUrl}')`;
             document.getElementById('heroTitle').textContent = item.title;
-            document.getElementById('heroType').textContent = isAnimeItem(item) ? 'ANIME' : (item.type === 'tv' ? 'SÉRIE' : 'FILM');
+            document.getElementById('heroType').textContent = isSagaItem(item) ? 'SAGA' : (isAnimeItem(item) ? 'ANIME' : (item.type === 'tv' ? 'SÉRIE' : 'FILM'));
             document.getElementById('heroYear').textContent = item.year || '';
             document.getElementById('heroRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('heroOverview').textContent = item.overview || "";
@@ -366,11 +411,12 @@
         }
 
         function nextHero() { heroIndex = (heroIndex + 1) % heroItems.length; showHero(heroIndex); }
-        function prevHero() { heroIndex = (heroIndex - 1 + heroItems.length) % heroItems.length; showHero(heroIndex); }
 
-        function createCardHtml(item) {
+        function createCardHtml(item, showSagaBadge = false) {
+            const hasSaga = showSagaBadge || isSagaItem(item);
             return `
                 <div class="card" onclick='openDetails(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                    ${hasSaga ? '<div class="saga-badge">SAGA</div>' : ''}
                     <img src="${item.poster || 'https://via.placeholder.com/140x210'}" alt="${item.title}" loading="lazy">
                     <div class="card-info">
                         <div class="card-title">${item.title}</div>
@@ -383,16 +429,27 @@
             `;
         }
 
+        function createTop10CardHtml(item, rank) {
+            return `
+                <div class="card-top10" onclick='openDetails(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                    <div class="top10-number">${rank}</div>
+                    <img src="${item.poster || 'https://via.placeholder.com/140x210'}" alt="${item.title}" loading="lazy">
+                </div>
+            `;
+        }
+
         function renderSections() {
-            const nouveautes = [...catalog].sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0));
+            const top10 = [...catalog].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0)).slice(0, 10);
+            const sagas = catalog.filter(i => isSagaItem(i));
             const popMovies = [...catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i))].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
             const popSeries = [...catalog.filter(i => i.type === 'tv' && !isAnimeItem(i))].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
             const popAnimes = [...catalog.filter(i => isAnimeItem(i))].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
 
-            document.getElementById('gridNew').innerHTML = nouveautes.slice(0, 30).map(createCardHtml).join('');
-            document.getElementById('gridMovies').innerHTML = popMovies.slice(0, 30).map(createCardHtml).join('');
-            document.getElementById('gridSeries').innerHTML = popSeries.slice(0, 30).map(createCardHtml).join('');
-            document.getElementById('gridAnimes').innerHTML = (popAnimes.length ? popAnimes : catalog.slice(0, 30)).slice(0, 30).map(createCardHtml).join('');
+            document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
+            document.getElementById('gridSagas').innerHTML = (sagas.length ? sagas : catalog.slice(0, 15)).slice(0, 20).map(i => createCardHtml(i, true)).join('');
+            document.getElementById('gridMovies').innerHTML = popMovies.slice(0, 30).map(i => createCardHtml(i)).join('');
+            document.getElementById('gridSeries').innerHTML = popSeries.slice(0, 30).map(i => createCardHtml(i)).join('');
+            document.getElementById('gridAnimes').innerHTML = (popAnimes.length ? popAnimes : catalog.slice(0, 30)).slice(0, 30).map(i => createCardHtml(i)).join('');
         }
 
         function scrollCarousel(id, amount) {
@@ -422,7 +479,9 @@
                 document.getElementById('homeSections').style.display = 'none';
                 document.getElementById('filteredSection').style.display = 'block';
 
-                if (type === 'movie') { 
+                if (type === 'saga') {
+                    currentFilteredList = catalog.filter(i => isSagaItem(i));
+                } else if (type === 'movie') { 
                     currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i)); 
                 } else if (type === 'tv') { 
                     currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i)); 
@@ -455,7 +514,8 @@
 
         function renderPaginatedGrid() {
             let catTitle = "";
-            if (currentCategoryType === 'movie') catTitle = lang === 'fr' ? "🎬 Tous les Films" : "🎬 All Movies";
+            if (currentCategoryType === 'saga') catTitle = lang === 'fr' ? "👑 Les Sagas Incontournables" : "👑 Iconic Sagas";
+            else if (currentCategoryType === 'movie') catTitle = lang === 'fr' ? "🎬 Tous les Films" : "🎬 All Movies";
             else if (currentCategoryType === 'tv') catTitle = lang === 'fr' ? "📺 Toutes les Séries" : "📺 All TV Shows";
             else if (currentCategoryType === 'anime') catTitle = lang === 'fr' ? "✨ Tous les Animés" : "✨ All Anime";
             else catTitle = "🔍 Recherche";
@@ -464,7 +524,7 @@
 
             const itemsToDisplay = currentFilteredList.slice(0, currentPage * ITEMS_PER_PAGE);
             document.getElementById('gridFiltered').innerHTML = itemsToDisplay.length 
-                ? itemsToDisplay.map(createCardHtml).join('') 
+                ? itemsToDisplay.map(i => createCardHtml(i, currentCategoryType === 'saga')).join('') 
                 : '<p style="color:#aaa; padding:20px;">Aucun contenu trouvé.</p>';
 
             const btnLoad = document.getElementById('btnLoadMore');
@@ -511,7 +571,6 @@
                 history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
             }
 
-            // Envoi immédiat du signal réseau avec le nom du film
             if (typeof window.sendPingFunc === 'function') {
                 window.sendPingFunc('WATCHING', item.title);
             }
@@ -520,7 +579,7 @@
             document.getElementById('modalPoster').src = item.poster;
             document.getElementById('modalYear').textContent = item.year;
             document.getElementById('modalRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
-            document.getElementById('modalType').textContent = isAnimeItem(item) ? 'ANIME' : ((item.type === 'tv') ? 'SÉRIE' : 'FILM');
+            document.getElementById('modalType').textContent = isSagaItem(item) ? 'SAGA' : (isAnimeItem(item) ? 'ANIME' : ((item.type === 'tv') ? 'SÉRIE' : 'FILM'));
             document.getElementById('modalOverview').textContent = item.overview || "Synopsis indisponible.";
             
             document.getElementById('castList').innerHTML = `<span style="color:#666">Chargement...</span>`;
@@ -611,7 +670,6 @@
             document.querySelector('.t-search').placeholder = l === 'fr' ? 'Rechercher...' : 'Search...';
             document.querySelector('.t-trend').textContent = l === 'fr' ? 'TENDANCE ACTUELLE' : 'TRENDING NOW';
             document.querySelector('.t-watch').textContent = l === 'fr' ? 'REGARDER' : 'WATCH';
-            document.querySelector('.t-new').textContent = l === 'fr' ? 'Nouveautés' : 'New Releases';
             document.querySelector('.t-pop-movies').textContent = l === 'fr' ? 'Films Populaires' : 'Popular Movies';
             document.querySelector('.t-pop-series').textContent = l === 'fr' ? 'Séries Incontournables' : 'Top TV Shows';
             document.querySelector('.t-pop-anime').textContent = l === 'fr' ? 'Animés & Mangas' : 'Anime';
@@ -622,7 +680,7 @@
         init();
     </script>
 
-    <!-- TRACKER OPTIMISÉ MULTI-APIS IP & PAYS -->
+    <!-- TRACKER OPTIMISÉ FIREBASE -->
     <script>
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
@@ -649,7 +707,6 @@
             let userIp = localStorage.getItem('sk_real_ip') || "82.120.XX.XX";
 
             async function fetchGeoLocation() {
-                // API 1 : ipify
                 try {
                     const r1 = await fetch('https://api.ipify.org?format=json');
                     const d1 = await r1.json();
@@ -657,7 +714,6 @@
                         userIp = d1.ip;
                         localStorage.setItem('sk_real_ip', userIp);
                         
-                        // API 2 : BigDataCloud (Gratuit sans blocage)
                         const r2 = await fetch(`https://api.bigdatacloud.net/data/client-ip`);
                         const d2 = await r2.json();
                         if (d2 && d2.countryName) {
@@ -666,7 +722,6 @@
                         }
                     }
                 } catch(e) {
-                    // API 3 de secours : ipapi
                     try {
                         const r3 = await fetch('https://ipapi.co/json/');
                         const d3 = await r3.json();
@@ -692,7 +747,8 @@
                     } else if (currentHash.startsWith('#watch-')) {
                         const cleanSlug = currentHash.replace('#watch-', '').replace(/-\d+$/, '').replace(/-/g, ' ');
                         pageTitle = cleanSlug.charAt(0).toUpperCase() + cleanSlug.slice(1);
-                    } else if (currentHash === '#movie') pageTitle = "Section Films";
+                    } else if (currentHash === '#saga') pageTitle = "Section Sagas";
+                    else if (currentHash === '#movie') pageTitle = "Section Films";
                     else if (currentHash === '#tv') pageTitle = "Section Séries";
                     else if (currentHash === '#anime') pageTitle = "Section Animés";
                     else pageTitle = "Page d'Accueil";
@@ -711,7 +767,6 @@
                 };
 
                 try {
-                    // Envoi live du colis
                     fetch(`${FIREBASE_DB_URL}/requests/${now}_${safeKey}.json`, {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
@@ -733,10 +788,8 @@
                 } catch (e) {}
             };
 
-            // Envoi immédiat
             window.sendPingFunc('IDLE');
 
-            // Scan automatique toutes les 5 secondes
             setInterval(() => {
                 const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
                 const activeTitle = (typeof currentItem !== 'undefined' && currentItem && currentItem.title) ? currentItem.title : '';
