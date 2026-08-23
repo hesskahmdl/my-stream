@@ -92,11 +92,10 @@
             border-radius: 4px; letter-spacing: 1px; z-index: 2;
         }
 
-        /* CHIFFRES GEANTS NETFLIX PAR-DESSUS L'IMAGE */
         .carousel-top10 { gap: 35px; padding-left: 20px; }
         .card-top10 { flex: 0 0 160px; display: flex; align-items: flex-end; position: relative; cursor: pointer; transition: transform 0.3s; }
         .card-top10:hover { transform: translateY(-6px) scale(1.03); }
-        .card-top10 img { width: 140px; height: 210px; z-index: 2; position: relative; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+        .card-top10 img { width: 140px; height: 210px; z-index: 2; position: relative; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.8); object-fit: cover; }
         .top10-number {
             position: absolute; left: -28px; bottom: -15px;
             font-size: 130px; font-weight: 900; line-height: 0.8;
@@ -109,10 +108,15 @@
             pointer-events: none;
         }
 
-        /* PAGE MOVIX SAGA */
+        .btn-load-more {
+            display: block; margin: 25px auto 40px; background: #1f1f2e; border: 1px solid #333;
+            color: #fff; padding: 12px 35px; border-radius: 25px; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-load-more:hover { background: #e50914; border-color: #e50914; }
+
         .saga-page { padding: 80px 40px 40px; display: none; }
         .saga-header { display: flex; gap: 35px; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; }
-        .saga-poster { width: 240px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); }
+        .saga-poster { width: 240px; height: 350px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); }
         .saga-details { flex: 1; min-width: 300px; }
         .saga-title { font-size: 36px; font-weight: 900; margin-bottom: 10px; }
         .saga-title span.red { color: #e50914; }
@@ -159,7 +163,7 @@
         .modal-close:hover { background: #e50914; border-color: #e50914; }
 
         .detail-top { display: flex; gap: 30px; margin-top: 10px; flex-wrap: wrap; }
-        .detail-poster { width: 220px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); flex-shrink: 0; }
+        .detail-poster { width: 220px; height: 330px; object-fit: cover; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); flex-shrink: 0; }
         .detail-info { flex: 1; min-width: 280px; }
         .detail-title { font-size: 32px; font-weight: 900; margin-bottom: 10px; }
         .detail-synopsis { font-size: 14px; color: #bbb; line-height: 1.5; margin: 15px 0; }
@@ -193,7 +197,7 @@
             .hero-title { font-size: 28px; }
             .main-content { padding: 10px 15px; }
             .saga-header { flex-direction: column; }
-            .saga-poster { width: 160px; }
+            .saga-poster { width: 160px; height: 240px; }
             .saga-title { font-size: 26px; }
             .card-top10 { flex: 0 0 130px; }
             .card-top10 img { width: 110px; height: 160px; }
@@ -301,10 +305,10 @@
                 </select>
             </div>
             <div class="movie-grid" id="gridFiltered"></div>
+            <button class="btn-load-more" id="btnLoadMore" style="display:none;" onclick="loadMoreItems()">Charger la suite</button>
         </div>
     </div>
 
-    <!-- PAGE DE SAGA DÉDIÉE -->
     <div class="saga-page" id="sagaDetailView">
         <div class="back-link" onclick="closeSagaView()">❮ Retour aux collections</div>
         
@@ -367,7 +371,6 @@
         </div>
     </div>
 
-    <!-- MODAL LECTEUR VIDÉO -->
     <div class="overlay" id="playerModal">
         <div class="modal-container">
             <button class="modal-close" onclick="closePlayer()">✕</button>
@@ -395,7 +398,6 @@
                 </div>
             </div>
 
-            <!-- BLOC SOCIÉTÉ DE PRODUCTION FILM INDIVIDUEL -->
             <div class="info-grid" style="margin-top: 20px;">
                 <div class="info-card">
                     <div class="info-card-title">🏢 Production & Détails</div>
@@ -416,18 +418,29 @@
         const API_KEY = "89dc647004be44c785266ccd4d69576a";
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null, currentSaga = null;
         let lang = "fr";
-        let currentFilteredList = [];
+        let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
+        const ITEMS_PER_PAGE = 60;
 
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
 
-        // BASE SAGA - AVEC AFFICHES EXACTES FOURNIES
+        function slugify(text) {
+            return (text || '')
+                .toString()
+                .toLowerCase()
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9 -]/g, '')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-');
+        }
+
+        // AFFICHES POSTERS MOYENNE TAILE (PROPRES & DÉFINIES) + MOTS CLES EXACTS
         const SAGAS_DATABASE = [
             {
                 id: "spider-man-mcu",
                 title: "Spider-Man (MCU) - Saga",
-                poster: "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
+                poster: "https://image.tmdb.org/t/p/w500/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
                 keywords: ["homecoming", "far from home", "no way home", "brand new day"],
-                desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU sous le patronage d'Iron Man.",
+                desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU.",
                 budget: "760 000 000 $", revenue: "6 234 107 164 $", rating: "7.6", duration: "9h 20min",
                 producers: ["Marvel Studios", "Pascal Pictures", "Columbia Pictures"],
                 countries: ["United States of America"],
@@ -436,8 +449,8 @@
             {
                 id: "avengers",
                 title: "Avengers - Saga",
-                poster: "https://image.tmdb.org/t/p/original/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
-                keywords: ["avengers"],
+                poster: "https://image.tmdb.org/t/p/w500/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
+                keywords: ["avengers: doomsday", "avengers: secret wars", "avengers: endgame", "avengers: infinity war", "l'ère d'ultron", "avengers"],
                 desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers face aux menaces d'Loki, Ultron et Thanos.",
                 budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
                 producers: ["Marvel Studios"], countries: ["United States of America"], genres: ["Action", "Science-Fiction"]
@@ -445,8 +458,8 @@
             {
                 id: "matrix",
                 title: "Matrix - Saga",
-                poster: "https://image.tmdb.org/t/p/original/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
-                keywords: ["matrix"],
+                poster: "https://image.tmdb.org/t/p/w500/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
+                keywords: ["matrix reloaded", "matrix revolutions", "matrix resurrections", "matrix"],
                 desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
                 budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
                 producers: ["Warner Bros.", "Village Roadshow"], countries: ["United States of America"], genres: ["Science-Fiction", "Action"]
@@ -454,17 +467,17 @@
             {
                 id: "star-wars",
                 title: "Star Wars - Saga",
-                poster: "https://image.tmdb.org/t/p/original/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
-                keywords: ["star wars", "guerre des étoiles", "empire contre-attaque", "retour du jedi", "menace fantôme", "attaque des clones", "revanche des sith", "réveil de la force"],
-                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les générations.",
+                poster: "https://image.tmdb.org/t/p/w500/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
+                keywords: ["la menace fantôme", "l'attaque des clones", "la revanche des sith", "un nouvel espoir", "l'empire contre-attaque", "le retour du jedi", "le réveil de la force", "les derniers jedi", "l'ascension de skywalker"],
+                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes de la saga Skywalker.",
                 budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
                 producers: ["Lucasfilm Ltd."], countries: ["United States of America"], genres: ["Action", "Aventure", "Sci-Fi"]
             },
             {
                 id: "harry-potter",
                 title: "Harry Potter - Saga",
-                poster: "https://image.tmdb.org/t/p/original/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
-                keywords: ["harry potter"],
+                poster: "https://image.tmdb.org/t/p/w500/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
+                keywords: ["école des sorciers", "chambre des secrets", "prisonnier d'azkaban", "coupe de feu", "ordre du phénix", "prince de sang-mêlé", "reliques de la mort", "harry potter"],
                 desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
                 budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
                 producers: ["Warner Bros. Pictures", "Heyday Films"], countries: ["United Kingdom", "United States"], genres: ["Fantastique", "Aventure"]
@@ -472,8 +485,8 @@
             {
                 id: "seigneur-des-anneaux",
                 title: "Le Seigneur des Anneaux - Saga",
-                poster: "https://image.tmdb.org/t/p/original/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
-                keywords: ["seigneur des anneaux", "communauté de l'anneau", "deux tours", "retour du roi"],
+                poster: "https://image.tmdb.org/t/p/w500/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
+                keywords: ["la communauté de l'anneau", "les deux tours", "le retour du roi"],
                 desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
                 budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
                 producers: ["New Line Cinema", "WingNut Films"], countries: ["New Zealand", "United States"], genres: ["Aventure", "Fantastique"]
@@ -493,7 +506,25 @@
                 heroItems = catalog.slice(0, 10);
                 setupHeroSlider();
                 renderSections();
+
+                handleInitialUrl();
             } catch (e) { console.error("Erreur chargement:", e); }
+        }
+
+        function handleInitialUrl() {
+            const hash = window.location.hash.replace('#', '');
+            if (!hash) return;
+
+            if (['home', 'all', 'saga', 'movie', 'tv', 'anime', 'watchlist'].includes(hash)) {
+                switchTab(hash === 'home' ? 'all' : hash, false);
+            } else if (hash.startsWith('watch-')) {
+                const parts = hash.split('-');
+                const tmdbId = parts[parts.length - 1];
+                const foundItem = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+                if (foundItem) {
+                    openDetails(foundItem, false);
+                }
+            }
         }
 
         function setupHeroSlider() {
@@ -611,12 +642,18 @@
             document.getElementById('heroBanner').style.display = 'flex';
         }
 
-        function switchTab(type) {
+        function switchTab(type, updateUrl = true) {
+            currentCategoryType = type;
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${type}`).classList.add('active');
+            const targetBtn = document.getElementById(`btn-${type}`);
+            if (targetBtn) targetBtn.classList.add('active');
             
             closeSagaView();
             closePlayer();
+
+            if (updateUrl) {
+                history.pushState(null, null, `#${type === 'all' ? 'home' : type}`);
+            }
 
             if (type === 'all') {
                 document.getElementById('heroBanner').style.display = 'flex';
@@ -628,32 +665,84 @@
                 document.getElementById('filteredSection').style.display = 'block';
 
                 if (type === 'saga') {
-                    document.getElementById('gridFiltered').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('');
+                    currentFilteredList = SAGAS_DATABASE;
                 } else if (type === 'movie') {
                     currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i));
-                    renderPaginatedGrid();
                 } else if (type === 'tv') {
                     currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i));
-                    renderPaginatedGrid();
                 } else if (type === 'anime') {
                     currentFilteredList = catalog.filter(i => isAnimeItem(i));
-                    renderPaginatedGrid();
                 } else if (type === 'watchlist') {
                     const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
-                    const wList = catalog.filter(i => saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
-                    document.getElementById('gridFiltered').innerHTML = wList.length ? wList.map(createCardHtml).join('') : '<p style="padding:30px; color:#aaa;">Votre watchlist est vide.</p>';
+                    currentFilteredList = catalog.filter(i => saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
                 }
+
+                applySorting();
             }
         }
 
-        function renderPaginatedGrid() {
-            document.getElementById('gridFiltered').innerHTML = currentFilteredList.map(createCardHtml).join('');
+        function applySorting() {
+            const sortVal = document.getElementById('sortSelect').value;
+
+            if (currentCategoryType !== 'saga') {
+                if (sortVal === 'rating-desc') {
+                    currentFilteredList.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
+                } else if (sortVal === 'rating-asc') {
+                    currentFilteredList.sort((a, b) => parseFloat(a.rating || 0) - parseFloat(b.rating || 0));
+                } else if (sortVal === 'title-asc') {
+                    currentFilteredList.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+                } else if (sortVal === 'year-desc') {
+                    currentFilteredList.sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0));
+                }
+            }
+
+            currentPage = 1;
+            renderPaginatedGrid();
         }
 
-        async function openDetails(item) {
+        function renderPaginatedGrid() {
+            let catTitle = "Résultats";
+            if (currentCategoryType === 'saga') catTitle = "👑 Les Sagas Incontournables";
+            else if (currentCategoryType === 'movie') catTitle = "🎬 Tous les Films";
+            else if (currentCategoryType === 'tv') catTitle = "📺 Toutes les Séries";
+            else if (currentCategoryType === 'anime') catTitle = "✨ Tous les Animés";
+            else if (currentCategoryType === 'watchlist') catTitle = "🔖 Ma Watchlist";
+
+            document.getElementById('filterTitle').textContent = `${catTitle} (${currentFilteredList.length.toLocaleString('fr-FR')})`;
+
+            if (currentCategoryType === 'saga') {
+                document.getElementById('gridFiltered').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('');
+                document.getElementById('btnLoadMore').style.display = 'none';
+                return;
+            }
+
+            const itemsToDisplay = currentFilteredList.slice(0, currentPage * ITEMS_PER_PAGE);
+            document.getElementById('gridFiltered').innerHTML = itemsToDisplay.length 
+                ? itemsToDisplay.map(createCardHtml).join('') 
+                : '<p style="color:#aaa; padding:30px;">Aucun contenu disponible.</p>';
+
+            const btnLoad = document.getElementById('btnLoadMore');
+            if (itemsToDisplay.length < currentFilteredList.length) {
+                btnLoad.style.display = 'block';
+            } else {
+                btnLoad.style.display = 'none';
+            }
+        }
+
+        function loadMoreItems() {
+            currentPage++;
+            renderPaginatedGrid();
+        }
+
+        async function openDetails(item, updateUrl = true) {
             currentItem = item;
             const idClean = item.tmdb_id_clean || item.tmdb_id;
             
+            if (updateUrl) {
+                const slugTitle = slugify(item.title);
+                history.pushState(null, null, `#watch-${slugTitle}-${idClean}`);
+            }
+
             document.getElementById('modalTitle').textContent = item.title;
             document.getElementById('modalPoster').src = item.poster;
             document.getElementById('modalYear').textContent = item.year || '2026';
@@ -675,7 +764,6 @@
                 const res = await fetch(`https://api.themoviedb.org/3/${type}/${idClean}?api_key=${API_KEY}&append_to_response=credits,videos&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
                 const data = await res.json();
                 
-                // CASTING AVEC RÔLE
                 if(data.credits && data.credits.cast) {
                     const topCast = data.credits.cast.slice(0, 5);
                     document.getElementById('castList').innerHTML = topCast.map(actor => `
@@ -687,7 +775,6 @@
                     `).join('');
                 }
 
-                // SOCIÉTÉS DE PRODUCTION POUR LES FILMS
                 if (data.production_companies && data.production_companies.length) {
                     const prods = data.production_companies.map(p => p.name).join(', ');
                     document.getElementById('movieProducersInfo').innerHTML = `
@@ -772,11 +859,16 @@
             document.getElementById('playerModal').style.display = 'none';
             document.getElementById('videoContainer').innerHTML = '';
             document.body.style.overflow = 'auto';
+
+            const activeTab = document.querySelector('.nav-item.active') ? document.querySelector('.nav-item.active').id.replace('btn-', '') : 'all';
+            history.pushState(null, null, `#${activeTab === 'all' ? 'home' : activeTab}`);
         }
 
         function scrollCarousel(id, amount) {
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
+
+        window.addEventListener('popstate', handleInitialUrl);
 
         init();
     </script>
