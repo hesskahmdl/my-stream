@@ -31,6 +31,21 @@
         .lang-switch img { width: 22px; height: 15px; border-radius: 2px; opacity: 0.4; transition: 0.2s; border: 1px solid transparent; }
         .lang-switch img.active { opacity: 1; border-color: #fff; }
 
+        /* BOUTON ET PROFIL CONNEXION */
+        .btn-auth-google {
+            background: #e50914; color: #fff; border: none; padding: 7px 15px;
+            border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap;
+        }
+        .btn-auth-google:hover { background: #ff0f1a; transform: scale(1.03); }
+        .user-profile-btn {
+            display: flex; align-items: center; gap: 8px; background: #18181f;
+            border: 1px solid #333; padding: 4px 10px 4px 5px; border-radius: 20px;
+            cursor: pointer; position: relative;
+        }
+        .user-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+        .user-name-text { font-size: 12px; font-weight: 700; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         .search-box input {
             background: #18181f; border: 1px solid #2a2a35; color: #fff; padding: 6px 12px;
             border-radius: 20px; outline: none; font-size: 13px; width: 180px; transition: width 0.3s;
@@ -272,6 +287,10 @@
             .trailer-box { width: 100%; }
         }
     </style>
+
+    <!-- FIREBASE SDK POUR AUTHENTIFICATION GOOGLE -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 <body>
 
@@ -305,6 +324,18 @@
             <div class="lang-switch">
                 <img src="https://flagcdn.com/w20/fr.png" alt="FR" id="flag-fr" class="active" onclick="setLang('fr')">
                 <img src="https://flagcdn.com/w20/gb.png" alt="EN" id="flag-en" onclick="setLang('en')">
+            </div>
+
+            <!-- BOUTON CONNEXION GOOGLE & MENU UTILISATEUR -->
+            <div id="authContainer">
+                <button class="btn-auth-google" id="btnLoginGoogle" onclick="loginWithGoogle()">
+                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/></svg>
+                    <span>Connexion</span>
+                </button>
+                <div class="user-profile-btn" id="userProfile" style="display:none;" onclick="logoutGoogle()">
+                    <img class="user-avatar" id="userAvatar" src="" alt="User">
+                    <span class="user-name-text" id="userName">User</span>
+                </div>
             </div>
         </div>
     </header>
@@ -518,6 +549,51 @@
         let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
+
+        /* CONFIGURATION ET LOGIQUE CONNEXION GOOGLE (FIREBASE) */
+        const firebaseConfig = {
+            databaseURL: "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        function loginWithGoogle() {
+            auth.signInWithPopup(googleProvider).then(result => {
+                const user = result.user;
+                localStorage.setItem('sk_user_id', user.displayName || user.email);
+            }).catch(error => {
+                console.error("Erreur connexion Google:", error);
+                alert("Impossible de se connecter avec Google.");
+            });
+        }
+
+        function logoutGoogle() {
+            if (confirm("Voulez-vous vous déconnecter ?")) {
+                auth.signOut().then(() => {
+                    localStorage.removeItem('sk_user_id');
+                });
+            }
+        }
+
+        auth.onAuthStateChanged(user => {
+            const btnLogin = document.getElementById('btnLoginGoogle');
+            const userProfile = document.getElementById('userProfile');
+            const avatar = document.getElementById('userAvatar');
+            const nameText = document.getElementById('userName');
+
+            if (user) {
+                btnLogin.style.display = 'none';
+                userProfile.style.display = 'flex';
+                avatar.src = user.photoURL || 'https://via.placeholder.com/26';
+                nameText.textContent = user.displayName ? user.displayName.split(' ')[0] : 'Profil';
+            } else {
+                btnLogin.style.display = 'flex';
+                userProfile.style.display = 'none';
+            }
+        });
 
         const translations = {
             fr: {
@@ -824,7 +900,6 @@
                     item.poster = formatTmdbImage(item.poster || item.poster_path, 'w780');
                 }
                 if (!hasCustomBackdrop) {
-                    // Restauration de la logique originale pour lire correctement la propriété 'backdrop', 'backdrops' ou 'backdrop_path'
                     const rawBackdrop = item.backdrop || item.backdrops || item.backdrop_path;
                     item.backdrop = formatTmdbImage(rawBackdrop, 'w1280');
                 }
@@ -866,7 +941,6 @@
         function showHero(index) {
             heroIndex = index;
             const item = heroItems[heroIndex];
-            // S'assure de récupérer l'image de fond si disponible, sinon se rabat sur le poster
             const bgImage = (item.backdrop && item.backdrop !== 'https://via.placeholder.com/500x750') ? item.backdrop : item.poster;
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
             document.getElementById('heroTitle').textContent = item.title;
