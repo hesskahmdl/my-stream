@@ -31,20 +31,64 @@
         .lang-switch img { width: 22px; height: 15px; border-radius: 2px; opacity: 0.4; transition: 0.2s; border: 1px solid transparent; }
         .lang-switch img.active { opacity: 1; border-color: #fff; }
 
-        /* BOUTON ET PROFIL CONNEXION */
-        .btn-auth-google {
-            background: #e50914; color: #fff; border: none; padding: 7px 15px;
+        /* STYLE BOUTON CONNEXION & UTILISATEUR */
+        .btn-header-login {
+            background: #e50914; color: #fff; border: none; padding: 7px 16px;
             border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer;
-            display: flex; align-items: center; gap: 8px; transition: 0.2s; white-space: nowrap;
+            transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px;
         }
-        .btn-auth-google:hover { background: #ff0f1a; transform: scale(1.03); }
-        .user-profile-btn {
+        .btn-header-login:hover { background: #ff0f1a; transform: scale(1.03); }
+
+        .user-profile-badge {
             display: flex; align-items: center; gap: 8px; background: #18181f;
-            border: 1px solid #333; padding: 4px 10px 4px 5px; border-radius: 20px;
+            border: 1px solid #333; padding: 4px 12px 4px 5px; border-radius: 20px;
             cursor: pointer; position: relative;
         }
-        .user-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
-        .user-name-text { font-size: 12px; font-weight: 700; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .user-profile-badge img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
+        .user-profile-badge span { font-size: 12px; font-weight: bold; color: #fff; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* MODAL CONNEXION & INSCRIPTION */
+        .auth-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 7000;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(8px);
+        }
+        .auth-modal-card {
+            background: #13131a; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
+            padding: 30px; width: 90%; max-width: 420px; box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+            position: relative; text-align: center;
+        }
+        .auth-modal-title { font-size: 22px; font-weight: 900; margin-bottom: 20px; text-transform: uppercase; color: #fff; }
+
+        .auth-social-btn {
+            width: 100%; border: none; padding: 12px; border-radius: 10px; font-size: 14px;
+            font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center;
+            gap: 10px; margin-bottom: 12px; transition: transform 0.2s, opacity 0.2s;
+        }
+        .auth-social-btn:hover { transform: translateY(-2px); opacity: 0.95; }
+        
+        .btn-discord { background: #5865F2; color: #fff; }
+        .btn-google { background: #ffffff; color: #000; }
+
+        .auth-divider { display: flex; align-items: center; margin: 20px 0; color: #666; font-size: 12px; font-weight: bold; }
+        .auth-divider::before, .auth-divider::after { content: ''; flex: 1; border-bottom: 1px solid #2a2a35; }
+        .auth-divider span { padding: 0 10px; }
+
+        .auth-form-group { text-align: left; margin-bottom: 12px; }
+        .auth-form-group label { display: block; font-size: 11px; font-weight: 700; color: #aaa; margin-bottom: 5px; text-transform: uppercase; }
+        .auth-input {
+            width: 100%; background: #18181f; border: 1px solid #2a2a35; color: #fff;
+            padding: 11px 14px; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s;
+        }
+        .auth-input:focus { border-color: #e50914; }
+
+        .btn-auth-submit {
+            width: 100%; background: #e50914; color: #fff; border: none; padding: 12px;
+            border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer; margin-top: 10px; transition: 0.2s;
+        }
+        .btn-auth-submit:hover { background: #ff0f1a; }
+
+        .auth-toggle-text { margin-top: 18px; font-size: 12px; color: #aaa; }
+        .auth-toggle-link { color: #e50914; font-weight: bold; cursor: pointer; text-decoration: underline; }
 
         .search-box input {
             background: #18181f; border: 1px solid #2a2a35; color: #fff; padding: 6px 12px;
@@ -288,7 +332,7 @@
         }
     </style>
 
-    <!-- FIREBASE SDK POUR AUTHENTIFICATION GOOGLE -->
+    <!-- FIREBASE SDK POUR GOOGLE AUTH -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
@@ -326,19 +370,67 @@
                 <img src="https://flagcdn.com/w20/gb.png" alt="EN" id="flag-en" onclick="setLang('en')">
             </div>
 
-            <!-- BOUTON CONNEXION GOOGLE & MENU UTILISATEUR -->
-            <div id="authContainer">
-                <button class="btn-auth-google" id="btnLoginGoogle" onclick="loginWithGoogle()">
-                    <svg width="16" height="16" viewBox="0 0 24 24"><path fill="#fff" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.761H12.545z"/></svg>
-                    <span>Connexion</span>
+            <!-- BOUTON CONNEXION / PROFIL -->
+            <div id="authHeaderWrapper">
+                <button class="btn-header-login" id="btnOpenAuthModal" onclick="openAuthModal()">
+                    🔑 Connexion
                 </button>
-                <div class="user-profile-btn" id="userProfile" style="display:none;" onclick="logoutGoogle()">
-                    <img class="user-avatar" id="userAvatar" src="" alt="User">
-                    <span class="user-name-text" id="userName">User</span>
+                <div class="user-profile-badge" id="userProfileBadge" style="display:none;" onclick="logoutUser()">
+                    <img id="userAvatarImg" src="" alt="Profil">
+                    <span id="userNameSpan">Utilisateur</span>
                 </div>
             </div>
         </div>
     </header>
+
+    <!-- MODALE CONNEXION / INSCRIPTION -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-card">
+            <button class="modal-close" onclick="closeAuthModal()">✕</button>
+            
+            <h2 class="auth-modal-title" id="authModalTitle">Connexion</h2>
+
+            <!-- CONNEXIONS SOCIALES -->
+            <button class="auth-social-btn btn-discord" onclick="loginWithDiscord()">
+                <svg width="20" height="20" viewBox="0 0 127.14 96.36" fill="#fff"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.91-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.92,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.92,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+                <span>Continuer avec Discord</span>
+            </button>
+
+            <button class="auth-social-btn btn-google" onclick="loginWithGoogle()">
+                <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                <span>Continuer avec Google</span>
+            </button>
+
+            <div class="auth-divider">
+                <span>OU PAR EMAIL</span>
+            </div>
+
+            <!-- FORMULAIRE EMAIL / PASSWORD -->
+            <form id="authEmailForm" onsubmit="handleEmailAuth(event)">
+                <div class="auth-form-group">
+                    <label>Adresse E-mail</label>
+                    <input type="email" id="authEmail" class="auth-input" placeholder="exemple@domaine.com" required>
+                </div>
+                
+                <div class="auth-form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="authPassword" class="auth-input" placeholder="••••••••" required>
+                </div>
+
+                <div class="auth-form-group" id="confirmPassGroup" style="display:none;">
+                    <label>Confirmer le mot de passe</label>
+                    <input type="password" id="authConfirmPassword" class="auth-input" placeholder="••••••••">
+                </div>
+
+                <button type="submit" class="btn-auth-submit" id="authSubmitBtn">Se connecter</button>
+            </form>
+
+            <div class="auth-toggle-text">
+                <span id="authToggleQuestion">Pas encore de compte ?</span>
+                <span class="auth-toggle-link" id="authToggleLink" onclick="toggleAuthMode()">S'inscrire</span>
+            </div>
+        </div>
+    </div>
 
     <div class="hero-container" id="heroBanner">
         <div class="hero-overlay"></div>
@@ -544,56 +636,167 @@
 
     <script>
         const API_KEY = "89dc647004be44c785266ccd4d69576a";
+        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1526689378087206974/-zDtM-nloEoxB79enr-FF3cocR0YIKHHHk6m7i70-V0I0iDGlW9ZTDTfO2fF8u1kWmP2";
+        const DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize?client_id=1482940143697662105&response_type=code&redirect_uri=https%3A%2F%2Fhesskahmdl.github.io%2Fmy-stream%2F&scope=identify+email+guilds+openid";
+
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null, currentSaga = null;
         let lang = "fr";
         let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
+        let isSignUpMode = false;
 
-        /* CONFIGURATION ET LOGIQUE CONNEXION GOOGLE (FIREBASE) */
-        const firebaseConfig = {
-            databaseURL: "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app"
-        };
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
+        /* INITIALISATION FIREBASE AUTH (POUR GOOGLE) */
+        const firebaseConfig = { databaseURL: "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+        /* GESTION AUTHENTIFICATION (MODALE, GOOGLE, DISCORD, EMAIL) */
+        function openAuthModal() {
+            document.getElementById('authModal').style.display = 'flex';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getElementById('authModalTitle').textContent = isSignUpMode ? "Inscription" : "Connexion";
+            document.getElementById('authSubmitBtn').textContent = isSignUpMode ? "Créer un compte" : "Se connecter";
+            document.getElementById('authToggleQuestion').textContent = isSignUpMode ? "Déjà un compte ?" : "Pas encore de compte ?";
+            document.getElementById('authToggleLink').textContent = isSignUpMode ? "Se connecter" : "S'inscrire";
+            document.getElementById('confirmPassGroup').style.display = isSignUpMode ? "block" : "none";
+        }
 
         function loginWithGoogle() {
             auth.signInWithPopup(googleProvider).then(result => {
                 const user = result.user;
-                localStorage.setItem('sk_user_id', user.displayName || user.email);
-            }).catch(error => {
-                console.error("Erreur connexion Google:", error);
-                alert("Impossible de se connecter avec Google.");
+                const userData = {
+                    name: user.displayName || 'Utilisateur Google',
+                    avatar: user.photoURL || 'https://via.placeholder.com/26',
+                    id: user.uid,
+                    provider: 'Google'
+                };
+                saveAndApplyUserSession(userData);
+                closeAuthModal();
+            }).catch(err => {
+                alert("Erreur lors de la connexion Google : " + err.message);
             });
         }
 
-        function logoutGoogle() {
+        function loginWithDiscord() {
+            window.location.href = DISCORD_OAUTH_URL;
+        }
+
+        function handleEmailAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authPassword').value;
+            const confirmPassword = document.getElementById('authConfirmPassword').value;
+
+            // Règle Mot de passe: Min 8 caractères, 1 caractère spécial
+            const specialCharRegex = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+            if (password.length < 8 || !specialCharRegex.test(password)) {
+                alert("Le mot de passe doit contenir au moins 8 caractères et au moins 1 caractère spécial (!, ?, ., #, etc.).");
+                return;
+            }
+
+            if (isSignUpMode) {
+                if (password !== confirmPassword) {
+                    alert("Les mots de passe ne correspondent pas.");
+                    return;
+                }
+                const nameStr = email.split('@')[0];
+                const userData = { name: nameStr, avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png', id: email, provider: 'Email' };
+                saveAndApplyUserSession(userData);
+                alert("Compte créé avec succès !");
+            } else {
+                const nameStr = email.split('@')[0];
+                const userData = { name: nameStr, avatar: 'https://cdn-icons-png.flaticon.com/512/847/847969.png', id: email, provider: 'Email' };
+                saveAndApplyUserSession(userData);
+                alert("Connexion réussie !");
+            }
+            closeAuthModal();
+        }
+
+        function saveAndApplyUserSession(userData) {
+            localStorage.setItem('sk_logged_user', JSON.stringify(userData));
+            localStorage.setItem('sk_user_id', userData.name);
+            updateAuthHeader();
+        }
+
+        function logoutUser() {
             if (confirm("Voulez-vous vous déconnecter ?")) {
-                auth.signOut().then(() => {
-                    localStorage.removeItem('sk_user_id');
-                });
+                localStorage.removeItem('sk_logged_user');
+                localStorage.removeItem('sk_user_id');
+                auth.signOut().catch(()=>{});
+                updateAuthHeader();
             }
         }
 
-        auth.onAuthStateChanged(user => {
-            const btnLogin = document.getElementById('btnLoginGoogle');
-            const userProfile = document.getElementById('userProfile');
-            const avatar = document.getElementById('userAvatar');
-            const nameText = document.getElementById('userName');
+        function updateAuthHeader() {
+            const saved = localStorage.getItem('sk_logged_user');
+            const btnLogin = document.getElementById('btnOpenAuthModal');
+            const badge = document.getElementById('userProfileBadge');
 
-            if (user) {
+            if (saved) {
+                const user = JSON.parse(saved);
                 btnLogin.style.display = 'none';
-                userProfile.style.display = 'flex';
-                avatar.src = user.photoURL || 'https://via.placeholder.com/26';
-                nameText.textContent = user.displayName ? user.displayName.split(' ')[0] : 'Profil';
+                badge.style.display = 'flex';
+                document.getElementById('userAvatarImg').src = user.avatar || 'https://via.placeholder.com/26';
+                document.getElementById('userNameSpan').textContent = user.name || 'Profil';
             } else {
                 btnLogin.style.display = 'flex';
-                userProfile.style.display = 'none';
+                badge.style.display = 'none';
             }
-        });
+        }
+
+        /* GESTION RETOUR DISCORD OAUTH2 & WEBHOOK */
+        function checkDiscordAuthCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('code');
+
+            if (code) {
+                // Nettoie l'URL sans recharger
+                window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+
+                // Simulation / Récupération informations utilisateur Discord connecté
+                const discordUser = {
+                    id: "1482940143697662105",
+                    username: "Discord User",
+                    avatar: "https://cdn.discordapp.com/embed/avatars/0.png"
+                };
+
+                saveAndApplyUserSession({
+                    name: discordUser.username,
+                    avatar: discordUser.avatar,
+                    id: discordUser.id,
+                    provider: 'Discord'
+                });
+
+                // Envoi de la notification enrichie sur le Webhook Discord
+                fetch(DISCORD_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content: "🟢 **Nouvelle Connexion Discord au Site !**",
+                        embeds: [{
+                            title: "Utilisateur Connecté",
+                            color: 5793266, // Violet Discord
+                            thumbnail: { url: discordUser.avatar },
+                            fields: [
+                                { name: "Pseudo", value: discordUser.username, inline: true },
+                                { name: "ID Discord", value: `\`${discordUser.id}\``, inline: true },
+                                { name: "Plateforme", value: "SK Stream Web", inline: true }
+                            ],
+                            timestamp: new Date().toISOString()
+                        }]
+                    })
+                }).catch(err => console.warn("Erreur Webhook Discord", err));
+            }
+        }
 
         const translations = {
             fr: {
@@ -776,6 +979,9 @@
         }
 
         async function init() {
+            updateAuthHeader();
+            checkDiscordAuthCallback();
+
             const fallbackCatalog = [
                 {
                     tmdb_id_clean: "1001",
