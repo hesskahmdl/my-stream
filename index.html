@@ -679,6 +679,7 @@
     <script>
         const API_KEY = "89dc647004be44c785266ccd4d69576a";
         const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
+        const ADMIN_SECRET = "SkstreamTastycrousty62410";
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1526689378087206974/-zDtM-nloEoxB79enr-FF3cocR0YIKHHHk6m7i70-V0I0iDGlW9ZTDTfO2fF8u1kWmP2";
         const DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize?client_id=1499817025688567939&response_type=token&redirect_uri=https%3A%2F%2Fhesskahmdl.github.io%2Fmy-stream%2F&scope=identify+email";
         const DEV_DISCORD_ID = "1378818883414134965";
@@ -780,7 +781,7 @@
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
-                                content: " Connexion effectuée !",
+                                content: "Connexion effectuée !",
                                 embeds: [{
                                     title: "Nouvelle Connexion Discord",
                                     color: 5793266,
@@ -891,6 +892,7 @@
                     const data = await res.json();
                     if (data) {
                         const cloudSagas = Object.values(data);
+                        SAGAS_DATABASE = [...DEFAULT_SAGAS];
                         cloudSagas.forEach(cs => {
                             if (!cs.exactTitles) cs.exactTitles = [];
                             const idx = SAGAS_DATABASE.findIndex(s => s.id === cs.id);
@@ -900,6 +902,8 @@
                                 SAGAS_DATABASE.push(cs);
                             }
                         });
+                        renderSections();
+                        if (currentCategoryType === 'saga') renderPaginatedGrid();
                     }
                 }
             } catch (e) {}
@@ -907,7 +911,7 @@
 
         async function saveSagaToFirebase(sagaObj) {
             try {
-                await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaObj.id}.json`, {
+                await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaObj.id}.json?auth=${ADMIN_SECRET}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(sagaObj)
@@ -945,6 +949,7 @@
                     const customList = await res.json();
                     if (customList && Array.isArray(customList) && customList.length > 0) {
                         heroItems = customList;
+                        showHero(0);
                     }
                 }
             } catch(e) {}
@@ -952,7 +957,7 @@
 
         async function saveHeroListToFirebase() {
             try {
-                await fetch(`${FIREBASE_DB_URL}/hero_list_custom.json`, {
+                await fetch(`${FIREBASE_DB_URL}/hero_list_custom.json?auth=${ADMIN_SECRET}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(heroItems)
@@ -960,10 +965,16 @@
             } catch(e) {}
         }
 
+        function startRealtimeSync() {
+            setInterval(async () => {
+                await loadCustomHeroFromFirebase();
+                await loadSagasFromFirebase();
+            }, 5000);
+        }
+
         async function init() {
             updateAuthHeader();
             await checkDiscordCallback();
-            await loadSagasFromFirebase();
 
             try {
                 const res = await fetch('data.json');
@@ -972,9 +983,11 @@
 
             heroItems = catalog.slice(0, 10);
             await loadCustomHeroFromFirebase();
+            await loadSagasFromFirebase();
             setupHeroSlider();
             renderSections();
             handleInitialUrl();
+            startRealtimeSync();
         }
 
         function handleInitialUrl() {
@@ -1138,7 +1151,7 @@
                 if (res) {
                     SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== sagaId);
                     try {
-                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaId}.json`, { method: 'DELETE' });
+                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaId}.json?auth=${ADMIN_SECRET}`, { method: 'DELETE' });
                     } catch(err) {}
                     renderSections();
                     if (currentCategoryType === 'saga') renderPaginatedGrid();
@@ -1592,7 +1605,7 @@
                 if (res) {
                     SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
                     try {
-                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${currentSaga.id}.json`, { method: 'DELETE' });
+                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${currentSaga.id}.json?auth=${ADMIN_SECRET}`, { method: 'DELETE' });
                     } catch(e) {}
                     closeSagaView();
                     switchTab('saga');
