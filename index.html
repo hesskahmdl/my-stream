@@ -341,6 +341,8 @@
         .hero-item-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
         .hero-item-img { width: 40px; height: 25px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
         .hero-item-title { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .hero-item-actions { display: flex; gap: 6px; }
+        .btn-edit-hero-item { background: #3b82f6; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
         .btn-del-hero-item { background: #e50914; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
 
         @media (max-width: 768px) {
@@ -637,7 +639,7 @@
             <div style="font-size:12px; color:#aaa; margin-bottom:6px; font-weight:bold;">Éléments actuels du Carrousel :</div>
             <div class="hero-list-container" id="heroListManager"></div>
 
-            <div style="font-size:12px; color:#e50914; margin-bottom:8px; font-weight:bold;">➕ Ajouter / Remplacer un élément :</div>
+            <div style="font-size:12px; color:#e50914; margin-bottom:8px; font-weight:bold;" id="heroFormLabel">➕ Ajouter un élément :</div>
             <input type="text" class="admin-input" id="heroEditTitle" placeholder="Titre du film">
             <input type="text" class="admin-input" id="heroEditImage" placeholder="Lien Image TMDB (ex: /t/p/w1280/... ou URL complète)">
             <input type="text" class="admin-input" id="heroEditTmdbId" placeholder="ID TMDB du film (ex: 550)">
@@ -645,7 +647,7 @@
             
             <div class="admin-btn-group">
                 <button class="btn-saga-action" onclick="closeAdminModals()">Annuler</button>
-                <button class="btn-saga-action" style="background:#e50914;" onclick="submitHeroEdit()">Ajouter au Carrousel</button>
+                <button class="btn-saga-action" style="background:#e50914;" id="btnSubmitHeroForm" onclick="submitHeroEdit()">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -687,6 +689,7 @@
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
         let customConfirmCallback = null;
+        let editingHeroIndex = null;
 
         function openCustomConfirm(title, text, callback) {
             document.getElementById('customConfirmTitle').textContent = title;
@@ -1411,17 +1414,40 @@
                         <img class="hero-item-img" src="${formatTmdbImage(item.backdrop || item.poster, 'w185')}" alt="">
                         <span class="hero-item-title">${item.title}</span>
                     </div>
-                    <button class="btn-del-hero-item" onclick="removeHeroItemByIndex(${index})">Supprimer</button>
+                    <div class="hero-item-actions">
+                        <button class="btn-edit-hero-item" onclick="startEditingHeroItem(${index})">Modifier</button>
+                        <button class="btn-del-hero-item" onclick="removeHeroItemByIndex(${index})">Supprimer</button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        function openEditHeroModal() {
-            if (!isAdmin) return;
+        function resetHeroForm() {
+            editingHeroIndex = null;
+            document.getElementById('heroFormLabel').textContent = "➕ Ajouter un élément :";
+            document.getElementById('btnSubmitHeroForm').textContent = "Ajouter au Carrousel";
             document.getElementById('heroEditTitle').value = '';
             document.getElementById('heroEditImage').value = '';
             document.getElementById('heroEditTmdbId').value = '';
             document.getElementById('heroEditDesc').value = '';
+        }
+
+        function startEditingHeroItem(index) {
+            if (!isAdmin || !heroItems[index]) return;
+            editingHeroIndex = index;
+            const item = heroItems[index];
+
+            document.getElementById('heroFormLabel').textContent = `✏️ Modifier : "${item.title}"`;
+            document.getElementById('btnSubmitHeroForm').textContent = "Enregistrer les modifications";
+            document.getElementById('heroEditTitle').value = item.title || '';
+            document.getElementById('heroEditImage').value = item.backdrop || item.poster || '';
+            document.getElementById('heroEditTmdbId').value = item.tmdb_id_clean || item.tmdb_id || '';
+            document.getElementById('heroEditDesc').value = item.overview || '';
+        }
+
+        function openEditHeroModal() {
+            if (!isAdmin) return;
+            resetHeroForm();
             renderHeroManagerList();
             document.getElementById('editHeroModal').style.display = 'flex';
         }
@@ -1432,6 +1458,7 @@
                 if (res) {
                     heroItems.splice(index, 1);
                     await saveHeroListToFirebase();
+                    resetHeroForm();
                     renderHeroManagerList();
                     if (heroItems.length > 0) {
                         showHero(0);
@@ -1452,21 +1479,33 @@
 
             if (!title || !image) return;
 
-            openCustomConfirm("Ajouter au Carrousel", "Ajouter cet élément et enregistrer les modifications pour tous les visiteurs ?", async (res) => {
+            const isEdit = editingHeroIndex !== null;
+            const confirmTitle = isEdit ? "Modifier l'élément" : "Ajouter au Carrousel";
+            const confirmText = isEdit 
+                ? `Enregistrer les modifications pour "${title}" sur le site ?` 
+                : "Ajouter cet élément et enregistrer les modifications pour tous les visiteurs ?";
+
+            openCustomConfirm(confirmTitle, confirmText, async (res) => {
                 if (res) {
-                    const newItem = {
+                    const itemData = {
                         title: title,
                         backdrop: formatTmdbImage(image, 'w1280'),
                         poster: formatTmdbImage(image, 'w780'),
                         tmdb_id_clean: tmdbId || "1001",
                         overview: desc,
-                        rating: "8.5",
-                        year: "2026"
+                        rating: isEdit ? (heroItems[editingHeroIndex].rating || "8.5") : "8.5",
+                        year: isEdit ? (heroItems[editingHeroIndex].year || "2026") : "2026"
                     };
 
-                    heroItems.unshift(newItem);
+                    if (isEdit) {
+                        heroItems[editingHeroIndex] = itemData;
+                    } else {
+                        heroItems.unshift(itemData);
+                    }
+
                     await saveHeroListToFirebase();
                     showHero(0);
+                    resetHeroForm();
                     renderHeroManagerList();
                     closeAdminModals();
                 }
@@ -1478,6 +1517,7 @@
             document.getElementById('createSagaModal').style.display = 'none';
             document.getElementById('addMovieModal').style.display = 'none';
             document.getElementById('editHeroModal').style.display = 'none';
+            resetHeroForm();
         }
 
         async function submitNewSaga() {
