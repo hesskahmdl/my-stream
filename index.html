@@ -121,6 +121,28 @@
         }
         .btn-edit-hero:hover { background: #fff; color: #000; }
 
+        .hero-progress-bar-container {
+            position: absolute; bottom: 20px; left: 40px; right: 40px;
+            display: flex; align-items: center; gap: 15px; z-index: 20;
+            background: rgba(0, 0, 0, 0.5); padding: 8px 16px; border-radius: 20px;
+            backdrop-filter: blur(5px); border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .hero-dots { display: flex; align-items: center; gap: 8px; }
+        .hero-dot {
+            width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.4);
+            cursor: pointer; transition: 0.3s;
+        }
+        .hero-dot.active { background: #fff; width: 24px; border-radius: 10px; }
+        .hero-divider { width: 1px; height: 16px; background: rgba(255, 255, 255, 0.2); }
+        .hero-progress-track {
+            flex: 1; height: 4px; background: #222; border-radius: 2px;
+            overflow: hidden; position: relative;
+        }
+        .hero-progress-fill {
+            height: 100%; width: 0%; background: #e50914;
+            border-radius: 2px; transition: width 0.1s linear;
+        }
+
         .main-content { padding: 15px 35px; position: relative; z-index: 10; margin-top: -30px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-size: 20px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -464,6 +486,14 @@
                 <button class="btn-edit-hero" id="btnEditHero" onclick="openEditHeroModal()">✏️ Modifier le Carrousel</button>
             </div>
         </div>
+
+        <div class="hero-progress-bar-container">
+            <div class="hero-dots" id="heroDotsContainer"></div>
+            <div class="hero-divider"></div>
+            <div class="hero-progress-track">
+                <div class="hero-progress-fill" id="heroProgressFill"></div>
+            </div>
+        </div>
     </div>
 
     <div class="main-content" id="homeMainView">
@@ -643,7 +673,7 @@
             <input type="text" class="admin-input" id="heroEditTitle" placeholder="Rechercher un film du catalogue..." oninput="filterMoviesForHero(this.value)">
             <div id="heroMovieSelectList" style="max-height: 150px; overflow-y: auto; margin-bottom: 12px; background:#18181f; padding:8px; border-radius:6px; display:none;"></div>
             
-            <input type="hidden" id="heroEditImage">
+            <input type="text" class="admin-input" id="heroEditImage" placeholder="Lien TMDB pour l'image (ex: /t/p/w1280/...) ou URL complète">
             <input type="hidden" id="heroEditTmdbId">
             <textarea class="admin-input" id="heroEditDesc" placeholder="Description du film (remplissage auto)" rows="2"></textarea>
             
@@ -686,13 +716,14 @@
         const DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize?client_id=1499817025688567939&response_type=token&redirect_uri=https%3A%2F%2Fhesskahmdl.github.io%2Fmy-stream%2F&scope=identify+email";
         const DEV_DISCORD_ID = "1378818883414134965";
 
-        let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null, currentSaga = null;
+        let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, progressInterval = null, currentItem = null, currentSaga = null;
         let lang = "fr";
         let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
         let customConfirmCallback = null;
         let editingHeroIndex = null;
+        const SLIDE_DURATION = 5000;
 
         function openCustomConfirm(title, text, callback) {
             document.getElementById('customConfirmTitle').textContent = title;
@@ -1007,12 +1038,43 @@
 
         function setupHeroSlider() {
             if (!heroItems.length) return;
+            renderHeroDots();
             showHero(heroIndex);
+            startHeroProgress();
+        }
+
+        function renderHeroDots() {
+            const container = document.getElementById('heroDotsContainer');
+            if (!container) return;
+            container.innerHTML = heroItems.map((_, idx) => `
+                <div class="hero-dot ${idx === heroIndex ? 'active' : ''}" onclick="goToHeroSlide(${idx})"></div>
+            `).join('');
+        }
+
+        function startHeroProgress() {
             clearInterval(sliderTimer);
+            clearInterval(progressInterval);
+            
+            let startTime = Date.now();
+            const fill = document.getElementById('heroProgressFill');
+
+            progressInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const percentage = Math.min(100, (elapsed / SLIDE_DURATION) * 100);
+                if (fill) fill.style.width = percentage + '%';
+            }, 50);
+
             sliderTimer = setInterval(() => {
                 heroIndex = (heroIndex + 1) % heroItems.length;
                 showHero(heroIndex);
-            }, 7000);
+                startTime = Date.now();
+            }, SLIDE_DURATION);
+        }
+
+        function goToHeroSlide(idx) {
+            heroIndex = idx;
+            showHero(heroIndex);
+            startHeroProgress();
         }
 
         function showHero(index) {
@@ -1032,6 +1094,8 @@
                     openDetails(item);
                 }
             };
+
+            renderHeroDots();
         }
 
         function isSavedInWatchlist(id) {
@@ -1145,20 +1209,15 @@
             `;
         }
 
-        function quickDeleteSaga(e, sagaId) {
+        async function quickDeleteSaga(e, sagaId) {
             e.stopPropagation();
             if (!isAdmin) return;
-            const saga = SAGAS_DATABASE.find(s => s.id === sagaId);
-            openCustomConfirm("Supprimer la Saga", `Voulez-vous vraiment SUPPRIMER la saga "${saga ? saga.title : sagaId}" ?`, async (res) => {
-                if (res) {
-                    SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== sagaId);
-                    try {
-                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaId}.json?auth=${ADMIN_SECRET}`, { method: 'DELETE' });
-                    } catch(err) {}
-                    renderSections();
-                    if (currentCategoryType === 'saga') renderPaginatedGrid();
-                }
-            });
+            SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== sagaId);
+            try {
+                await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaId}.json?auth=${ADMIN_SECRET}`, { method: 'DELETE' });
+            } catch(err) {}
+            renderSections();
+            if (currentCategoryType === 'saga') renderPaginatedGrid();
         }
 
         function createAddSagaCardHtml() {
@@ -1438,7 +1497,6 @@
             if (!m) return;
 
             document.getElementById('heroEditTitle').value = m.title;
-            document.getElementById('heroEditImage').value = m.backdrop || m.poster || '';
             document.getElementById('heroEditTmdbId').value = m.tmdb_id_clean || m.tmdb_id || '';
             document.getElementById('heroEditDesc').value = m.overview || '';
             document.getElementById('heroMovieSelectList').style.display = 'none';
@@ -1498,22 +1556,19 @@
             document.getElementById('editHeroModal').style.display = 'flex';
         }
 
-        function removeHeroItemByIndex(index) {
+        async function removeHeroItemByIndex(index) {
             if (!isAdmin) return;
-            openCustomConfirm("Supprimer du Carrousel", `Retirer "${heroItems[index].title}" du carrousel ?`, async (res) => {
-                if (res) {
-                    heroItems.splice(index, 1);
-                    await saveHeroListToFirebase();
-                    resetHeroForm();
-                    renderHeroManagerList();
-                    if (heroItems.length > 0) {
-                        showHero(0);
-                    } else {
-                        document.getElementById('heroBanner').style.backgroundImage = 'none';
-                        document.getElementById('heroTitle').textContent = 'Aucun élément';
-                    }
-                }
-            });
+            heroItems.splice(index, 1);
+            await saveHeroListToFirebase();
+            resetHeroForm();
+            renderHeroManagerList();
+            if (heroItems.length > 0) {
+                showHero(0);
+                startHeroProgress();
+            } else {
+                document.getElementById('heroBanner').style.backgroundImage = 'none';
+                document.getElementById('heroTitle').textContent = 'Aucun élément';
+            }
         }
 
         async function submitHeroEdit() {
@@ -1548,6 +1603,7 @@
 
             await saveHeroListToFirebase();
             showHero(0);
+            startHeroProgress();
             resetHeroForm();
             renderHeroManagerList();
             closeAdminModals();
@@ -1569,23 +1625,19 @@
 
             if (!name || !poster) return;
 
-            openCustomConfirm("Créer une Saga", `Créer la saga "${name}" pour tout le monde ?`, async (res) => {
-                if (res) {
-                    const newSaga = {
-                        id: slugify(name),
-                        title: `${name} - Saga`,
-                        poster: formatTmdbImage(poster, 'w780'),
-                        exactTitles: [],
-                        desc: desc || "Aucune description."
-                    };
+            const newSaga = {
+                id: slugify(name),
+                title: `${name} - Saga`,
+                poster: formatTmdbImage(poster, 'w780'),
+                exactTitles: [],
+                desc: desc || "Aucune description."
+            };
 
-                    SAGAS_DATABASE.push(newSaga);
-                    await saveSagaToFirebase(newSaga);
-                    closeAdminModals();
-                    renderSections();
-                    switchTab('saga');
-                }
-            });
+            SAGAS_DATABASE.push(newSaga);
+            await saveSagaToFirebase(newSaga);
+            closeAdminModals();
+            renderSections();
+            switchTab('saga');
         }
 
         function openAddMovieToSagaModal() {
@@ -1610,43 +1662,31 @@
 
         async function addMovieToCurrentSaga(movieTitle) {
             if (!currentSaga || !isAdmin) return;
-            openCustomConfirm("Ajouter un film", `Ajouter "${movieTitle}" à la saga "${currentSaga.title}" ?`, async (res) => {
-                if (res) {
-                    if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
-                    if (!currentSaga.exactTitles.includes(movieTitle.toLowerCase())) {
-                        currentSaga.exactTitles.push(movieTitle.toLowerCase());
-                        await saveSagaToFirebase(currentSaga);
-                        openSagaView(currentSaga.id);
-                        closeAdminModals();
-                    }
-                }
-            });
+            if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
+            if (!currentSaga.exactTitles.includes(movieTitle.toLowerCase())) {
+                currentSaga.exactTitles.push(movieTitle.toLowerCase());
+                await saveSagaToFirebase(currentSaga);
+                openSagaView(currentSaga.id);
+                closeAdminModals();
+            }
         }
 
         async function removeMovieFromCurrentSaga(e, movieTitle) {
             e.stopPropagation();
             if (!currentSaga || !isAdmin) return;
-            openCustomConfirm("Retirer le film", `Retirer "${movieTitle}" de la saga ?`, async (res) => {
-                if (res) {
-                    currentSaga.exactTitles = currentSaga.exactTitles.filter(t => t !== movieTitle.toLowerCase());
-                    await saveSagaToFirebase(currentSaga);
-                    openSagaView(currentSaga.id);
-                }
-            });
+            currentSaga.exactTitles = currentSaga.exactTitles.filter(t => t !== movieTitle.toLowerCase());
+            await saveSagaToFirebase(currentSaga);
+            openSagaView(currentSaga.id);
         }
 
         async function deleteCurrentSaga() {
             if (!currentSaga || !isAdmin) return;
-            openCustomConfirm("Supprimer la Saga", `SUPPRIMER entièrement la saga "${currentSaga.title}" ?`, async (res) => {
-                if (res) {
-                    SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
-                    try {
-                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${currentSaga.id}.json?auth=${ADMIN_SECRET}`, { method: 'DELETE' });
-                    } catch(e) {}
-                    closeSagaView();
-                    switchTab('saga');
-                }
-            });
+            SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
+            try {
+                await fetch(`${FIREBASE_DB_URL}/sagas_custom/${currentSaga.id}.json?auth=${ADMIN_SECRET}`, { method: 'DELETE' });
+            } catch(e) {}
+            closeSagaView();
+            switchTab('saga');
         }
 
         window.addEventListener('popstate', handleInitialUrl);
