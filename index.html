@@ -37,7 +37,6 @@
         }
         .search-box input:focus { width: 240px; border-color: #e50914; }
 
-        /* BOUTONS HEADER & PROFIL */
         .btn-header-login {
             background: #e50914; color: #fff; border: none; padding: 7px 16px;
             border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer;
@@ -78,7 +77,6 @@
         }
         .btn-discord-login:hover { background: #4752C4; transform: translateY(-2px); }
 
-        /* POPUP BLOQUANT À DISTANCE */
         .remote-popup-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999;
             display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
@@ -91,7 +89,6 @@
         .remote-popup-title { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 12px; }
         .remote-popup-text { font-size: 14px; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
 
-        /* HERO BANNER */
         .hero-container {
             position: relative; width: 100%; height: 75vh; min-height: 480px;
             background-size: cover; background-position: center; transition: background-image 0.8s ease-in-out;
@@ -216,13 +213,13 @@
         .btn-load-more:hover { background: #e50914; border-color: #e50914; }
 
         .saga-page { padding: 80px 40px 40px; display: none; }
-        .saga-header { display: flex; gap: 35px; align-items: flex-start; margin-bottom: 30px; flex-wrap: wrap; }
-        .saga-poster { width: 250px; height: 360px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); image-rendering: -webkit-optimize-contrast; }
+        .saga-header { display: flex; gap: 35px; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; }
+        .saga-poster { width: 220px; height: 320px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); image-rendering: -webkit-optimize-contrast; }
         .saga-details { flex: 1; min-width: 300px; }
         .saga-title { font-size: 36px; font-weight: 900; margin-bottom: 10px; }
         .saga-title span.red { color: #e50914; }
         .saga-stats-bar { display: flex; gap: 20px; font-size: 13px; color: #aaa; margin-bottom: 15px; font-weight: bold; }
-        .saga-desc { font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 25px; max-width: 800px; }
+        .saga-desc { font-size: 14px; color: #ccc; line-height: 1.6; margin-bottom: 20px; max-width: 800px; }
 
         .btn-group-actions { display: flex; gap: 12px; flex-wrap: wrap; }
         .btn-saga-action {
@@ -234,13 +231,22 @@
         .btn-admin-danger { background: #900; border-color: #e50914; }
         .btn-admin-danger:hover { background: #e50914; }
 
-        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 30px 0; }
-        .info-card { background: #13131a; border: 1px solid #222; padding: 20px; border-radius: 10px; }
-        .info-card-title { font-size: 14px; font-weight: bold; color: #fff; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
-        .info-list-item { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .info-list-item span.count { background: #1c1c28; color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        .saga-top-cast { margin: 25px 0; }
+        .saga-top-cast-title { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-bottom: 12px; }
+        .saga-top-cast-title span.red { color: #e50914; }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 30px 0; }
+        .cast-list { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
+        .cast-list::-webkit-scrollbar { display: none; }
+        .cast-item { display: flex; flex-direction: column; align-items: center; text-align: center; width: 75px; flex-shrink: 0; }
+        .cast-img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; background: #222; margin-bottom: 6px; border: 2px solid #333; image-rendering: -webkit-optimize-contrast; }
+        .cast-name { font-size: 11px; font-weight: bold; line-height: 1.2; color: #fff; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin: 20px 0; }
+        .info-card { background: #13131a; border: 1px solid #222; padding: 16px; border-radius: 10px; }
+        .info-card-title { font-size: 13px; font-weight: bold; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .info-list-item { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
         .stat-card { background: #13131a; border: 1px solid #222; padding: 18px; border-radius: 10px; }
         .stat-card-title { font-size: 12px; color: #888; margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
         .stat-card-value { font-size: 20px; font-weight: 900; color: #10b981; }
@@ -271,12 +277,6 @@
         .detail-title { font-size: 32px; font-weight: 900; margin-bottom: 10px; }
         .detail-synopsis { font-size: 14px; color: #bbb; line-height: 1.5; margin: 15px 0; }
         
-        .cast-list { display: flex; gap: 12px; margin-top: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .cast-item { display: flex; flex-direction: column; align-items: center; text-align: center; width: 80px; flex-shrink: 0; }
-        .cast-img { width: 55px; height: 55px; border-radius: 50%; object-fit: cover; background: #333; margin-bottom: 5px; image-rendering: -webkit-optimize-contrast; }
-        .cast-name { font-size: 10px; font-weight: bold; line-height: 1.1; }
-        .cast-role { font-size: 9px; color: #888; }
-        
         .trailer-box { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px; }
         .trailer-box h3 { font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
         .trailer-embed { width: 100%; aspect-ratio: 16/9; background: #15151a; border-radius: 10px; overflow: hidden; border: 1px solid #333; }
@@ -290,7 +290,6 @@
         .player-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; position: relative; margin-bottom: 40px; }
         .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; inset: 0; }
 
-        /* MODALES ADMIN */
         .admin-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000;
             display: none; align-items: center; justify-content: center; backdrop-filter: blur(5px);
@@ -323,7 +322,6 @@
         .movie-select-title { font-size: 13px; color: #fff; font-weight: bold; flex: 1; }
         .movie-select-btn { color: #e50914; font-weight: bold; font-size: 12px; }
 
-        /* MODALE POPUP CONFIRMATION CUSTOM SITE */
         .custom-confirm-card {
             background: #13131a; border: 1px solid #e50914; border-radius: 12px;
             padding: 25px; width: 90%; max-width: 400px; text-align: center;
@@ -386,12 +384,10 @@
                 <img src="https://flagcdn.com/w20/gb.png" alt="EN" id="flag-en" onclick="setLang('en')">
             </div>
 
-            <!-- BOUTON DASHBOARD DEV -->
             <a href="https://hesskahmdl.github.io/my-stream/sk-admin-secret.html" class="btn-dashboard-link" id="btnDevDashboard">
                 🛠️ Dashboard
             </a>
 
-            <!-- BOUTON CONNEXION -->
             <button class="btn-header-login" id="btnOpenAuthModal" onclick="openAuthModal()">
                 🔑 Connexion
             </button>
@@ -402,7 +398,6 @@
         </div>
     </header>
 
-    <!-- MODAL DE CONNEXION DISCORD -->
     <div class="auth-modal" id="authModal">
         <div class="auth-modal-card">
             <button class="modal-close" onclick="closeAuthModal()">✕</button>
@@ -415,7 +410,6 @@
         </div>
     </div>
 
-    <!-- POPUP CONFIRMATION DU SITE -->
     <div class="admin-modal" id="customConfirmModal">
         <div class="custom-confirm-card">
             <div class="custom-confirm-title" id="customConfirmTitle">Confirmation</div>
@@ -427,7 +421,6 @@
         </div>
     </div>
 
-    <!-- POPUP BLOQUANT À DISTANCE -->
     <div class="remote-popup-modal" id="remotePopupModal">
         <div class="remote-popup-card">
             <h2 class="remote-popup-title">🔒 Connexion Requise</h2>
@@ -529,14 +522,16 @@
                     <button class="btn-saga-action" id="adminAddMovieToSagaBtn" style="display:none;" onclick="openAddMovieToSagaModal()">➕ Ajouter un film</button>
                     <button class="btn-saga-action btn-admin-danger" id="adminDeleteSagaBtn" style="display:none;" onclick="deleteCurrentSaga()">🗑️ Supprimer la Saga</button>
                 </div>
+
+                <div class="saga-top-cast">
+                    <div class="saga-top-cast-title">🎭 CASTING <span class="red">PRINCIPAL</span></div>
+                    <div class="cast-list" id="sagaCastList"></div>
+                </div>
             </div>
         </div>
 
         <div class="section-title"><span data-i18n="saga_sec_movies">Films de la</span> <span class="red">collection</span></div>
         <div class="movie-grid" id="sagaMoviesList"></div>
-
-        <div class="section-title" style="margin-top: 30px;">🎭 Casting <span class="red">Principal</span></div>
-        <div class="cast-list" id="sagaCastList" style="margin-bottom:30px;"></div>
 
         <div class="section-title" style="margin-top: 40px;"><span data-i18n="saga_sec_prod">Informations de</span> <span class="red">production</span></div>
         <div class="info-grid">
@@ -622,7 +617,6 @@
         </div>
     </div>
 
-    <!-- MODALE EDITION CARROUSEL HERO -->
     <div class="admin-modal" id="editHeroModal">
         <div class="admin-modal-content">
             <div class="admin-modal-title">Modifier le Carrousel (Bannière)</div>
@@ -637,7 +631,6 @@
         </div>
     </div>
 
-    <!-- MODALE DE CRÉATION DE SAGA (ADMIN) -->
     <div class="admin-modal" id="createSagaModal">
         <div class="admin-modal-content">
             <div class="admin-modal-title">Créer une nouvelle Saga</div>
@@ -651,7 +644,6 @@
         </div>
     </div>
 
-    <!-- MODALE D'AJOUT DE FILM À UNE SAGA (ADMIN) -->
     <div class="admin-modal" id="addMovieModal">
         <div class="admin-modal-content">
             <div class="admin-modal-title">Ajouter un film à la Saga</div>
@@ -1111,7 +1103,7 @@
             document.getElementById('gridAnimes').innerHTML = popAnimes.map(createCardHtml).join('');
         }
 
-        function renderSagaMovies() {
+        async function renderSagaMovies() {
             if (!currentSaga) return;
             if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
 
@@ -1123,52 +1115,73 @@
             document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} film${sagaMovies.length > 1 ? 's' : ''}`;
             document.getElementById('sagaMoviesList').innerHTML = sagaMovies.map(item => createCardHtml(item, true)).join('');
 
-            let totalBudget = 0, totalRevenue = 0, ratingSum = 0, castMap = new Map();
+            // RECUPERATION EN DIRECT VIA TMDB DE CHAQUE FILM
+            let totalBudget = 0, totalRevenue = 0, totalRuntime = 0, ratingSum = 0;
+            let producersMap = new Set(), countriesMap = new Set(), languagesMap = new Set(), genresMap = new Set();
+            let castMap = new Map();
 
-            sagaMovies.forEach(m => {
-                totalBudget += (m.budget || 150000000);
-                totalRevenue += (m.revenue || 450000000);
+            const fetchPromises = sagaMovies.map(async (m) => {
+                const tmdbId = m.tmdb_id_clean || m.tmdb_id;
                 ratingSum += parseFloat(m.rating || 7.5);
 
-                // EXTRACTION ADAPTATIVE DE LA STRUCTURE DU CASTING DANS DATA.JSON
-                const castArray = m.top_billed_cast || m.cast || [];
-                if (Array.isArray(castArray)) {
-                    castArray.forEach(c => {
-                        const actorName = c.name || c.actor_name;
-                        const actorImg = c.profile_path || c.image || c.profile;
-                        const actorRole = c.character || c.role || 'Acteur';
-                        if (actorName && !castMap.has(actorName)) {
-                            castMap.set(actorName, { name: actorName, profile_path: actorImg, character: actorRole });
+                if (tmdbId) {
+                    try {
+                        const res = await fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${API_KEY}&language=fr-FR&append_to_response=credits`);
+                        if (res.ok) {
+                            const details = await res.json();
+                            totalBudget += details.budget || 0;
+                            totalRevenue += details.revenue || 0;
+                            totalRuntime += details.runtime || 0;
+
+                            if (details.production_companies) details.production_companies.forEach(p => producersMap.add(p.name));
+                            if (details.production_countries) details.production_countries.forEach(c => countriesMap.add(c.name));
+                            if (details.spoken_languages) details.spoken_languages.forEach(l => languagesMap.add(l.french_name || l.name));
+                            if (details.genres) details.genres.forEach(g => genresMap.add(g.name));
+
+                            if (details.credits && details.credits.cast) {
+                                details.credits.cast.slice(0, 6).forEach(actor => {
+                                    if (!castMap.has(actor.name)) {
+                                        castMap.set(actor.name, {
+                                            name: actor.name,
+                                            profile_path: actor.profile_path ? `https://image.tmdb.org/t/p/w185${actor.profile_path}` : 'https://via.placeholder.com/185'
+                                        });
+                                    }
+                                });
+                            }
                         }
-                    });
-                } else {
-                    for (let k = 1; k <= 10; k++) {
-                        const nameKey = `actor_${k}_name`;
-                        const imgKey = `actor_${k}_image` || `actor_${k}_profile`;
-                        const roleKey = `actor_${k}_character` || `actor_${k}_role`;
-                        if (m[nameKey]) {
-                            castMap.set(m[nameKey], { name: m[nameKey], profile_path: m[imgKey], character: m[roleKey] || 'Acteur' });
-                        }
-                    }
+                    } catch(e) {}
                 }
             });
 
+            await Promise.all(fetchPromises);
+
+            // AFFICHAGE DES CALCULS DANS LES STATS
+            const hours = Math.floor(totalRuntime / 60);
+            const minutes = totalRuntime % 60;
+            document.getElementById('statDuration').textContent = totalRuntime > 0 ? `${hours}h ${minutes < 10 ? '0' : ''}${minutes}min` : "N/A";
+            document.getElementById('statBudget').textContent = totalBudget > 0 ? `${totalBudget.toLocaleString('fr-FR')} $` : "N/A";
+            document.getElementById('statRevenue').textContent = totalRevenue > 0 ? `${totalRevenue.toLocaleString('fr-FR')} $` : "N/A";
+            
             const avgRating = sagaMovies.length ? (ratingSum / sagaMovies.length).toFixed(1) : "8.0";
-            document.getElementById('statBudget').textContent = totalBudget ? `${(totalBudget / 1000000).toFixed(0)} 000 000 $` : "N/A";
-            document.getElementById('statRevenue').textContent = totalRevenue ? `${(totalRevenue / 1000000).toFixed(0)} 000 000 $` : "N/A";
             document.getElementById('statRating').textContent = `${avgRating} / 10`;
 
+            // AFFICHAGE PRODUCTION
+            document.getElementById('infoProducers').innerHTML = Array.from(producersMap).slice(0, 5).map(p => `<div class="info-list-item"><span>${p}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
+            document.getElementById('infoCountries').innerHTML = Array.from(countriesMap).slice(0, 5).map(c => `<div class="info-list-item"><span>${c}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
+            document.getElementById('infoLanguages').innerHTML = Array.from(languagesMap).slice(0, 5).map(l => `<div class="info-list-item"><span>${l}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
+            document.getElementById('infoGenres').innerHTML = Array.from(genresMap).slice(0, 5).map(g => `<div class="info-list-item"><span>${g}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
+
+            // AFFICHAGE DU CASTING EN HAUT
             const sagaCastList = document.getElementById('sagaCastList');
             if (castMap.size > 0) {
                 sagaCastList.innerHTML = Array.from(castMap.values()).slice(0, 10).map(actor => `
                     <div class="cast-item">
-                        <img class="cast-img" src="${formatTmdbImage(actor.profile_path, 'w185')}" alt="${actor.name}">
+                        <img class="cast-img" src="${actor.profile_path}" alt="${actor.name}">
                         <div class="cast-name">${actor.name}</div>
-                        <div class="cast-role">${actor.character || 'Acteur'}</div>
                     </div>
                 `).join('');
             } else {
-                sagaCastList.innerHTML = '<span style="color:#777; font-size:12px;">Casting indisponible pour ces films.</span>';
+                sagaCastList.innerHTML = '<span style="color:#777; font-size:12px;">Casting indisponible.</span>';
             }
         }
 
@@ -1314,7 +1327,6 @@
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        /* FONCTIONS DEVELOPPEUR / ADMIN */
         function openEditHeroModal() {
             if (!isAdmin) return;
             const currentHero = heroItems[heroIndex] || {};
@@ -1459,7 +1471,6 @@
         init();
     </script>
 
-    <!-- TRACKER FIREBASE + SYSTEME DE POPUP REMOTE -->
     <script>
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
@@ -1507,7 +1518,6 @@
                 window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
             }, 5000);
 
-            // ECOUTEUR DE POPUP EN DIRECT DEPUIS LE DASHBOARD
             setInterval(async () => {
                 try {
                     const res = await fetch(`${FIREBASE_DB_URL}/popups/${safeKey}.json`);
