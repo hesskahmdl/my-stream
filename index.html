@@ -314,7 +314,6 @@
             display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
-        /* STYLE POUR LA RECHERCHE DE SAGA AVEC AFFICHAGE DES JAQUETTES */
         .movie-select-row {
             display: flex; align-items: center; gap: 12px; padding: 8px; cursor: pointer;
             border-bottom: 1px solid #222; transition: background 0.2s;
@@ -323,6 +322,15 @@
         .movie-select-poster { width: 35px; height: 50px; object-fit: cover; border-radius: 4px; background: #222; }
         .movie-select-title { font-size: 13px; color: #fff; font-weight: bold; flex: 1; }
         .movie-select-btn { color: #e50914; font-weight: bold; font-size: 12px; }
+
+        /* MODALE POPUP CONFIRMATION CUSTOM SITE */
+        .custom-confirm-card {
+            background: #13131a; border: 1px solid #e50914; border-radius: 12px;
+            padding: 25px; width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 0 30px rgba(229, 9, 20, 0.4);
+        }
+        .custom-confirm-title { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+        .custom-confirm-text { font-size: 13px; color: #ccc; margin-bottom: 20px; }
 
         @media (max-width: 768px) {
             header { padding: 10px 15px; }
@@ -407,7 +415,19 @@
         </div>
     </div>
 
-    <!-- POPUP A DISTANCE PAR DASHBOARD -->
+    <!-- POPUP CONFIRMATION DU SITE -->
+    <div class="admin-modal" id="customConfirmModal">
+        <div class="custom-confirm-card">
+            <div class="custom-confirm-title" id="customConfirmTitle">Confirmation</div>
+            <div class="custom-confirm-text" id="customConfirmText">Voulez-vous effectuer cette action ?</div>
+            <div class="admin-btn-group" style="justify-content:center; gap:15px;">
+                <button class="btn-saga-action" onclick="closeCustomConfirm(false)">Annuler</button>
+                <button class="btn-saga-action" style="background:#e50914;" onclick="closeCustomConfirm(true)">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- POPUP BLOQUANT À DISTANCE -->
     <div class="remote-popup-modal" id="remotePopupModal">
         <div class="remote-popup-card">
             <h2 class="remote-popup-title">🔒 Connexion Requise</h2>
@@ -500,8 +520,8 @@
             <div class="saga-details">
                 <h1 class="saga-title" id="sagaTitle">Spider-Man (MCU) - <span class="red">Saga</span></h1>
                 <div class="saga-stats-bar">
-                    <span id="sagaMovieCount">🎬 4 films</span>
-                    <span id="sagaYears">📅 2017 - 2026</span>
+                    <span id="sagaMovieCount">🎬 0 film</span>
+                    <span id="sagaYears">📅 2026</span>
                 </div>
                 <p class="saga-desc" id="sagaDesc">Description...</p>
                 <div class="btn-group-actions">
@@ -514,6 +534,9 @@
 
         <div class="section-title"><span data-i18n="saga_sec_movies">Films de la</span> <span class="red">collection</span></div>
         <div class="movie-grid" id="sagaMoviesList"></div>
+
+        <div class="section-title" style="margin-top: 30px;">🎭 Casting <span class="red">Principal</span></div>
+        <div class="cast-list" id="sagaCastList" style="margin-bottom:30px;"></div>
 
         <div class="section-title" style="margin-top: 40px;"><span data-i18n="saga_sec_prod">Informations de</span> <span class="red">production</span></div>
         <div class="info-grid">
@@ -539,19 +562,19 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_budget">💲 Budget total</div>
-                <div class="stat-card-value" id="statBudget">760 000 000 $</div>
+                <div class="stat-card-value" id="statBudget">0 $</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_revenue">💰 Revenus totaux</div>
-                <div class="stat-card-value" id="statRevenue">6 234 107 164 $</div>
+                <div class="stat-card-value" id="statRevenue">0 $</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_rating">⭐ Note moyenne</div>
-                <div class="stat-card-value" id="statRating">7.6 / 10</div>
+                <div class="stat-card-value" id="statRating">0.0 / 10</div>
             </div>
             <div class="stat-card">
                 <div class="stat-card-title" data-i18n="stat_duration">⏱️ Durée totale</div>
-                <div class="stat-card-value" id="statDuration">9h 20min</div>
+                <div class="stat-card-value" id="statDuration">0h 00min</div>
             </div>
         </div>
     </div>
@@ -652,6 +675,19 @@
         let currentFilteredList = [], currentPage = 1, currentCategoryType = 'all';
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
+        let customConfirmCallback = null;
+
+        function openCustomConfirm(title, text, callback) {
+            document.getElementById('customConfirmTitle').textContent = title;
+            document.getElementById('customConfirmText').textContent = text;
+            customConfirmCallback = callback;
+            document.getElementById('customConfirmModal').style.display = 'flex';
+        }
+
+        function closeCustomConfirm(choice) {
+            document.getElementById('customConfirmModal').style.display = 'none';
+            if (customConfirmCallback) customConfirmCallback(choice);
+        }
 
         function openAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
         function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
@@ -686,12 +722,14 @@
         }
 
         function logoutUser() {
-            if (confirm("Voulez-vous vous déconnecter ?")) {
-                localStorage.removeItem('sk_logged_user');
-                isAdmin = false;
-                updateAuthHeader();
-                renderSections();
-            }
+            openCustomConfirm("Déconnexion", "Voulez-vous vraiment vous déconnecter ?", (res) => {
+                if (res) {
+                    localStorage.removeItem('sk_logged_user');
+                    isAdmin = false;
+                    updateAuthHeader();
+                    renderSections();
+                }
+            });
         }
 
         async function checkDiscordCallback() {
@@ -819,20 +857,14 @@
                 title: "Spider-Man (MCU) - Saga",
                 poster: "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg",
                 exactTitles: ["spider-man: homecoming", "spider-man: far from home", "spider-man: no way home", "spider-man: brand new day"],
-                desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU.",
-                budget: "760 000 000 $", revenue: "6 234 107 164 $", rating: "7.6", duration: "9h 20min",
-                producers: ["Marvel Studios", "Pascal Pictures", "Columbia Pictures"],
-                countries: ["United States of America"],
-                genres: ["Action", "Aventure", "Science-Fiction"]
+                desc: "Cette saga nous dépeint la vie de Peter Parker, partagé entre sa vie de lycéen lambda et ses aspirations de justicier au sein du MCU."
             },
             {
                 id: "avengers",
                 title: "Avengers - Saga",
                 poster: "/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg",
                 exactTitles: ["avengers", "avengers : l'ère d'ultron", "avengers : infinity war", "avengers : endgame"],
-                desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
-                budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
-                producers: ["Marvel Studios"], countries: ["United States of America"], genres: ["Action", "Science-Fiction"]
+                desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers."
             }
         ];
 
@@ -846,7 +878,11 @@
                     if (data) {
                         const cloudSagas = Object.values(data);
                         cloudSagas.forEach(cs => {
-                            if (!SAGAS_DATABASE.some(s => s.id === cs.id)) {
+                            if (!cs.exactTitles) cs.exactTitles = [];
+                            const idx = SAGAS_DATABASE.findIndex(s => s.id === cs.id);
+                            if (idx !== -1) {
+                                SAGAS_DATABASE[idx] = cs;
+                            } else {
                                 SAGAS_DATABASE.push(cs);
                             }
                         });
@@ -1027,18 +1063,20 @@
             `;
         }
 
-        async function quickDeleteSaga(e, sagaId) {
+        function quickDeleteSaga(e, sagaId) {
             e.stopPropagation();
             if (!isAdmin) return;
             const saga = SAGAS_DATABASE.find(s => s.id === sagaId);
-            if (confirm(`Voulez-vous vraiment SUPPRIMER entièrement la saga "${saga ? saga.title : sagaId}" ?`)) {
-                SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== sagaId);
-                try {
-                    await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaId}.json`, { method: 'DELETE' });
-                } catch(err) {}
-                renderSections();
-                if (currentCategoryType === 'saga') renderPaginatedGrid();
-            }
+            openCustomConfirm("Supprimer la Saga", `Voulez-vous vraiment SUPPRIMER la saga "${saga ? saga.title : sagaId}" ?`, async (res) => {
+                if (res) {
+                    SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== sagaId);
+                    try {
+                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaId}.json`, { method: 'DELETE' });
+                    } catch(err) {}
+                    renderSections();
+                    if (currentCategoryType === 'saga') renderPaginatedGrid();
+                }
+            });
         }
 
         function createAddSagaCardHtml() {
@@ -1075,12 +1113,52 @@
 
         function renderSagaMovies() {
             if (!currentSaga) return;
+            if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
+
             const sagaMovies = catalog.filter(item => {
                 const titleLower = (item.title || '').toLowerCase();
                 return currentSaga.exactTitles.some(exact => titleLower.includes(exact.toLowerCase()));
             });
-            document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} films`;
+
+            document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} film${sagaMovies.length > 1 ? 's' : ''}`;
             document.getElementById('sagaMoviesList').innerHTML = sagaMovies.map(item => createCardHtml(item, true)).join('');
+
+            // CALCUL AUTOMATIQUE DU CASTING ET DES STATS GLOBALES DES FILMS
+            let totalBudget = 0, totalRevenue = 0, ratingSum = 0, castMap = new Map();
+
+            sagaMovies.forEach(m => {
+                totalBudget += (m.budget || 150000000);
+                totalRevenue += (m.revenue || 450000000);
+                ratingSum += parseFloat(m.rating || 7.5);
+
+                if (m.cast && Array.isArray(m.cast)) {
+                    m.cast.forEach(c => {
+                        if (!castMap.has(c.name)) {
+                            castMap.set(c.name, c);
+                        }
+                    });
+                }
+            });
+
+            // MISE A JOUR DES STATS
+            const avgRating = sagaMovies.length ? (ratingSum / sagaMovies.length).toFixed(1) : "8.0";
+            document.getElementById('statBudget').textContent = totalBudget ? `${(totalBudget / 1000000).toFixed(0)} 000 000 $` : "N/A";
+            document.getElementById('statRevenue').textContent = totalRevenue ? `${(totalRevenue / 1000000).toFixed(0)} 000 000 $` : "N/A";
+            document.getElementById('statRating').textContent = `${avgRating} / 10`;
+
+            // MISE A JOUR DU CASTING
+            const sagaCastList = document.getElementById('sagaCastList');
+            if (castMap.size > 0) {
+                sagaCastList.innerHTML = Array.from(castMap.values()).slice(0, 8).map(actor => `
+                    <div class="cast-item">
+                        <img class="cast-img" src="${formatTmdbImage(actor.profile_path, 'w185')}" alt="${actor.name}">
+                        <div class="cast-name">${actor.name}</div>
+                        <div class="cast-role">${actor.character || 'Acteur'}</div>
+                    </div>
+                `).join('');
+            } else {
+                sagaCastList.innerHTML = '<span style="color:#777; font-size:12px;">Casting mis à jour automatiquement selon les films de la saga.</span>';
+            }
         }
 
         function openSagaView(sagaId) {
@@ -1091,10 +1169,6 @@
             document.getElementById('sagaTitle').innerHTML = `${saga.title}`;
             document.getElementById('sagaPoster').src = formatTmdbImage(saga.poster, 'w780');
             document.getElementById('sagaDesc').textContent = saga.desc;
-            document.getElementById('statBudget').textContent = saga.budget || "N/A";
-            document.getElementById('statRevenue').textContent = saga.revenue || "N/A";
-            document.getElementById('statRating').textContent = `${saga.rating || '8.0'} / 10`;
-            document.getElementById('statDuration').textContent = saga.duration || "N/A";
 
             renderSagaMovies();
             updateAdminUI();
@@ -1247,31 +1321,32 @@
             const tmdbId = document.getElementById('heroEditTmdbId').value.trim();
             const desc = document.getElementById('heroEditDesc').value.trim();
 
-            if (!title || !image) { alert("Le titre et l'image sont obligatoires."); return; }
+            if (!title || !image) return;
 
-            const updatedHero = {
-                title: title,
-                backdrop: formatTmdbImage(image, 'w1280'),
-                poster: formatTmdbImage(image, 'w780'),
-                tmdb_id_clean: tmdbId || "1001",
-                overview: desc,
-                rating: "8.5",
-                year: "2026"
-            };
+            openCustomConfirm("Modifier le Carrousel", "Enregistrer les modifications pour tous les visiteurs ?", async (res) => {
+                if (res) {
+                    const updatedHero = {
+                        title: title,
+                        backdrop: formatTmdbImage(image, 'w1280'),
+                        poster: formatTmdbImage(image, 'w780'),
+                        tmdb_id_clean: tmdbId || "1001",
+                        overview: desc,
+                        rating: "8.5",
+                        year: "2026"
+                    };
 
-            try {
-                await fetch(`${FIREBASE_DB_URL}/hero_custom.json`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(updatedHero)
-                });
-                heroItems[heroIndex] = updatedHero;
-                showHero(heroIndex);
-                closeAdminModals();
-                alert("Carrousel mis à jour pour tous les visiteurs !");
-            } catch(e) {
-                alert("Erreur de sauvegarde.");
-            }
+                    try {
+                        await fetch(`${FIREBASE_DB_URL}/hero_custom.json`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updatedHero)
+                        });
+                        heroItems[heroIndex] = updatedHero;
+                        showHero(heroIndex);
+                        closeAdminModals();
+                    } catch(e) {}
+                }
+            });
         }
 
         function openCreateSagaModal() { document.getElementById('createSagaModal').style.display = 'flex'; }
@@ -1287,24 +1362,25 @@
             const poster = document.getElementById('newSagaPoster').value.trim();
             const desc = document.getElementById('newSagaDesc').value.trim();
 
-            if (!name || !poster) { alert("Nom et Image obligatoires !"); return; }
+            if (!name || !poster) return;
 
-            const newSaga = {
-                id: slugify(name),
-                title: `${name} - Saga`,
-                poster: formatTmdbImage(poster, 'w780'),
-                exactTitles: [],
-                desc: desc || "Aucune description.",
-                rating: "8.0",
-                producers: ["Marvel Studios"], countries: ["USA"], genres: ["Action"]
-            };
+            openCustomConfirm("Créer une Saga", `Créer la saga "${name}" pour tout le monde ?`, async (res) => {
+                if (res) {
+                    const newSaga = {
+                        id: slugify(name),
+                        title: `${name} - Saga`,
+                        poster: formatTmdbImage(poster, 'w780'),
+                        exactTitles: [],
+                        desc: desc || "Aucune description."
+                    };
 
-            SAGAS_DATABASE.push(newSaga);
-            await saveSagaToFirebase(newSaga);
-            closeAdminModals();
-            renderSections();
-            switchTab('saga');
-            alert(`Saga "${name}" créée pour tout le monde !`);
+                    SAGAS_DATABASE.push(newSaga);
+                    await saveSagaToFirebase(newSaga);
+                    closeAdminModals();
+                    renderSections();
+                    switchTab('saga');
+                }
+            });
         }
 
         function openAddMovieToSagaModal() {
@@ -1313,7 +1389,6 @@
             filterMoviesForSaga('');
         }
 
-        /* RECHERCHE DE FILM POUR SAGA AVEC AFFICHAGE DES IMAGES ET TITRES */
         function filterMoviesForSaga(query) {
             const listDiv = document.getElementById('movieSelectList');
             const q = query.toLowerCase();
@@ -1330,34 +1405,43 @@
 
         async function addMovieToCurrentSaga(movieTitle) {
             if (!currentSaga || !isAdmin) return;
-            if (!currentSaga.exactTitles.includes(movieTitle.toLowerCase())) {
-                currentSaga.exactTitles.push(movieTitle.toLowerCase());
-                await saveSagaToFirebase(currentSaga);
-                openSagaView(currentSaga.id);
-                closeAdminModals();
-            }
+            openCustomConfirm("Ajouter un film", `Ajouter "${movieTitle}" à la saga "${currentSaga.title}" ?`, async (res) => {
+                if (res) {
+                    if (!currentSaga.exactTitles) currentSaga.exactTitles = [];
+                    if (!currentSaga.exactTitles.includes(movieTitle.toLowerCase())) {
+                        currentSaga.exactTitles.push(movieTitle.toLowerCase());
+                        await saveSagaToFirebase(currentSaga);
+                        openSagaView(currentSaga.id);
+                        closeAdminModals();
+                    }
+                }
+            });
         }
 
         async function removeMovieFromCurrentSaga(e, movieTitle) {
             e.stopPropagation();
             if (!currentSaga || !isAdmin) return;
-            if (confirm(`Retirer "${movieTitle}" ?`)) {
-                currentSaga.exactTitles = currentSaga.exactTitles.filter(t => t !== movieTitle.toLowerCase());
-                await saveSagaToFirebase(currentSaga);
-                openSagaView(currentSaga.id);
-            }
+            openCustomConfirm("Retirer le film", `Retirer "${movieTitle}" de la saga ?`, async (res) => {
+                if (res) {
+                    currentSaga.exactTitles = currentSaga.exactTitles.filter(t => t !== movieTitle.toLowerCase());
+                    await saveSagaToFirebase(currentSaga);
+                    openSagaView(currentSaga.id);
+                }
+            });
         }
 
         async function deleteCurrentSaga() {
             if (!currentSaga || !isAdmin) return;
-            if (confirm(`SUPPRIMER la saga "${currentSaga.title}" ?`)) {
-                SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
-                try {
-                    await fetch(`${FIREBASE_DB_URL}/sagas_custom/${currentSaga.id}.json`, { method: 'DELETE' });
-                } catch(e) {}
-                closeSagaView();
-                switchTab('saga');
-            }
+            openCustomConfirm("Supprimer la Saga", `SUPPRIMER entièrement la saga "${currentSaga.title}" ?`, async (res) => {
+                if (res) {
+                    SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
+                    try {
+                        await fetch(`${FIREBASE_DB_URL}/sagas_custom/${currentSaga.id}.json`, { method: 'DELETE' });
+                    } catch(e) {}
+                    closeSagaView();
+                    switchTab('saga');
+                }
+            });
         }
 
         window.addEventListener('popstate', handleInitialUrl);
