@@ -1480,36 +1480,28 @@
             if (!title || !image) return;
 
             const isEdit = editingHeroIndex !== null;
-            const confirmTitle = isEdit ? "Modifier l'élément" : "Ajouter au Carrousel";
-            const confirmText = isEdit 
-                ? `Enregistrer les modifications pour "${title}" sur le site ?` 
-                : "Ajouter cet élément et enregistrer les modifications pour tous les visiteurs ?";
 
-            openCustomConfirm(confirmTitle, confirmText, async (res) => {
-                if (res) {
-                    const itemData = {
-                        title: title,
-                        backdrop: formatTmdbImage(image, 'w1280'),
-                        poster: formatTmdbImage(image, 'w780'),
-                        tmdb_id_clean: tmdbId || "1001",
-                        overview: desc,
-                        rating: isEdit ? (heroItems[editingHeroIndex].rating || "8.5") : "8.5",
-                        year: isEdit ? (heroItems[editingHeroIndex].year || "2026") : "2026"
-                    };
+            const itemData = {
+                title: title,
+                backdrop: formatTmdbImage(image, 'w1280'),
+                poster: formatTmdbImage(image, 'w780'),
+                tmdb_id_clean: tmdbId || "1001",
+                overview: desc,
+                rating: isEdit ? (heroItems[editingHeroIndex].rating || "8.5") : "8.5",
+                year: isEdit ? (heroItems[editingHeroIndex].year || "2026") : "2026"
+            };
 
-                    if (isEdit) {
-                        heroItems[editingHeroIndex] = itemData;
-                    } else {
-                        heroItems.unshift(itemData);
-                    }
+            if (isEdit) {
+                heroItems[editingHeroIndex] = itemData;
+            } else {
+                heroItems.unshift(itemData);
+            }
 
-                    await saveHeroListToFirebase();
-                    showHero(0);
-                    resetHeroForm();
-                    renderHeroManagerList();
-                    closeAdminModals();
-                }
-            });
+            await saveHeroListToFirebase();
+            showHero(0);
+            resetHeroForm();
+            renderHeroManagerList();
+            closeAdminModals();
         }
 
         function openCreateSagaModal() { document.getElementById('createSagaModal').style.display = 'flex'; }
