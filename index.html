@@ -1008,8 +1008,11 @@
 
         function createSagaCardHtml(saga) {
             const isSaved = isSavedInWatchlist(saga.id);
+            const deleteSagaBtn = isAdmin ? `<button class="btn-remove-movie" onclick="quickDeleteSaga(event, '${saga.id}')">✕</button>` : '';
+
             return `
-                <div class="card" onclick="openSagaView('${saga.id}')">
+                <div class="card movie-saga-item" onclick="openSagaView('${saga.id}')">
+                    ${deleteSagaBtn}
                     <div class="saga-badge">SAGA</div>
                     <div class="star-watchlist ${isSaved ? 'active' : ''}" onclick="toggleWatchlistEvent(event, '${saga.id}')">
                         ${isSaved ? '★' : '☆'}
@@ -1022,6 +1025,20 @@
                     </div>
                 </div>
             `;
+        }
+
+        async function quickDeleteSaga(e, sagaId) {
+            e.stopPropagation();
+            if (!isAdmin) return;
+            const saga = SAGAS_DATABASE.find(s => s.id === sagaId);
+            if (confirm(`Voulez-vous vraiment SUPPRIMER entièrement la saga "${saga ? saga.title : sagaId}" ?`)) {
+                SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== sagaId);
+                try {
+                    await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaId}.json`, { method: 'DELETE' });
+                } catch(err) {}
+                renderSections();
+                if (currentCategoryType === 'saga') renderPaginatedGrid();
+            }
         }
 
         function createAddSagaCardHtml() {
