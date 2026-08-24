@@ -37,13 +37,20 @@
         }
         .search-box input:focus { width: 240px; border-color: #e50914; }
 
-        /* BOUTON ET MODAL DISCORD */
+        /* BOUTONS HEADER & PROFIL */
         .btn-header-login {
             background: #e50914; color: #fff; border: none; padding: 7px 16px;
             border-radius: 20px; font-size: 13px; font-weight: 700; cursor: pointer;
             transition: 0.2s; white-space: nowrap; display: flex; align-items: center; gap: 6px;
         }
         .btn-header-login:hover { background: #ff0f1a; transform: scale(1.03); }
+
+        .btn-dashboard-link {
+            background: #10b981; color: #fff; border: none; padding: 7px 14px;
+            border-radius: 20px; font-size: 12px; font-weight: 800; cursor: pointer;
+            transition: 0.2s; text-decoration: none; display: none; align-items: center; gap: 5px;
+        }
+        .btn-dashboard-link:hover { background: #059669; transform: scale(1.05); }
 
         .user-profile-badge {
             display: flex; align-items: center; gap: 8px; background: #18181f;
@@ -67,9 +74,22 @@
         .btn-discord-login {
             width: 100%; background: #5865F2; color: #fff; border: none; padding: 14px;
             border-radius: 10px; font-size: 15px; font-weight: 800; cursor: pointer;
-            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s;
+            display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.2s; text-decoration: none;
         }
         .btn-discord-login:hover { background: #4752C4; transform: translateY(-2px); }
+
+        /* POPUP BLOQUANT À DISTANCE */
+        .remote-popup-modal {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.92); z-index: 9999;
+            display: none; align-items: center; justify-content: center; backdrop-filter: blur(10px);
+        }
+        .remote-popup-card {
+            background: #13131a; border: 2px solid #e50914; border-radius: 16px;
+            padding: 35px 25px; width: 90%; max-width: 420px; text-align: center;
+            box-shadow: 0 0 50px rgba(229, 9, 20, 0.5);
+        }
+        .remote-popup-title { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+        .remote-popup-text { font-size: 14px; color: #ccc; margin-bottom: 25px; line-height: 1.5; }
 
         /* HERO BANNER */
         .hero-container {
@@ -341,6 +361,11 @@
                 <img src="https://flagcdn.com/w20/gb.png" alt="EN" id="flag-en" onclick="setLang('en')">
             </div>
 
+            <!-- BOUTON DASHBOARD DEV -->
+            <a href="https://hesskahmdl.github.io/my-stream/sk-admin-secret.html" class="btn-dashboard-link" id="btnDevDashboard">
+                🛠️ Dashboard
+            </a>
+
             <!-- BOUTON CONNEXION -->
             <button class="btn-header-login" id="btnOpenAuthModal" onclick="openAuthModal()">
                 🔑 Connexion
@@ -358,6 +383,18 @@
             <button class="modal-close" onclick="closeAuthModal()">✕</button>
             <h2 class="auth-modal-title">Connexion</h2>
             
+            <button class="btn-discord-login" onclick="loginWithDiscord()">
+                <svg width="22" height="22" viewBox="0 0 127.14 96.36" fill="#fff"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.91-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.92,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.92,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
+                <span>Connexion via Discord</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- POPUP A DISTANCE PAR DASHBOARD -->
+    <div class="remote-popup-modal" id="remotePopupModal">
+        <div class="remote-popup-card">
+            <h2 class="remote-popup-title">🔒 Connexion Requise</h2>
+            <p class="remote-popup-text">Pour continuer à regarder ce programme, connecte-toi avec ton compte Discord.</p>
             <button class="btn-discord-login" onclick="loginWithDiscord()">
                 <svg width="22" height="22" viewBox="0 0 127.14 96.36" fill="#fff"><path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1,105.25,105.25,0,0,0,32.19-16.14c2.64-27.38-4.51-51.11-18.91-72.15ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,45.92,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.74,11.44-12.74S96.23,45.92,96.12,53,91.08,65.69,84.69,65.69Z"/></svg>
                 <span>Connexion via Discord</span>
@@ -569,9 +606,10 @@
 
     <script>
         const API_KEY = "89dc647004be44c785266ccd4d69576a";
+        const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
         const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1526689378087206974/-zDtM-nloEoxB79enr-FF3cocR0YIKHHHk6m7i70-V0I0iDGlW9ZTDTfO2fF8u1kWmP2";
-        // Utilisation du mode implicit grant (response_type=token) pour lire les infos utilisateur directement
         const DISCORD_OAUTH_URL = "https://discord.com/oauth2/authorize?client_id=1499817025688567939&response_type=token&redirect_uri=https%3A%2F%2Fhesskahmdl.github.io%2Fmy-stream%2F&scope=identify+email";
+        const DEV_DISCORD_ID = "1378818883414134965";
 
         let catalog = [], heroItems = [], heroIndex = 0, sliderTimer = null, currentItem = null, currentSaga = null;
         let lang = "fr";
@@ -579,23 +617,15 @@
         const ITEMS_PER_PAGE = 60;
         let isAdmin = false;
 
-        /* MODAL ET AUTHENTIFICATION DISCORD */
-        function openAuthModal() {
-            document.getElementById('authModal').style.display = 'flex';
-        }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-        }
-
-        function loginWithDiscord() {
-            window.location.href = DISCORD_OAUTH_URL;
-        }
+        function openAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
+        function closeAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+        function loginWithDiscord() { window.location.href = DISCORD_OAUTH_URL; }
 
         function updateAuthHeader() {
             const saved = localStorage.getItem('sk_logged_user');
             const btnLogin = document.getElementById('btnOpenAuthModal');
             const badge = document.getElementById('userProfileBadge');
+            const devBtn = document.getElementById('btnDevDashboard');
 
             if (saved) {
                 const user = JSON.parse(saved);
@@ -603,20 +633,28 @@
                 badge.style.display = 'flex';
                 document.getElementById('userAvatarImg').src = user.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
                 document.getElementById('userNameSpan').textContent = user.name || 'Profil';
+
+                if (String(user.id) === DEV_DISCORD_ID) {
+                    isAdmin = true;
+                    if (devBtn) devBtn.style.display = 'inline-flex';
+                    updateAdminUI();
+                }
             } else {
                 btnLogin.style.display = 'flex';
                 badge.style.display = 'none';
+                if (devBtn) devBtn.style.display = 'none';
             }
         }
 
         function logoutUser() {
             if (confirm("Voulez-vous vous déconnecter ?")) {
                 localStorage.removeItem('sk_logged_user');
+                isAdmin = false;
                 updateAuthHeader();
+                renderSections();
             }
         }
 
-        // Récupération automatique du VRAI profil Discord depuis l'API Discord
         async function checkDiscordCallback() {
             const hashParams = new URLSearchParams(window.location.hash.substring(1));
             const accessToken = hashParams.get('access_token');
@@ -625,7 +663,6 @@
                 window.history.replaceState({}, document.title, window.location.pathname);
 
                 try {
-                    // Appel à l'API officielle Discord pour obtenir les réelles informations
                     const res = await fetch('https://discord.com/api/users/@me', {
                         headers: { authorization: `Bearer ${accessToken}` }
                     });
@@ -638,9 +675,9 @@
                         
                         const globalName = userData.global_name || userData.username;
 
-                        // Sauvegarde du vrai profil dans le navigateur
                         localStorage.setItem('sk_logged_user', JSON.stringify({
                             name: globalName,
+                            username: userData.username,
                             avatar: avatarUrl,
                             id: userData.id
                         }));
@@ -648,7 +685,6 @@
                         localStorage.setItem('sk_user_id', globalName);
                         updateAuthHeader();
 
-                        // Envoi du vrai ID, vrai Pseudo et vraie Photo sur le Webhook Discord
                         fetch(DISCORD_WEBHOOK_URL, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -669,7 +705,7 @@
                         }).catch(e => console.warn(e));
                     }
                 } catch (err) {
-                    console.error("Erreur de récupération des données Discord:", err);
+                    console.error("Erreur Discord API:", err);
                 }
             }
         }
@@ -703,12 +739,8 @@
 
         function formatTmdbImage(url, size = 'w780') {
             if (!url) return 'https://via.placeholder.com/500x750';
-            if (url.startsWith('http://') || url.startsWith('https://')) {
-                return url;
-            }
-            if (url.startsWith('/')) {
-                return `https://image.tmdb.org/t/p/${size}${url}`;
-            }
+            if (url.startsWith('http://') || url.startsWith('https://')) return url;
+            if (url.startsWith('/')) return `https://image.tmdb.org/t/p/${size}${url}`;
             return url;
         }
 
@@ -727,14 +759,9 @@
                 if (translations[lang][key]) el.placeholder = translations[lang][key];
             });
 
-            if (currentItem) {
-                openDetails(currentItem, false);
-            }
-            if (currentSaga) {
-                openSagaView(currentSaga.id);
-            } else if (currentCategoryType !== 'all') {
-                renderPaginatedGrid();
-            }
+            if (currentItem) openDetails(currentItem, false);
+            if (currentSaga) openSagaView(currentSaga.id);
+            else if (currentCategoryType !== 'all') renderPaginatedGrid();
         }
 
         function slugify(text) {
@@ -767,68 +794,36 @@
                 desc: "L'équipe des super-héros la plus puissante de la Terre s'unit pour protéger l'univers.",
                 budget: "1 280 000 000 $", revenue: "7 768 000 000 $", rating: "8.3", duration: "10h 15min",
                 producers: ["Marvel Studios"], countries: ["United States of America"], genres: ["Action", "Science-Fiction"]
-            },
-            {
-                id: "matrix",
-                title: "Matrix - Saga",
-                poster: "/alQ1yfJR9cxAPOx0WsTYj37HawI.jpg",
-                exactTitles: ["matrix", "matrix reloaded", "matrix revolutions", "matrix resurrections"],
-                desc: "Neo découvre que la réalité perçue par les humains est une simulation créée par des machines pour les asservir.",
-                budget: "363 000 000 $", revenue: "1 780 000 000 $", rating: "7.9", duration: "8h 45min",
-                producers: ["Warner Bros.", "Village Roadshow"], countries: ["United States of America"], genres: ["Science-Fiction", "Action"]
-            },
-            {
-                id: "star-wars",
-                title: "Star Wars - Saga",
-                poster: "/9fJpXSzO6P4ar9aqRs9bu0aetZy.jpg",
-                exactTitles: ["star wars : épisode i", "star wars : épisode ii", "star wars : épisode iii", "star wars : épisode iv", "star wars : épisode v", "star wars : épisode vi", "star wars : épisode vii", "star wars : épisode viii", "star wars : épisode ix"],
-                desc: "L'affrontement galactique séculaire entre les Chevaliers Jedi et les Seigneurs Sith à travers les neuf épisodes.",
-                budget: "1 600 000 000 $", revenue: "10 300 000 000 $", rating: "8.2", duration: "20h 10min",
-                producers: ["Lucasfilm Ltd."], countries: ["United States of America"], genres: ["Action", "Aventure", "Sci-Fi"]
-            },
-            {
-                id: "harry-potter",
-                title: "Harry Potter - Saga",
-                poster: "/iK5s34WRr3OoSKgWPfEsp3ZAsMK.jpg",
-                exactTitles: ["harry potter à l'école des sorciers", "harry potter et la chambre des secrets", "harry potter et le prisonnier d'azkaban", "harry potter et la coupe de feu", "harry potter et l'ordre du phénix", "harry potter et le prince de sang-mêlé", "harry potter et les reliques de la mort - 1ère partie", "harry potter et les reliques de la mort - 2ème partie"],
-                desc: "Suivez l'aventure fantastique du jeune sorcier Harry Potter et de ses amis Ron et Hermione à l'école Poudlard.",
-                budget: "1 200 000 000 $", revenue: "7 700 000 000 $", rating: "8.1", duration: "19h 40min",
-                producers: ["Warner Bros. Pictures", "Heyday Films"], countries: ["United Kingdom", "United States"], genres: ["Fantastique", "Aventure"]
-            },
-            {
-                id: "seigneur-des-anneaux",
-                title: "Le Seigneur des Anneaux - Saga",
-                poster: "/geSEwZ1hHjI2uv4Vb4dQrD2grnG.jpg",
-                exactTitles: ["le seigneur des anneaux : la communauté de l'anneau", "le seigneur des anneaux : les deux tours", "le seigneur des anneaux : le retour du roi"],
-                desc: "Frodon Sacquet entreprend un pèlerinage épique vers la Montagne du Destin pour détruire l'Anneau Unique.",
-                budget: "281 000 000 $", revenue: "2 991 000 000 $", rating: "8.8", duration: "11h 32min",
-                producers: ["New Line Cinema", "WingNut Films"], countries: ["New Zealand", "United States"], genres: ["Aventure", "Fantastique"]
             }
         ];
 
-        let SAGAS_DATABASE = JSON.parse(localStorage.getItem('sk_sagas_database')) || DEFAULT_SAGAS;
+        let SAGAS_DATABASE = DEFAULT_SAGAS;
 
-        // Force l'affiche Spider-Man Saga avec le bon lien
-        const spideySaga = SAGAS_DATABASE.find(s => s.id === "spider-man-mcu");
-        if (spideySaga) {
-            spideySaga.poster = "https://image.tmdb.org/t/p/original/3BVng0lmJyYIUqm5dxLS2eZ2625.jpg";
+        async function loadSagasFromFirebase() {
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/sagas_custom.json`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data) {
+                        const cloudSagas = Object.values(data);
+                        cloudSagas.forEach(cs => {
+                            if (!SAGAS_DATABASE.some(s => s.id === cs.id)) {
+                                SAGAS_DATABASE.push(cs);
+                            }
+                        });
+                    }
+                }
+            } catch (e) {}
         }
 
-        function saveSagasToStorage() {
-            localStorage.setItem('sk_sagas_database', JSON.stringify(SAGAS_DATABASE));
-        }
-
-        /* VERIFICATION MOT DE PASSE SECRET */
-        function triggerAdminPrompt() {
-            const pass = prompt("Entrez le mot de passe Administrateur :");
-            if (pass === "tastycroustyjetaime2026") {
-                isAdmin = true;
-                alert("🔓 Mode Administrateur activé ! L'option 'Créer une Saga' est débloquée.");
-                updateAdminUI();
-                renderSections();
-            } else if (pass !== null) {
-                alert("❌ Mot de passe incorrect !");
-            }
+        async function saveSagaToFirebase(sagaObj) {
+            try {
+                await fetch(`${FIREBASE_DB_URL}/sagas_custom/${sagaObj.id}.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(sagaObj)
+                });
+            } catch (e) {}
         }
 
         function updateAdminUI() {
@@ -857,156 +852,29 @@
         async function init() {
             updateAuthHeader();
             await checkDiscordCallback();
-
-            const fallbackCatalog = [
-                {
-                    tmdb_id_clean: "1001",
-                    title: "Spider-Man: Brand New Day",
-                    rating: "8.8",
-                    year: "2026",
-                    type: "movie",
-                    overview: "Peter Parker entame un tout nouveau chapitre sous le costume de l'araignée.",
-                    poster: "https://image.tmdb.org/t/p/original/5cY4DgCWhABURo3Kedt5hBwhzxF.jpg",
-                    backdrop: "https://image.tmdb.org/t/p/original/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg"
-                },
-                {
-                    tmdb_id_clean: "1002",
-                    title: "Mutiny",
-                    rating: "8.1",
-                    year: "2026",
-                    type: "movie",
-                    overview: "Un thriller d'action intense au cœur d'une mutinerie à haut risque.",
-                    poster: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg",
-                    backdrop: "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg"
-                },
-                {
-                    tmdb_id_clean: "1003",
-                    title: "L'Odyssée",
-                    rating: "8.5",
-                    year: "2026",
-                    type: "movie",
-                    overview: "L'adaptation spectaculaire et éblouissante de la célèbres épopée d'Ulysse.",
-                    poster: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
-                    backdrop: "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg"
-                },
-                {
-                    tmdb_id_clean: "1004",
-                    title: "Toy Story 5",
-                    rating: "8.3",
-                    year: "2026",
-                    type: "movie",
-                    overview: "Woody, Buzz et toute la bande reviennent pour de nouvelles aventures captivantes.",
-                    poster: "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg",
-                    backdrop: "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg"
-                },
-                {
-                    tmdb_id_clean: "1005",
-                    title: "Colony",
-                    rating: "7.9",
-                    year: "2026",
-                    type: "movie",
-                    overview: "La lutte acharnée pour la survie d'une colonie dans un futur mystérieux et hostile.",
-                    poster: "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg",
-                    backdrop: "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg"
-                },
-                {
-                    tmdb_id_clean: "1006",
-                    title: "Vaiana (Moana)",
-                    rating: "8.4",
-                    year: "2026",
-                    type: "movie",
-                    overview: "Une grande aventure océanique guidée par le destin et la découverte de soi.",
-                    poster: "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
-                    backdrop: "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg"
-                },
-                {
-                    tmdb_id_clean: "1007",
-                    title: "Obsession",
-                    rating: "8.0",
-                    year: "2026",
-                    type: "movie",
-                    overview: "Un thriller psychologique haletant où le désir devient une véritable obsession.",
-                    poster: "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg",
-                    backdrop: "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg"
-                }
-            ];
+            await loadSagasFromFirebase();
 
             try {
                 const res = await fetch('data.json');
-                if (!res.ok) throw new Error("Fichier data.json non trouvé");
-                catalog = await res.json();
-            } catch (e) {
-                console.warn("data.json non trouvé. Chargement du catalogue d'images personnalisées.", e);
-                catalog = fallbackCatalog;
-            }
-
-            const customPosters = {
-                "spider-man: brand new day": "https://image.tmdb.org/t/p/original/5cY4DgCWhABURo3Kedt5hBwhzxF.jpg",
-                "mutiny": "https://image.tmdb.org/t/p/original/qDa0fqDqIBCovRp975RvtGPcuN3.jpg",
-                "l'odyssée": "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
-                "l'odyssee": "https://image.tmdb.org/t/p/original/n3D2Lmwomtbc4SZFO8hLtLL0b5q.jpg",
-                "toy story 5": "https://image.tmdb.org/t/p/original/8sSKdEmlmqF4kJUd28SqthXC4yZ.jpg",
-                "colony": "https://image.tmdb.org/t/p/original/84FEpVVbSKYvKXDZJDZXOKBxCEm.jpg",
-                "vaiana": "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
-                "moana": "https://image.tmdb.org/t/p/original/76WFQTmh4gsqYpWTejxuEu5Iu69.jpg",
-                "obsession": "https://image.tmdb.org/t/p/original/rZfmzpixLKLR3Hg2u0WgC7XLFl8.jpg"
-            };
-
-            const customBackdrops = {
-                "spider-man: brand new day": "https://image.tmdb.org/t/p/original/vjMvFSmGUxEtqVdaZgvFee9XkZl.jpg",
-                "minion": "https://image.tmdb.org/t/p/original/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg",
-                "monster": "https://image.tmdb.org/t/p/original/kkcwhgSFd81QDlXo8ytrpHPQjhy.jpg"
-            };
-
-            catalog.forEach(item => {
-                const titleLower = (item.title || '').toLowerCase().trim();
-                let hasCustom = false;
-                for (let key in customPosters) {
-                    if (titleLower.includes(key)) {
-                        item.poster = customPosters[key];
-                        hasCustom = true;
-                        break;
-                    }
-                }
-                
-                let hasCustomBackdrop = false;
-                for (let key in customBackdrops) {
-                    if (titleLower.includes(key)) {
-                        item.backdrop = customBackdrops[key];
-                        hasCustomBackdrop = true;
-                        break;
-                    }
-                }
-
-                if (!hasCustom) {
-                    item.poster = formatTmdbImage(item.poster || item.poster_path, 'w780');
-                }
-                if (!hasCustomBackdrop) {
-                    const rawBackdrop = item.backdrop || item.backdrops || item.backdrop_path;
-                    item.backdrop = formatTmdbImage(rawBackdrop, 'w1280');
-                }
-            });
+                if (res.ok) catalog = await res.json();
+            } catch (e) {}
 
             heroItems = catalog.slice(0, 10);
             setupHeroSlider();
             renderSections();
-
             handleInitialUrl();
         }
 
         function handleInitialUrl() {
             const hash = window.location.hash.replace('#', '');
             if (!hash) return;
-
             if (['home', 'all', 'saga', 'movie', 'tv', 'anime', 'watchlist'].includes(hash)) {
                 switchTab(hash === 'home' ? 'all' : hash, false);
             } else if (hash.startsWith('watch-')) {
                 const parts = hash.split('-');
                 const tmdbId = parts[parts.length - 1];
                 const foundItem = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
-                if (foundItem) {
-                    openDetails(foundItem, false);
-                }
+                if (foundItem) openDetails(foundItem, false);
             }
         }
 
@@ -1041,28 +909,18 @@
             e.stopPropagation();
             let saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
             id = String(id);
-            if (saved.includes(id)) {
-                saved = saved.filter(i => i !== id);
-            } else {
-                saved.push(id);
-            }
+            if (saved.includes(id)) saved = saved.filter(i => i !== id);
+            else saved.push(id);
             localStorage.setItem('sk_watchlist', JSON.stringify(saved));
             
             const star = e.currentTarget;
-            if (saved.includes(id)) {
-                star.classList.add('active');
-                star.textContent = "★";
-            } else {
-                star.classList.remove('active');
-                star.textContent = "☆";
-            }
+            if (saved.includes(id)) { star.classList.add('active'); star.textContent = "★"; }
+            else { star.classList.remove('active'); star.textContent = "☆"; }
         }
 
         function openDetailsById(tmdbId) {
             const found = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
-            if (found) {
-                openDetails(found);
-            }
+            if (found) openDetails(found);
         }
 
         function createCardHtml(item, isInSagaView = false) {
@@ -1086,20 +944,6 @@
             `;
         }
 
-        function createAdminCardHtml() {
-            return `
-                <div class="card" onclick="triggerAdminPrompt()" style="border: 1px solid #e50914;">
-                    <div class="saga-badge" style="background:#e50914;">ADMIN</div>
-                    <img class="poster-img" src="https://image.tmdb.org/t/p/w780/qvWDDPlo2MT7YCU4NSVxCgStxqu.jpg" alt="Panel Admin">
-                    <div class="card-hover-overlay">
-                        <div class="card-hover-title" style="color:#e50914;">Panneau d'administration</div>
-                        <div class="card-hover-rating">🔐 Accès Sécurisé</div>
-                        <div class="card-hover-desc">Cliquez pour vous authentifier et débloquer les fonctionnalités d'administration.</div>
-                    </div>
-                </div>
-            `;
-        }
-
         function createSagaCardHtml(saga) {
             const isSaved = isSavedInWatchlist(saga.id);
             return `
@@ -1111,7 +955,7 @@
                     <img class="poster-img" src="${formatTmdbImage(saga.poster, 'w780')}" alt="${saga.title}">
                     <div class="card-hover-overlay">
                         <div class="card-hover-title">${saga.title}</div>
-                        <div class="card-hover-rating">⭐ ${saga.rating}</div>
+                        <div class="card-hover-rating">⭐ ${saga.rating || '8.0'}</div>
                         <div class="card-hover-desc">${saga.desc}</div>
                     </div>
                 </div>
@@ -1144,12 +988,10 @@
             const popAnimes = catalog.filter(i => isAnimeItem(i)).slice(0, 30);
 
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
-            
             document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
-            
             document.getElementById('gridMovies').innerHTML = popMovies.map(createCardHtml).join('');
             document.getElementById('gridSeries').innerHTML = popSeries.map(createCardHtml).join('');
-            document.getElementById('gridAnimes').innerHTML = (popAnimes.length ? popAnimes : catalog.slice(0, 30)).slice(0, 30).map(createCardHtml).join('');
+            document.getElementById('gridAnimes').innerHTML = popAnimes.map(createCardHtml).join('');
         }
 
         function renderSagaMovies() {
@@ -1170,37 +1012,25 @@
             document.getElementById('sagaTitle').innerHTML = `${saga.title}`;
             document.getElementById('sagaPoster').src = formatTmdbImage(saga.poster, 'w780');
             document.getElementById('sagaDesc').textContent = saga.desc;
-            document.getElementById('statBudget').textContent = saga.budget;
-            document.getElementById('statRevenue').textContent = saga.revenue;
-            document.getElementById('statRating').textContent = `${saga.rating} / 10`;
-            document.getElementById('statDuration').textContent = saga.duration;
-
-            document.getElementById('infoProducers').innerHTML = saga.producers.map(p => `<div class="info-list-item"><span>${p}</span><span class="count">Collection</span></div>`).join('');
-            document.getElementById('infoCountries').innerHTML = saga.countries.map(c => `<div class="info-list-item"><span>${c}</span><span class="count">Officiel</span></div>`).join('');
-            document.getElementById('infoLanguages').innerHTML = `<div class="info-list-item"><span>Français (VF)</span><span class="count">VF</span></div><div class="info-list-item"><span>English (VOSTFR)</span><span class="count">VOSTFR</span></div>`;
-            document.getElementById('infoGenres').innerHTML = saga.genres.map(g => `<div class="info-list-item"><span>${g}</span><span class="count">Genre</span></div>`).join('');
+            document.getElementById('statBudget').textContent = saga.budget || "N/A";
+            document.getElementById('statRevenue').textContent = saga.revenue || "N/A";
+            document.getElementById('statRating').textContent = `${saga.rating || '8.0'} / 10`;
+            document.getElementById('statDuration').textContent = saga.duration || "N/A";
 
             renderSagaMovies();
-            updateWatchlistButton('btnWatchlistSaga', saga.id);
             updateAdminUI();
 
             document.getElementById('homeMainView').style.display = 'none';
             document.getElementById('heroBanner').style.display = 'none';
             document.getElementById('sagaDetailView').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
-
-            if (typeof window.sendPingFunc === 'function') {
-                window.sendPingFunc('IDLE', `Consulte Saga: ${saga.title}`);
-            }
         }
 
         function closeSagaView() {
             currentSaga = null;
             document.getElementById('sagaDetailView').style.display = 'none';
             document.getElementById('homeMainView').style.display = 'block';
-            if(currentCategoryType === 'all') {
-                document.getElementById('heroBanner').style.display = 'flex';
-            }
+            if(currentCategoryType === 'all') document.getElementById('heroBanner').style.display = 'flex';
             updateAdminUI();
         }
 
@@ -1213,9 +1043,7 @@
             closeSagaView();
             closePlayer();
 
-            if (updateUrl) {
-                history.pushState(null, null, `#${type === 'all' ? 'home' : type}`);
-            }
+            if (updateUrl) history.pushState(null, null, `#${type === 'all' ? 'home' : type}`);
 
             if (type === 'all') {
                 document.getElementById('heroBanner').style.display = 'flex';
@@ -1226,15 +1054,11 @@
                 document.getElementById('homeSections').style.display = 'none';
                 document.getElementById('filteredSection').style.display = 'block';
 
-                if (type === 'saga') {
-                    currentFilteredList = SAGAS_DATABASE;
-                } else if (type === 'movie') {
-                    currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i));
-                } else if (type === 'tv') {
-                    currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i));
-                } else if (type === 'anime') {
-                    currentFilteredList = catalog.filter(i => isAnimeItem(i));
-                } else if (type === 'watchlist') {
+                if (type === 'saga') currentFilteredList = SAGAS_DATABASE;
+                else if (type === 'movie') currentFilteredList = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i));
+                else if (type === 'tv') currentFilteredList = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i));
+                else if (type === 'anime') currentFilteredList = catalog.filter(i => isAnimeItem(i));
+                else if (type === 'watchlist') {
                     const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
                     currentFilteredList = catalog.filter(i => saved.includes(String(i.tmdb_id_clean || i.tmdb_id)));
                 }
@@ -1246,24 +1070,7 @@
 
         function handleSearch(query) {
             const q = query.trim();
-            
-            if (q.toLowerCase() === "panel_adminhesskaceo") {
-                document.getElementById('searchInput').value = '';
-                closeSagaView();
-                closePlayer();
-                document.getElementById('heroBanner').style.display = 'none';
-                document.getElementById('homeSections').style.display = 'none';
-                document.getElementById('filteredSection').style.display = 'block';
-                document.getElementById('filterTitle').textContent = "🔒 Panneau Administrateur Sécurisé";
-                document.getElementById('gridFiltered').innerHTML = createAdminCardHtml();
-                document.getElementById('btnLoadMore').style.display = 'none';
-                return;
-            }
-
-            if (!q) {
-                switchTab(currentCategoryType || 'all', false);
-                return;
-            }
+            if (!q) { switchTab(currentCategoryType || 'all', false); return; }
 
             closeSagaView();
             closePlayer();
@@ -1280,38 +1087,12 @@
         }
 
         function applySorting() {
-            const sortVal = document.getElementById('sortSelect').value;
-
-            if (currentCategoryType !== 'saga') {
-                if (sortVal === 'rating-desc') {
-                    currentFilteredList.sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0));
-                } else if (sortVal === 'rating-asc') {
-                    currentFilteredList.sort((a, b) => parseFloat(a.rating || 0) - parseFloat(b.rating || 0));
-                } else if (sortVal === 'title-asc') {
-                    currentFilteredList.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-                } else if (sortVal === 'year-desc') {
-                    currentFilteredList.sort((a, b) => parseInt(b.year || 0) - parseInt(a.year || 0));
-                }
-            }
-
             currentPage = 1;
             renderPaginatedGrid();
         }
 
         function renderPaginatedGrid() {
-            let catTitle = "Résultats";
-            if (currentCategoryType === 'saga') catTitle = translations[lang].sec_sagas;
-            else if (currentCategoryType === 'movie') catTitle = translations[lang].sec_movies;
-            else if (currentCategoryType === 'tv') catTitle = translations[lang].sec_series;
-            else if (currentCategoryType === 'anime') catTitle = translations[lang].sec_animes;
-            else if (currentCategoryType === 'watchlist') catTitle = translations[lang].nav_watchlist;
-
-            const searchInput = document.getElementById('searchInput');
-            if (!searchInput.value.trim()) {
-                document.getElementById('filterTitle').textContent = `${catTitle} (${currentFilteredList.length.toLocaleString('fr-FR')})`;
-            }
-
-            if (currentCategoryType === 'saga' && !searchInput.value.trim()) {
+            if (currentCategoryType === 'saga' && !document.getElementById('searchInput').value.trim()) {
                 document.getElementById('gridFiltered').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
                 document.getElementById('btnLoadMore').style.display = 'none';
                 return;
@@ -1323,17 +1104,11 @@
                 : '<p style="color:#aaa; padding:30px;">Aucun contenu disponible.</p>';
 
             const btnLoad = document.getElementById('btnLoadMore');
-            if (itemsToDisplay.length < currentFilteredList.length) {
-                btnLoad.style.display = 'block';
-            } else {
-                btnLoad.style.display = 'none';
-            }
+            if (itemsToDisplay.length < currentFilteredList.length) btnLoad.style.display = 'block';
+            else btnLoad.style.display = 'none';
         }
 
-        function loadMoreItems() {
-            currentPage++;
-            renderPaginatedGrid();
-        }
+        function loadMoreItems() { currentPage++; renderPaginatedGrid(); }
 
         async function openDetails(item, updateUrl = true) {
             currentItem = item;
@@ -1349,166 +1124,67 @@
             document.getElementById('modalYear').textContent = item.year || '2026';
             document.getElementById('modalRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('modalOverview').textContent = item.overview || "Synopsis indisponible.";
-            
-            updateWatchlistButton('btnModalWatchlist', String(idClean));
-
-            document.getElementById('castList').innerHTML = `<span style="color:#666; font-size:11px;">Chargement du casting...</span>`;
-            document.getElementById('movieProducersInfo').innerHTML = `<span style="color:#666; font-size:12px;">Chargement des données de production...</span>`;
-            document.getElementById('trailerContainer').innerHTML = `<span style="padding: 20px; display: block; text-align: center; color: #666;">Recherche...</span>`;
 
             loadSource('vf');
             document.getElementById('playerModal').style.display = 'block';
-
-            const type = (isAnimeItem(item) || item.type === 'tv') ? 'tv' : 'movie';
-            
-            try {
-                const res = await fetch(`https://api.themoviedb.org/3/${type}/${idClean}?api_key=${API_KEY}&append_to_response=credits,videos&language=${lang === 'fr' ? 'fr-FR' : 'en-US'}`);
-                const data = await res.json();
-                
-                if(data.credits && data.credits.cast) {
-                    const topCast = data.credits.cast.slice(0, 5);
-                    document.getElementById('castList').innerHTML = topCast.map(actor => `
-                        <div class="cast-item">
-                            <img class="cast-img" src="${actor.profile_path ? formatTmdbImage(actor.profile_path, 'w185') : 'https://via.placeholder.com/55'}" alt="${actor.name}">
-                            <div class="cast-name">${actor.name}</div>
-                            <div class="cast-role">${actor.character || 'Rôle'}</div>
-                        </div>
-                    `).join('');
-                }
-
-                if (data.production_companies && data.production_companies.length) {
-                    const prods = data.production_companies.map(p => p.name).join(', ');
-                    document.getElementById('movieProducersInfo').innerHTML = `
-                        <div class="info-list-item"><span>Sociétés:</span><span style="color:#fff;">${prods}</span></div>
-                        <div class="info-list-item"><span>Pays:</span><span style="color:#fff;">${(data.production_countries || []).map(c=>c.name).join(', ') || 'USA'}</span></div>
-                    `;
-                } else {
-                    document.getElementById('movieProducersInfo').innerHTML = `<span style="color:#aaa; font-size:12px;">Production indépendante</span>`;
-                }
-
-                let trailer = null;
-                if(data.videos && data.videos.results) {
-                    trailer = data.videos.results.find(v => v.type === 'Trailer' && v.site === 'YouTube');
-                }
-                if(trailer) {
-                    document.getElementById('trailerContainer').innerHTML = `<iframe src="https://www.youtube.com/embed/${trailer.key}?mute=1" allowfullscreen></iframe>`;
-                } else {
-                    document.getElementById('trailerContainer').innerHTML = `<span style="padding: 20px; display: block; text-align: center; color: #666;">Aucune bande-annonce</span>`;
-                }
-            } catch (e) {}
-
-            if (typeof window.sendPingFunc === 'function') {
-                window.sendPingFunc('WATCHING', item.title);
-            }
         }
 
         function loadSource(s) {
             if (!currentItem) return;
             const id = currentItem.tmdb_id_clean || currentItem.tmdb_id;
             const isTv = (currentItem.type === 'tv' || isAnimeItem(currentItem));
-            let url = "";
-
-            document.querySelectorAll('.btn-source').forEach(b => b.classList.remove('active'));
-            document.getElementById(`btn-${s}`).classList.add('active');
-
-            if (s === 'vf') {
-                url = isTv ? `https://frembed.casa/api/serie.php?id=${id}&sa=1&epi=1` : `https://frembed.casa/api/film.php?id=${id}`;
-            } else if (s === 'vostfr') {
-                url = isTv ? `https://www.2embed.cc/embedtv/${id}&s=1&e=1` : `https://www.2embed.cc/embed/${id}`;
-            }
+            let url = (s === 'vf') 
+                ? (isTv ? `https://frembed.casa/api/serie.php?id=${id}&sa=1&epi=1` : `https://frembed.casa/api/film.php?id=${id}`)
+                : (isTv ? `https://www.2embed.cc/embedtv/${id}&s=1&e=1` : `https://www.2embed.cc/embed/${id}`);
 
             document.getElementById('videoContainer').innerHTML = `<iframe src="${url}" allowfullscreen></iframe>`;
-        }
-
-        function updateWatchlistButton(btnId, itemId) {
-            const btn = document.getElementById(btnId);
-            if (!btn) return;
-            const saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
-            if (saved.includes(itemId)) {
-                btn.innerHTML = translations[lang].rem_wl;
-                btn.classList.add('active');
-            } else {
-                btn.innerHTML = translations[lang].add_wl;
-                btn.classList.remove('active');
-            }
-        }
-
-        function toggleWatchlistCurrentSaga() {
-            if (!currentSaga) return;
-            toggleWatchlistId(currentSaga.id);
-            updateWatchlistButton('btnWatchlistSaga', currentSaga.id);
-        }
-
-        function toggleWatchlistCurrentMovie() {
-            if (!currentItem) return;
-            const idClean = String(currentItem.tmdb_id_clean || currentItem.tmdb_id);
-            toggleWatchlistId(idClean);
-            updateWatchlistButton('btnModalWatchlist', idClean);
-        }
-
-        function toggleWatchlistId(id) {
-            let saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
-            if (saved.includes(id)) {
-                saved = saved.filter(i => i !== id);
-            } else {
-                saved.push(id);
-            }
-            localStorage.setItem('sk_watchlist', JSON.stringify(saved));
         }
 
         function closePlayer() {
             document.getElementById('playerModal').style.display = 'none';
             document.getElementById('videoContainer').innerHTML = '';
             document.body.style.overflow = 'auto';
-
-            const activeTab = document.querySelector('.nav-item.active') ? document.querySelector('.nav-item.active').id.replace('btn-', '') : 'all';
-            history.pushState(null, null, `#${activeTab === 'all' ? 'home' : activeTab}`);
         }
 
         function scrollCarousel(id, amount) {
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
-        /* FONCTIONS ADMIN */
-        function openCreateSagaModal() {
-            document.getElementById('createSagaModal').style.display = 'flex';
-        }
-
+        /* FONCTIONS DEVELOPPEUR / ADMIN */
+        function openCreateSagaModal() { document.getElementById('createSagaModal').style.display = 'flex'; }
         function closeAdminModals() {
             document.getElementById('createSagaModal').style.display = 'none';
             document.getElementById('addMovieModal').style.display = 'none';
         }
 
-        function submitNewSaga() {
+        async function submitNewSaga() {
+            if (!isAdmin) return;
             const name = document.getElementById('newSagaName').value.trim();
             const poster = document.getElementById('newSagaPoster').value.trim();
             const desc = document.getElementById('newSagaDesc').value.trim();
 
-            if (!name || !poster) {
-                alert("Veuillez remplir au moins le nom et le lien de l'image.");
-                return;
-            }
+            if (!name || !poster) { alert("Nom et Image obligatoires !"); return; }
 
             const newSaga = {
                 id: slugify(name),
                 title: `${name} - Saga`,
                 poster: formatTmdbImage(poster, 'w780'),
                 exactTitles: [],
-                desc: desc || "Aucune description fournie.",
-                budget: "N/A", revenue: "N/A", rating: "8.0", duration: "N/A",
-                producers: ["Production Indépendante"], countries: ["International"], genres: ["Action", "Aventure"]
+                desc: desc || "Aucune description.",
+                rating: "8.0",
+                producers: ["Marvel Studios"], countries: ["USA"], genres: ["Action"]
             };
 
             SAGAS_DATABASE.push(newSaga);
-            saveSagasToStorage();
+            await saveSagaToFirebase(newSaga);
             closeAdminModals();
             renderSections();
             switchTab('saga');
-            alert(`Saga "${name}" créée avec succès !`);
+            alert(`Saga "${name}" créée pour tout le monde !`);
         }
 
         function openAddMovieToSagaModal() {
-            if (!currentSaga) return;
+            if (!currentSaga || !isAdmin) return;
             document.getElementById('addMovieModal').style.display = 'flex';
             filterMoviesForSaga('');
         }
@@ -1526,83 +1202,80 @@
             `).join('');
         }
 
-        function addMovieToCurrentSaga(movieTitle) {
-            if (!currentSaga) return;
+        async function addMovieToCurrentSaga(movieTitle) {
+            if (!currentSaga || !isAdmin) return;
             if (!currentSaga.exactTitles.includes(movieTitle.toLowerCase())) {
                 currentSaga.exactTitles.push(movieTitle.toLowerCase());
-                saveSagasToStorage();
+                await saveSagaToFirebase(currentSaga);
                 openSagaView(currentSaga.id);
                 closeAdminModals();
-                alert(`Film "${movieTitle}" ajouté à la saga !`);
-            } else {
-                alert("Ce film est déjà présent dans la saga.");
             }
         }
 
-        function removeMovieFromCurrentSaga(e, movieTitle) {
+        async function removeMovieFromCurrentSaga(e, movieTitle) {
             e.stopPropagation();
             if (!currentSaga || !isAdmin) return;
-            if (confirm(`Voulez-vous vraiment retirer "${movieTitle}" de cette saga ?`)) {
+            if (confirm(`Retirer "${movieTitle}" ?`)) {
                 currentSaga.exactTitles = currentSaga.exactTitles.filter(t => t !== movieTitle.toLowerCase());
-                saveSagasToStorage();
+                await saveSagaToFirebase(currentSaga);
                 openSagaView(currentSaga.id);
             }
         }
 
-        function deleteCurrentSaga() {
+        async function deleteCurrentSaga() {
             if (!currentSaga || !isAdmin) return;
-            if (confirm(`Êtes-vous sûr de vouloir SUPPRIMER définitivement la saga "${currentSaga.title}" ?`)) {
+            if (confirm(`SUPPRIMER la saga "${currentSaga.title}" ?`)) {
                 SAGAS_DATABASE = SAGAS_DATABASE.filter(s => s.id !== currentSaga.id);
-                saveSagasToStorage();
+                try {
+                    await fetch(`${FIREBASE_DB_URL}/sagas_custom/${currentSaga.id}.json`, { method: 'DELETE' });
+                } catch(e) {}
                 closeSagaView();
                 switchTab('saga');
-                alert("Saga supprimée !");
             }
         }
 
         window.addEventListener('popstate', handleInitialUrl);
-
         init();
     </script>
 
-    <!-- TRACKER FIREBASE AUTOMATIQUE -->
+    <!-- TRACKER FIREBASE + SYSTEME DE POPUP REMOTE -->
     <script>
         (function() {
             if (window.location.href.includes('sk-admin-secret.html')) return;
 
-            const FIREBASE_DB_URL = "https://sk-stream-default-rtdb.europe-west1.firebasedatabase.app";
-            
             let userId = localStorage.getItem('sk_user_id');
-            if (!userId) {
+            const userLogged = JSON.parse(localStorage.getItem('sk_logged_user') || '{}');
+            
+            if (userLogged && userLogged.name) {
+                userId = userLogged.name;
+            } else if (!userId) {
                 userId = `Utilisateur #${Math.floor(1000 + Math.random() * 9000)}`;
                 localStorage.setItem('sk_user_id', userId);
             }
 
             const ua = navigator.userAgent;
-            let deviceType = "💻 PC Windows";
+            let deviceType = "💻 PC";
             if (/iPhone/i.test(ua)) deviceType = "📱 iPhone";
             else if (/Android/i.test(ua)) deviceType = "📱 Android";
 
-            let geoInfo = localStorage.getItem('sk_geo_info') || "France";
-            let userIp = localStorage.getItem('sk_real_ip') || "82.120.XX.XX";
+            const safeKey = slugify(userId);
 
             window.sendPingFunc = function(status = 'IDLE', customTitle = '') {
                 const now = Date.now();
-                const safeKey = userId.replace('#', 'ID_');
-
                 const payload = {
-                    uid: userId, ip: userIp, geo: geoInfo, device: deviceType,
-                    status: status, title: customTitle || (currentItem ? currentItem.title : "Page d'Accueil"), lastPing: now
+                    uid: userId,
+                    discord_id: userLogged.id || "Non connecté",
+                    avatar: userLogged.avatar || "",
+                    device: deviceType,
+                    status: status,
+                    title: customTitle || (currentItem ? currentItem.title : "Page d'Accueil"),
+                    lastPing: now
                 };
 
                 try {
-                    fetch(`${FIREBASE_DB_URL}/requests/${now}_${safeKey}.json`, {
-                        method: 'PUT', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
                     fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
                         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ uid: userId, ip: userIp, geo: geoInfo, device: deviceType, lastVisit: now, lastPage: payload.title })
+                        body: JSON.stringify(payload)
                     });
                 } catch (e) {}
             };
@@ -1612,6 +1285,21 @@
                 const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
                 window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
             }, 5000);
+
+            // ECOUTEUR DE POPUP EN DIRECT DEPUIS LE DASHBOARD
+            setInterval(async () => {
+                try {
+                    const res = await fetch(`${FIREBASE_DB_URL}/popups/${safeKey}.json`);
+                    if (res.ok) {
+                        const trigger = await res.json();
+                        if (trigger === true) {
+                            document.getElementById('remotePopupModal').style.display = 'flex';
+                        } else {
+                            document.getElementById('remotePopupModal').style.display = 'none';
+                        }
+                    }
+                } catch(e) {}
+            }, 3000);
         })();
     </script>
 </body>
