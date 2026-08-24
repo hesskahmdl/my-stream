@@ -117,6 +117,13 @@
         }
         .btn-watch:hover { background: #ff0f1a; transform: scale(1.05); }
 
+        .btn-edit-hero {
+            background: rgba(255,255,255,0.15); color: #fff; border: 1px solid #fff;
+            padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold;
+            cursor: pointer; margin-left: 10px; backdrop-filter: blur(5px); transition: 0.2s; display: none;
+        }
+        .btn-edit-hero:hover { background: #fff; color: #000; }
+
         .main-content { padding: 15px 35px; position: relative; z-index: 10; margin-top: -30px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px; flex-wrap: wrap; gap: 10px; }
         .section-title { font-size: 20px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -307,6 +314,16 @@
             display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
         }
 
+        /* STYLE POUR LA RECHERCHE DE SAGA AVEC AFFICHAGE DES JAQUETTES */
+        .movie-select-row {
+            display: flex; align-items: center; gap: 12px; padding: 8px; cursor: pointer;
+            border-bottom: 1px solid #222; transition: background 0.2s;
+        }
+        .movie-select-row:hover { background: #22222e; }
+        .movie-select-poster { width: 35px; height: 50px; object-fit: cover; border-radius: 4px; background: #222; }
+        .movie-select-title { font-size: 13px; color: #fff; font-weight: bold; flex: 1; }
+        .movie-select-btn { color: #e50914; font-weight: bold; font-size: 12px; }
+
         @media (max-width: 768px) {
             header { padding: 10px 15px; }
             .logo { font-size: 18px; }
@@ -413,7 +430,11 @@
                 <span class="badge badge-rating" id="heroRating">⭐ 8.5</span>
             </div>
             <p class="hero-overview" id="heroOverview">...</p>
-            <button class="btn-watch" id="heroWatchBtn" data-i18n="btn_watch">▶ REGARDER</button>
+
+            <div style="display:flex; align-items:center;">
+                <button class="btn-watch" id="heroWatchBtn" data-i18n="btn_watch">▶ REGARDER</button>
+                <button class="btn-edit-hero" id="btnEditHero" onclick="openEditHeroModal()">✏️ Modifier le Carrousel</button>
+            </div>
         </div>
     </div>
 
@@ -578,7 +599,22 @@
         </div>
     </div>
 
-    <!-- MODALES ADMIN -->
+    <!-- MODALE EDITION CARROUSEL HERO -->
+    <div class="admin-modal" id="editHeroModal">
+        <div class="admin-modal-content">
+            <div class="admin-modal-title">Modifier le Carrousel (Bannière)</div>
+            <input type="text" class="admin-input" id="heroEditTitle" placeholder="Titre du film">
+            <input type="text" class="admin-input" id="heroEditImage" placeholder="Lien Image TMDB (ex: /t/p/w1280/... ou URL complète)">
+            <input type="text" class="admin-input" id="heroEditTmdbId" placeholder="ID TMDB du film (ex: 550)">
+            <textarea class="admin-input" id="heroEditDesc" placeholder="Description du film" rows="3"></textarea>
+            <div class="admin-btn-group">
+                <button class="btn-saga-action" onclick="closeAdminModals()">Annuler</button>
+                <button class="btn-saga-action" style="background:#e50914;" onclick="submitHeroEdit()">Enregistrer sur le site</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALE DE CRÉATION DE SAGA (ADMIN) -->
     <div class="admin-modal" id="createSagaModal">
         <div class="admin-modal-content">
             <div class="admin-modal-title">Créer une nouvelle Saga</div>
@@ -597,7 +633,7 @@
         <div class="admin-modal-content">
             <div class="admin-modal-title">Ajouter un film à la Saga</div>
             <input type="text" class="admin-input" id="searchMovieForSaga" placeholder="Rechercher un film du catalogue..." oninput="filterMoviesForSaga(this.value)">
-            <div id="movieSelectList" style="max-height: 200px; overflow-y: auto; margin-bottom: 12px; background:#18181f; padding:8px; border-radius:6px;"></div>
+            <div id="movieSelectList" style="max-height: 250px; overflow-y: auto; margin-bottom: 12px; background:#18181f; padding:8px; border-radius:6px;"></div>
             <div class="admin-btn-group">
                 <button class="btn-saga-action" onclick="closeAdminModals()">Fermer</button>
             </div>
@@ -626,6 +662,7 @@
             const btnLogin = document.getElementById('btnOpenAuthModal');
             const badge = document.getElementById('userProfileBadge');
             const devBtn = document.getElementById('btnDevDashboard');
+            const editHeroBtn = document.getElementById('btnEditHero');
 
             if (saved) {
                 const user = JSON.parse(saved);
@@ -637,12 +674,14 @@
                 if (String(user.id) === DEV_DISCORD_ID) {
                     isAdmin = true;
                     if (devBtn) devBtn.style.display = 'inline-flex';
+                    if (editHeroBtn) editHeroBtn.style.display = 'inline-flex';
                     updateAdminUI();
                 }
             } else {
                 btnLogin.style.display = 'flex';
                 badge.style.display = 'none';
                 if (devBtn) devBtn.style.display = 'none';
+                if (editHeroBtn) editHeroBtn.style.display = 'none';
             }
         }
 
@@ -849,6 +888,18 @@
             return animeKeywords.some(kw => text.includes(kw));
         }
 
+        async function loadCustomHeroFromFirebase() {
+            try {
+                const res = await fetch(`${FIREBASE_DB_URL}/hero_custom.json`);
+                if (res.ok) {
+                    const customHero = await res.json();
+                    if (customHero && customHero.title) {
+                        heroItems.unshift(customHero);
+                    }
+                }
+            } catch(e) {}
+        }
+
         async function init() {
             updateAuthHeader();
             await checkDiscordCallback();
@@ -860,6 +911,7 @@
             } catch (e) {}
 
             heroItems = catalog.slice(0, 10);
+            await loadCustomHeroFromFirebase();
             setupHeroSlider();
             renderSections();
             handleInitialUrl();
@@ -891,13 +943,19 @@
         function showHero(index) {
             heroIndex = index;
             const item = heroItems[heroIndex];
-            const bgImage = (item.backdrop && item.backdrop !== 'https://via.placeholder.com/500x750') ? item.backdrop : item.poster;
+            const bgImage = formatTmdbImage(item.backdrop || item.poster, 'w1280');
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
             document.getElementById('heroTitle').textContent = item.title;
             document.getElementById('heroYear').textContent = item.year || '2026';
             document.getElementById('heroRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('heroOverview').textContent = item.overview || "";
-            document.getElementById('heroWatchBtn').onclick = () => openDetails(item);
+            document.getElementById('heroWatchBtn').onclick = () => {
+                if (item.tmdb_id_clean || item.tmdb_id) {
+                    openDetailsById(item.tmdb_id_clean || item.tmdb_id);
+                } else {
+                    openDetails(item);
+                }
+            };
         }
 
         function isSavedInWatchlist(id) {
@@ -920,7 +978,11 @@
 
         function openDetailsById(tmdbId) {
             const found = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
-            if (found) openDetails(found);
+            if (found) {
+                openDetails(found);
+            } else {
+                openDetails({ tmdb_id_clean: tmdbId, title: "Film sélectionné", rating: "8.0", year: "2026" });
+            }
         }
 
         function createCardHtml(item, isInSagaView = false) {
@@ -1151,10 +1213,55 @@
         }
 
         /* FONCTIONS DEVELOPPEUR / ADMIN */
+        function openEditHeroModal() {
+            if (!isAdmin) return;
+            const currentHero = heroItems[heroIndex] || {};
+            document.getElementById('heroEditTitle').value = currentHero.title || '';
+            document.getElementById('heroEditImage').value = currentHero.backdrop || currentHero.poster || '';
+            document.getElementById('heroEditTmdbId').value = currentHero.tmdb_id_clean || currentHero.tmdb_id || '';
+            document.getElementById('heroEditDesc').value = currentHero.overview || '';
+            document.getElementById('editHeroModal').style.display = 'flex';
+        }
+
+        async function submitHeroEdit() {
+            if (!isAdmin) return;
+            const title = document.getElementById('heroEditTitle').value.trim();
+            const image = document.getElementById('heroEditImage').value.trim();
+            const tmdbId = document.getElementById('heroEditTmdbId').value.trim();
+            const desc = document.getElementById('heroEditDesc').value.trim();
+
+            if (!title || !image) { alert("Le titre et l'image sont obligatoires."); return; }
+
+            const updatedHero = {
+                title: title,
+                backdrop: formatTmdbImage(image, 'w1280'),
+                poster: formatTmdbImage(image, 'w780'),
+                tmdb_id_clean: tmdbId || "1001",
+                overview: desc,
+                rating: "8.5",
+                year: "2026"
+            };
+
+            try {
+                await fetch(`${FIREBASE_DB_URL}/hero_custom.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updatedHero)
+                });
+                heroItems[heroIndex] = updatedHero;
+                showHero(heroIndex);
+                closeAdminModals();
+                alert("Carrousel mis à jour pour tous les visiteurs !");
+            } catch(e) {
+                alert("Erreur de sauvegarde.");
+            }
+        }
+
         function openCreateSagaModal() { document.getElementById('createSagaModal').style.display = 'flex'; }
         function closeAdminModals() {
             document.getElementById('createSagaModal').style.display = 'none';
             document.getElementById('addMovieModal').style.display = 'none';
+            document.getElementById('editHeroModal').style.display = 'none';
         }
 
         async function submitNewSaga() {
@@ -1189,15 +1296,17 @@
             filterMoviesForSaga('');
         }
 
+        /* RECHERCHE DE FILM POUR SAGA AVEC AFFICHAGE DES IMAGES ET TITRES */
         function filterMoviesForSaga(query) {
             const listDiv = document.getElementById('movieSelectList');
             const q = query.toLowerCase();
             const filtered = catalog.filter(m => (m.title || '').toLowerCase().includes(q)).slice(0, 15);
 
             listDiv.innerHTML = filtered.map(m => `
-                <div style="padding:6px; cursor:pointer; border-bottom:1px solid #222; font-size:13px; display:flex; justify-content:space-between;" onclick="addMovieToCurrentSaga('${m.title.replace(/'/g, "\\'")}')">
-                    <span>${m.title} (${m.year || 'N/A'})</span>
-                    <span style="color:#e50914; font-weight:bold;">+ Ajouter</span>
+                <div class="movie-select-row" onclick="addMovieToCurrentSaga('${m.title.replace(/'/g, "\\'")}')">
+                    <img class="movie-select-poster" src="${m.poster || 'https://via.placeholder.com/50'}" alt="Poster">
+                    <span class="movie-select-title">${m.title} (${m.year || 'N/A'})</span>
+                    <span class="movie-select-btn">+ Ajouter</span>
                 </div>
             `).join('');
         }
