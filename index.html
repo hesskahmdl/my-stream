@@ -992,16 +992,59 @@
         }
 
         function toggleWatchlistEvent(e, id) {
-            e.stopPropagation();
+            if (e) e.stopPropagation();
             let saved = JSON.parse(localStorage.getItem('sk_watchlist') || '[]');
             id = String(id);
             if (saved.includes(id)) saved = saved.filter(i => i !== id);
             else saved.push(id);
             localStorage.setItem('sk_watchlist', JSON.stringify(saved));
             
-            const star = e.currentTarget;
-            if (saved.includes(id)) { star.classList.add('active'); star.textContent = "★"; }
-            else { star.classList.remove('active'); star.textContent = "☆"; }
+            if (e && e.currentTarget) {
+                const star = e.currentTarget;
+                if (saved.includes(id)) { star.classList.add('active'); star.textContent = "★"; }
+                else { star.classList.remove('active'); star.textContent = "☆"; }
+            }
+            return saved.includes(id);
+        }
+
+        /* FONCTIONS DE GESTION DES BOUTONS DE WATCHLIST POUR LES SAGAS ET FILMS */
+        function toggleWatchlistCurrentSaga() {
+            if (!currentSaga) return;
+            const isSaved = toggleWatchlistEvent(null, currentSaga.id);
+            updateSagaWatchlistBtn(isSaved);
+            if (currentCategoryType === 'watchlist') renderPaginatedGrid();
+        }
+
+        function updateSagaWatchlistBtn(isSaved) {
+            const btn = document.getElementById('btnWatchlistSaga');
+            if (!btn) return;
+            if (isSaved) {
+                btn.innerHTML = translations[lang].rem_wl || "❌ Retirer de ma watchlist";
+                btn.classList.add('active');
+            } else {
+                btn.innerHTML = translations[lang].add_wl || "🔖 Ajouter à ma watchlist";
+                btn.classList.remove('active');
+            }
+        }
+
+        function toggleWatchlistCurrentMovie() {
+            if (!currentItem) return;
+            const id = String(currentItem.tmdb_id_clean || currentItem.tmdb_id);
+            const isSaved = toggleWatchlistEvent(null, id);
+            updateMovieWatchlistBtn(isSaved);
+            if (currentCategoryType === 'watchlist') renderPaginatedGrid();
+        }
+
+        function updateMovieWatchlistBtn(isSaved) {
+            const btn = document.getElementById('btnModalWatchlist');
+            if (!btn) return;
+            if (isSaved) {
+                btn.innerHTML = translations[lang].rem_wl || "❌ Retirer de ma watchlist";
+                btn.classList.add('active');
+            } else {
+                btn.innerHTML = translations[lang].add_wl || "🔖 Ajouter à ma watchlist";
+                btn.classList.remove('active');
+            }
         }
 
         function openDetailsById(tmdbId) {
@@ -1115,7 +1158,6 @@
             document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} film${sagaMovies.length > 1 ? 's' : ''}`;
             document.getElementById('sagaMoviesList').innerHTML = sagaMovies.map(item => createCardHtml(item, true)).join('');
 
-            // RECUPERATION EN DIRECT VIA TMDB DE CHAQUE FILM
             let totalBudget = 0, totalRevenue = 0, totalRuntime = 0, ratingSum = 0;
             let producersMap = new Set(), countriesMap = new Set(), languagesMap = new Set(), genresMap = new Set();
             let castMap = new Map();
@@ -1155,7 +1197,6 @@
 
             await Promise.all(fetchPromises);
 
-            // AFFICHAGE DES CALCULS DANS LES STATS
             const hours = Math.floor(totalRuntime / 60);
             const minutes = totalRuntime % 60;
             document.getElementById('statDuration').textContent = totalRuntime > 0 ? `${hours}h ${minutes < 10 ? '0' : ''}${minutes}min` : "N/A";
@@ -1165,13 +1206,11 @@
             const avgRating = sagaMovies.length ? (ratingSum / sagaMovies.length).toFixed(1) : "8.0";
             document.getElementById('statRating').textContent = `${avgRating} / 10`;
 
-            // AFFICHAGE PRODUCTION
             document.getElementById('infoProducers').innerHTML = Array.from(producersMap).slice(0, 5).map(p => `<div class="info-list-item"><span>${p}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
             document.getElementById('infoCountries').innerHTML = Array.from(countriesMap).slice(0, 5).map(c => `<div class="info-list-item"><span>${c}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
             document.getElementById('infoLanguages').innerHTML = Array.from(languagesMap).slice(0, 5).map(l => `<div class="info-list-item"><span>${l}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
             document.getElementById('infoGenres').innerHTML = Array.from(genresMap).slice(0, 5).map(g => `<div class="info-list-item"><span>${g}</span></div>`).join('') || '<span style="color:#777;">Non disponible</span>';
 
-            // AFFICHAGE DU CASTING EN HAUT
             const sagaCastList = document.getElementById('sagaCastList');
             if (castMap.size > 0) {
                 sagaCastList.innerHTML = Array.from(castMap.values()).slice(0, 10).map(actor => `
@@ -1194,6 +1233,7 @@
             document.getElementById('sagaPoster').src = formatTmdbImage(saga.poster, 'w780');
             document.getElementById('sagaDesc').textContent = saga.desc;
 
+            updateSagaWatchlistBtn(isSavedInWatchlist(saga.id));
             renderSagaMovies();
             updateAdminUI();
 
@@ -1302,6 +1342,7 @@
             document.getElementById('modalRating').textContent = `⭐ ${parseFloat(item.rating || 0).toFixed(1)}`;
             document.getElementById('modalOverview').textContent = item.overview || "Synopsis indisponible.";
 
+            updateMovieWatchlistBtn(isSavedInWatchlist(idClean));
             loadSource('vf');
             document.getElementById('playerModal').style.display = 'block';
         }
