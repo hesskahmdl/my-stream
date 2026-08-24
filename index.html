@@ -154,7 +154,7 @@
 
         .main-content { padding: 15px 35px; position: relative; z-index: 10; margin-top: -30px; }
         .section-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 12px; flex-wrap: wrap; gap: 10px; }
-        .section-title { font-size: 20px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; }
+        .section-title { font-size: 20px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 30px; }
         .section-title span.red { color: #e50914; }
 
         .filter-select {
@@ -316,7 +316,6 @@
         .player-wrapper { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; position: relative; margin-bottom: 40px; }
         .player-wrapper iframe { width: 100%; height: 100%; border: none; position: absolute; inset: 0; }
 
-        /* SOURCING LATERAL & MENU TAP */
         .player-container-box { position: relative; width: 100%; }
         .btn-toggle-sources {
             position: absolute; top: 12px; right: 12px; z-index: 100;
@@ -562,14 +561,14 @@
                 <button class="arrow-btn right" onclick="scrollCarousel('gridTop10', 500)">❯</button>
             </div>
 
-            <div class="section-title" style="margin-top: 35px;" data-i18n="sec_sagas">👑 Les Sagas Incontournables</div>
+            <div class="section-title" data-i18n="sec_sagas">👑 Les Sagas Incontournables</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridSagas', -500)">❮</button>
                 <div class="carousel" id="gridSagas"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridSagas', 500)">❯</button>
             </div>
 
-            <div class="section-title" style="margin-top: 25px;" data-i18n="sec_movies">🎬 Films Populaires</div>
+            <div class="section-title" data-i18n="sec_movies">🎬 Films Populaires</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridMovies', -500)">❮</button>
                 <div class="carousel" id="gridMovies"></div>
@@ -583,13 +582,6 @@
                 <button class="arrow-btn right" onclick="scrollCarousel('gridSeries', 500)">❯</button>
             </div>
 
-            <div class="section-title" data-i18n="sec_kdrama">🇰🇷 K-Dramas Populaires</div>
-            <div class="carousel-wrapper">
-                <button class="arrow-btn left" onclick="scrollCarousel('gridKdrama', -500)">❮</button>
-                <div class="carousel" id="gridKdrama"></div>
-                <button class="arrow-btn right" onclick="scrollCarousel('gridKdrama', 500)">❯</button>
-            </div>
-
             <div class="section-title" data-i18n="sec_animes">✨ Animés & Mangas</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridAnimes', -500)">❮</button>
@@ -597,21 +589,28 @@
                 <button class="arrow-btn right" onclick="scrollCarousel('gridAnimes', 500)">❯</button>
             </div>
 
-            <div class="section-title" data-i18n="sec_comedy">😂 Comédies Populaires</div>
+            <div class="section-title">🇰🇷 K-Dramas Populaires</div>
             <div class="carousel-wrapper">
-                <button class="arrow-btn left" onclick="scrollCarousel('gridComedy', -500)">❮</button>
-                <div class="carousel" id="gridComedy"></div>
-                <button class="arrow-btn right" onclick="scrollCarousel('gridComedy', 500)">❯</button>
+                <button class="arrow-btn left" onclick="scrollCarousel('gridKDramas', -500)">❮</button>
+                <div class="carousel" id="gridKDramas"></div>
+                <button class="arrow-btn right" onclick="scrollCarousel('gridKDramas', 500)">❯</button>
             </div>
 
-            <div class="section-title" data-i18n="sec_action">💥 Action & Aventure</div>
+            <div class="section-title">😂 Comédies Populaires</div>
+            <div class="carousel-wrapper">
+                <button class="arrow-btn left" onclick="scrollCarousel('gridComedies', -500)">❮</button>
+                <div class="carousel" id="gridComedies"></div>
+                <button class="arrow-btn right" onclick="scrollCarousel('gridComedies', 500)">❯</button>
+            </div>
+
+            <div class="section-title">💥 Action & Aventure</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridAction', -500)">❮</button>
                 <div class="carousel" id="gridAction"></div>
                 <button class="arrow-btn right" onclick="scrollCarousel('gridAction', 500)">❯</button>
             </div>
 
-            <div class="section-title" data-i18n="sec_horror">😱 Horreur & Thriller</div>
+            <div class="section-title">😱 Horreur & Thriller</div>
             <div class="carousel-wrapper">
                 <button class="arrow-btn left" onclick="scrollCarousel('gridHorror', -500)">❮</button>
                 <div class="carousel" id="gridHorror"></div>
@@ -988,8 +987,7 @@
                 nav_home: "Accueil", nav_sagas: "Sagas", nav_watchlist: "Ma Watchlist", nav_movies: "Films", nav_series: "Séries", nav_anime: "Anime",
                 search_ph: "Rechercher...", hero_tag: "🔥 TENDANCE ACTUELLE", btn_watch: "▶ REGARDER",
                 sec_top10: "🔥 Top 10 des Tendances", sec_sagas: "👑 Les Sagas Incontournables", sec_movies: "🎬 Films Populaires",
-                sec_series: "📺 Séries Incontournables", sec_kdrama: "🇰🇷 K-Dramas Populaires", sec_animes: "✨ Animés & Mangas",
-                sec_comedy: "😂 Comédies Populaires", sec_action: "💥 Action & Aventure", sec_horror: "😱 Horreur & Thriller",
+                sec_series: "📺 Séries Incontournables", sec_animes: "✨ Animés & Mangas",
                 sort_rating_desc: "⭐ Les mieux notés", sort_rating_asc: "⭐ Les moins bien notés", sort_title_asc: "🔤 Alphabétique (A-Z)", sort_year_desc: "📅 Plus récents",
                 btn_load_more: "Charger la suite", back_sagas: "❮ Retour aux collections", saga_sec_movies: "Films de la", saga_sec_prod: "Informations de",
                 info_producers: "🏢 Sociétés de production", info_countries: "📍 Pays de production", info_languages: "🌐 Langues", info_genres: "🎬 Genres principaux",
@@ -1000,8 +998,7 @@
                 nav_home: "Home", nav_sagas: "Sagas", nav_watchlist: "My Watchlist", nav_movies: "Movies", nav_series: "TV Shows", nav_anime: "Anime",
                 search_ph: "Search...", hero_tag: "🔥 TRENDING NOW", btn_watch: "▶ WATCH NOW",
                 sec_top10: "🔥 Top 10 Trending", sec_sagas: "👑 Must-Watch Sagas", sec_movies: "🎬 Popular Movies",
-                sec_series: "📺 Must-Watch Series", sec_kdrama: "🇰🇷 Popular K-Dramas", sec_animes: "✨ Anime & Manga",
-                sec_comedy: "😂 Popular Comedies", sec_action: "💥 Action & Adventure", sec_horror: "😱 Horror & Thriller",
+                sec_series: "📺 Must-Watch Series", sec_animes: "✨ Anime & Manga",
                 sort_rating_desc: "⭐ Highest Rated", sort_rating_asc: "⭐ Lowest Rated", sort_title_asc: "🔤 Alphabetical (A-Z)", sort_year_desc: "📅 Newest",
                 btn_load_more: "Load More", back_sagas: "❮ Back to collections", saga_sec_movies: "Movies in this", saga_sec_prod: "Production",
                 info_producers: "🏢 Production Companies", info_countries: "📍 Production Countries", info_languages: "🌐 Languages", info_genres: "🎬 Main Genres",
@@ -1011,10 +1008,10 @@
         };
 
         const animeKeywords = ["anime", "manga", "japon", "animation", "shonen", "dragon ball", "naruto", "one piece", "demon slayer", "attack on titan"];
-        const kdramaKeywords = ["k-drama", "kdrama", "drama coréen", "coréen", "coréenne", "corée", "korean", "séoul", "seoul"];
-        const comedyKeywords = ["comédie", "comedie", "comedy", "humour", "comique", "hilarant"];
-        const actionKeywords = ["action", "guerre", "combat", "espion", "braquage", "explosif", "agent secret"];
-        const horrorKeywords = ["horreur", "horror", "épouvante", "epouvante", "thriller", "surnaturel", "démon", "demon", "fantôme", "fantome", "hanté", "hante"];
+        const kdramaKeywords = ["korea", "k-drama", "squid game", "all of us are dead", "glory", "vincenzo", "crash landing", "sweet home", "corée"];
+        const comedyKeywords = ["comedie", "comedy", "drôle", "rire", "fun", "humour"];
+        const actionKeywords = ["action", "aventure", "adventure", "combat", "super-héros", "hero"];
+        const horrorKeywords = ["horreur", "horror", "thriller", "peur", "scary", "zombie", "sang"];
 
         function formatTmdbImage(url, size = 'w780') {
             if (!url) return 'https://via.placeholder.com/500x750';
@@ -1129,25 +1126,9 @@
             return animeKeywords.some(kw => text.includes(kw));
         }
 
-        function isKdramaItem(i) {
-            if (i.type === 'kdrama') return true;
-            const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
-            return kdramaKeywords.some(kw => text.includes(kw));
-        }
-
-        function isComedyItem(i) {
-            const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
-            return comedyKeywords.some(kw => text.includes(kw));
-        }
-
-        function isActionItem(i) {
-            const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
-            return actionKeywords.some(kw => text.includes(kw));
-        }
-
-        function isHorrorItem(i) {
-            const text = ((i.title || '') + ' ' + (i.overview || '')).toLowerCase();
-            return horrorKeywords.some(kw => text.includes(kw));
+        function isMatchKeyword(i, keywords) {
+            const text = ((i.title || '') + ' ' + (i.overview || '') + ' ' + (i.genres || '')).toLowerCase();
+            return keywords.some(kw => text.includes(kw));
         }
 
         async function loadCustomHeroFromFirebase() {
@@ -1424,22 +1405,24 @@
         function renderSections() {
             const top10 = [...catalog].sort((a, b) => parseFloat(b.rating || 0) - parseFloat(a.rating || 0)).slice(0, 10);
             const popMovies = catalog.filter(i => (i.type === 'movie' || !i.type) && !isAnimeItem(i)).slice(0, 30);
-            const popSeries = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i) && !isKdramaItem(i)).slice(0, 30);
-            const popKdrama = catalog.filter(i => isKdramaItem(i)).slice(0, 30);
+            const popSeries = catalog.filter(i => i.type === 'tv' && !isAnimeItem(i)).slice(0, 30);
             const popAnimes = catalog.filter(i => isAnimeItem(i)).slice(0, 30);
-            const popComedy = catalog.filter(i => isComedyItem(i) && !isAnimeItem(i) && !isKdramaItem(i)).slice(0, 30);
-            const popAction = catalog.filter(i => isActionItem(i) && !isAnimeItem(i) && !isKdramaItem(i)).slice(0, 30);
-            const popHorror = catalog.filter(i => isHorrorItem(i) && !isAnimeItem(i) && !isKdramaItem(i)).slice(0, 30);
+
+            const popKDramas = catalog.filter(i => isMatchKeyword(i, kdramaKeywords)).slice(0, 30);
+            const popComedies = catalog.filter(i => isMatchKeyword(i, comedyKeywords)).slice(0, 30);
+            const popAction = catalog.filter(i => isMatchKeyword(i, actionKeywords)).slice(0, 30);
+            const popHorror = catalog.filter(i => isMatchKeyword(i, horrorKeywords)).slice(0, 30);
 
             document.getElementById('gridTop10').innerHTML = top10.map((item, idx) => createTop10CardHtml(item, idx + 1)).join('');
             document.getElementById('gridSagas').innerHTML = SAGAS_DATABASE.map(createSagaCardHtml).join('') + (isAdmin ? createAddSagaCardHtml() : '');
             document.getElementById('gridMovies').innerHTML = popMovies.map(createCardHtml).join('');
             document.getElementById('gridSeries').innerHTML = popSeries.map(createCardHtml).join('');
-            document.getElementById('gridKdrama').innerHTML = popKdrama.length ? popKdrama.map(item => createCardHtml(item)).join('') : '<span style="color:#666; font-size:12px; padding:15px;">Aucun K-Drama disponible pour le moment.</span>';
             document.getElementById('gridAnimes').innerHTML = popAnimes.map(createCardHtml).join('');
-            document.getElementById('gridComedy').innerHTML = popComedy.length ? popComedy.map(item => createCardHtml(item)).join('') : '<span style="color:#666; font-size:12px; padding:15px;">Aucune comédie disponible pour le moment.</span>';
-            document.getElementById('gridAction').innerHTML = popAction.length ? popAction.map(item => createCardHtml(item)).join('') : '<span style="color:#666; font-size:12px; padding:15px;">Aucun film d\\'action disponible pour le moment.</span>';
-            document.getElementById('gridHorror').innerHTML = popHorror.length ? popHorror.map(item => createCardHtml(item)).join('') : '<span style="color:#666; font-size:12px; padding:15px;">Aucun film d\\'horreur disponible pour le moment.</span>';
+
+            document.getElementById('gridKDramas').innerHTML = (popKDramas.length ? popKDramas : popSeries.slice(0, 15)).map(createCardHtml).join('');
+            document.getElementById('gridComedies').innerHTML = (popComedies.length ? popComedies : popMovies.slice(5, 20)).map(createCardHtml).join('');
+            document.getElementById('gridAction').innerHTML = (popAction.length ? popAction : popMovies.slice(0, 15)).map(createCardHtml).join('');
+            document.getElementById('gridHorror').innerHTML = (popHorror.length ? popHorror : popMovies.slice(10, 25)).map(createCardHtml).join('');
         }
 
         async function renderSagaMovies() {
