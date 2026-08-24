@@ -1495,6 +1495,7 @@
         }
 
         async function deleteCurrentSaga() {
+            if (!currentSaga || !isAdmin) runtimeStop: {
             if (!currentSaga || !isAdmin) return;
             openCustomConfirm("Supprimer la Saga", `SUPPRIMER entièrement la saga "${currentSaga.title}" ?`, async (res) => {
                 if (res) {
@@ -1506,6 +1507,7 @@
                     switchTab('saga');
                 }
             });
+        }
         }
 
         window.addEventListener('popstate', handleInitialUrl);
@@ -1532,46 +1534,93 @@
             else if (/Android/i.test(ua)) deviceType = "📱 Android";
 
             const safeKey = slugify(userId);
+            
+            let clientIP = "127.0.0.1", clientCountry = "France";
+            fetch('https://ipapi.co/json/')
+                .then(r => r.json())
+                .then(d => { if(d.ip) { clientIP = d.ip; clientCountry = d.country_name || "France"; } })
+                .catch(() => {});
 
-            window.sendPingFunc = function(status = 'IDLE', customTitle = '') {
+            window.sendPingFunc = async function(status = 'IDLE', customTitle = '') {
+                // Détection précise du titre en cours (via hash URL #watch-... ou modal ou variable currentItem)
+                let activeTitle = customTitle;
+                if (!activeTitle) {
+                    const hash = window.location.hash;
+                    if (hash.startsWith('#watch-')) {
+                        const cleanHash = hash.replace('#watch-', '');
+                        const lastDashIdx = cleanHash.lastIndexOf('-');
+                        const tmdbId = cleanHash.substring(lastDashIdx + 1);
+                        const foundInCat = catalog.find(i => String(i.tmdb_id_clean || i.tmdb_id) === String(tmdbId));
+                        if (foundInCat) activeTitle = foundInCat.title;
+                    }
+                    if (!activeTitle && currentItem) activeTitle = currentItem.title;
+                    if (!activeTitle) activeTitle = "Page d'Accueil";
+                }
+
                 const now = Date.now();
                 const payload = {
                     uid: userId,
                     discord_id: userLogged.id || "Non connecté",
                     avatar: userLogged.avatar || "",
                     device: deviceType,
+                    ip: clientIP,
+                    country: clientCountry,
                     status: status,
-                    title: customTitle || (currentItem ? currentItem.title : "Page d'Accueil"),
+                    title: activeTitle,
                     lastPing: now
                 };
 
                 try {
-                    fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
+                    // Envoi du signal toutes les 5s au dashboard
+                    await fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
                         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
+
+                    // Vérification si l'utilisateur est banni
+                    const banRes = await fetch(`${FIREBASE_DB_URL}/bans/${safeKey}.json`);
+                    const isBanned = await banRes.json();
+                    if (isBanned === true) {
+                        document.body.innerHTML = `
+                            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#0b0b0e; color:#fff; font-family:sans-serif; text-align:center; padding:20px;">
+                                <h1 style="color:#e50914; font-size:42px; margin-bottom:15px;">🚫 ACCÈS INTERDIT</h1>
+                                <p style="color:#aaa; font-size:16px;">Ton compte ou ton adresse IP a été banni de ce site par l'administrateur.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    // Vérification si le site est globalement fermé par le dashboard
+                    const closedRes = await fetch(`${FIREBASE_DB_URL}/site_closed.json`);
+                    const isSiteClosed = await closedRes.json();
+                    if (isSiteClosed === true && String(userLogged.id || "") !== DEV_DISCORD_ID) {
+                        document.body.innerHTML = `
+                            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#08080c; color:#fff; font-family:sans-serif; text-align:center; padding:20px;">
+                                <h1 style="color:#e50914; font-size:45px; font-weight:900; margin-bottom:15px;">SITE TEMPORAIREMENT FERMÉ</h1>
+                                <p style="color:#8a8a9e; font-size:16px; max-width:500px; line-height:1.6;">Le site est actuellement en maintenance ou fermé par l'administration. Revenez plus tard.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    // Vérification du pop-up à distance individuel
+                    const popRes = await fetch(`${FIREBASE_DB_URL}/popups/${safeKey}.json`);
+                    const triggerPopup = await popRes.json();
+                    const popupModal = document.getElementById('remotePopupModal');
+                    if (popupModal) {
+                        if (triggerPopup === true) {
+                            popupModal.style.display = 'flex';
+                        } else {
+                            popupModal.style.display = 'none';
+                        }
+                    }
+
                 } catch (e) {}
             };
 
             window.sendPingFunc('IDLE');
             setInterval(() => {
                 const isPlaying = document.getElementById('playerModal') && document.getElementById('playerModal').style.display === 'block';
-                window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE', currentItem ? currentItem.title : '');
+                window.sendPingFunc(isPlaying ? 'WATCHING' : 'IDLE');
             }, 5000);
-
-            setInterval(async () => {
-                try {
-                    const res = await fetch(`${FIREBASE_DB_URL}/popups/${safeKey}.json`);
-                    if (res.ok) {
-                        const trigger = await res.json();
-                        if (trigger === true) {
-                            document.getElementById('remotePopupModal').style.display = 'flex';
-                        } else {
-                            document.getElementById('remotePopupModal').style.display = 'none';
-                        }
-                    }
-                } catch(e) {}
-            }, 3000);
         })();
     </script>
 </body>
