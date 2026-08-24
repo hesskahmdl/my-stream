@@ -640,10 +640,12 @@
             <div class="hero-list-container" id="heroListManager"></div>
 
             <div style="font-size:12px; color:#e50914; margin-bottom:8px; font-weight:bold;" id="heroFormLabel">➕ Ajouter un élément :</div>
-            <input type="text" class="admin-input" id="heroEditTitle" placeholder="Titre du film">
-            <input type="text" class="admin-input" id="heroEditImage" placeholder="Lien Image TMDB (ex: /t/p/w1280/... ou URL complète)">
-            <input type="text" class="admin-input" id="heroEditTmdbId" placeholder="ID TMDB du film (ex: 550)">
-            <textarea class="admin-input" id="heroEditDesc" placeholder="Description du film" rows="2"></textarea>
+            <input type="text" class="admin-input" id="heroEditTitle" placeholder="Rechercher un film du catalogue..." oninput="filterMoviesForHero(this.value)">
+            <div id="heroMovieSelectList" style="max-height: 150px; overflow-y: auto; margin-bottom: 12px; background:#18181f; padding:8px; border-radius:6px; display:none;"></div>
+            
+            <input type="hidden" id="heroEditImage">
+            <input type="hidden" id="heroEditTmdbId">
+            <textarea class="admin-input" id="heroEditDesc" placeholder="Description du film (remplissage auto)" rows="2"></textarea>
             
             <div class="admin-btn-group">
                 <button class="btn-saga-action" onclick="closeAdminModals()">Annuler</button>
@@ -949,7 +951,7 @@
                     const customList = await res.json();
                     if (customList && Array.isArray(customList) && customList.length > 0) {
                         heroItems = customList;
-                        showHero(0);
+                        setupHeroSlider();
                     }
                 }
             } catch(e) {}
@@ -1005,7 +1007,7 @@
 
         function setupHeroSlider() {
             if (!heroItems.length) return;
-            showHero(0);
+            showHero(heroIndex);
             clearInterval(sliderTimer);
             sliderTimer = setInterval(() => {
                 heroIndex = (heroIndex + 1) % heroItems.length;
@@ -1413,6 +1415,35 @@
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
+        function filterMoviesForHero(query) {
+            const listDiv = document.getElementById('heroMovieSelectList');
+            const q = query.toLowerCase().trim();
+            if (!q) { listDiv.style.display = 'none'; return; }
+
+            const filtered = catalog.filter(m => (m.title || '').toLowerCase().includes(q)).slice(0, 10);
+            if (filtered.length === 0) { listDiv.style.display = 'none'; return; }
+
+            listDiv.style.display = 'block';
+            listDiv.innerHTML = filtered.map(m => `
+                <div class="movie-select-row" onclick="selectMovieForHero('${m.title.replace(/'/g, "\\'")}')">
+                    <img class="movie-select-poster" src="${m.poster || 'https://via.placeholder.com/50'}" alt="Poster">
+                    <span class="movie-select-title">${m.title} (${m.year || 'N/A'})</span>
+                    <span class="movie-select-btn">Sélectionner</span>
+                </div>
+            `).join('');
+        }
+
+        function selectMovieForHero(title) {
+            const m = catalog.find(item => item.title === title);
+            if (!m) return;
+
+            document.getElementById('heroEditTitle').value = m.title;
+            document.getElementById('heroEditImage').value = m.backdrop || m.poster || '';
+            document.getElementById('heroEditTmdbId').value = m.tmdb_id_clean || m.tmdb_id || '';
+            document.getElementById('heroEditDesc').value = m.overview || '';
+            document.getElementById('heroMovieSelectList').style.display = 'none';
+        }
+
         function renderHeroManagerList() {
             const container = document.getElementById('heroListManager');
             if (!container) return;
@@ -1443,6 +1474,7 @@
             document.getElementById('heroEditImage').value = '';
             document.getElementById('heroEditTmdbId').value = '';
             document.getElementById('heroEditDesc').value = '';
+            document.getElementById('heroMovieSelectList').style.display = 'none';
         }
 
         function startEditingHeroItem(index) {
@@ -1456,6 +1488,7 @@
             document.getElementById('heroEditImage').value = item.backdrop || item.poster || '';
             document.getElementById('heroEditTmdbId').value = item.tmdb_id_clean || item.tmdb_id || '';
             document.getElementById('heroEditDesc').value = item.overview || '';
+            document.getElementById('heroMovieSelectList').style.display = 'none';
         }
 
         function openEditHeroModal() {
@@ -1486,11 +1519,14 @@
         async function submitHeroEdit() {
             if (!isAdmin) return;
             const title = document.getElementById('heroEditTitle').value.trim();
-            const image = document.getElementById('heroEditImage').value.trim();
+            let image = document.getElementById('heroEditImage').value.trim();
             const tmdbId = document.getElementById('heroEditTmdbId').value.trim();
             const desc = document.getElementById('heroEditDesc').value.trim();
 
-            if (!title || !image) return;
+            if (!title) return;
+
+            const foundInCat = catalog.find(m => m.title.toLowerCase() === title.toLowerCase());
+            if (!image && foundInCat) image = foundInCat.backdrop || foundInCat.poster;
 
             const isEdit = editingHeroIndex !== null;
 
@@ -1498,10 +1534,10 @@
                 title: title,
                 backdrop: formatTmdbImage(image, 'w1280'),
                 poster: formatTmdbImage(image, 'w780'),
-                tmdb_id_clean: tmdbId || "1001",
-                overview: desc,
-                rating: isEdit ? (heroItems[editingHeroIndex].rating || "8.5") : "8.5",
-                year: isEdit ? (heroItems[editingHeroIndex].year || "2026") : "2026"
+                tmdb_id_clean: tmdbId || (foundInCat ? foundInCat.tmdb_id_clean : "1001"),
+                overview: desc || (foundInCat ? foundInCat.overview : ""),
+                rating: isEdit ? (heroItems[editingHeroIndex].rating || "8.5") : (foundInCat ? foundInCat.rating : "8.5"),
+                year: isEdit ? (heroItems[editingHeroIndex].year || "2026") : (foundInCat ? foundInCat.year : "2026")
             };
 
             if (isEdit) {
