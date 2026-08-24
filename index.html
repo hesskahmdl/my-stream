@@ -330,6 +330,19 @@
         .custom-confirm-title { font-size: 18px; font-weight: 900; color: #fff; margin-bottom: 10px; }
         .custom-confirm-text { font-size: 13px; color: #ccc; margin-bottom: 20px; }
 
+        .hero-list-container {
+            max-height: 200px; overflow-y: auto; background: #18181f; border: 1px solid #333;
+            border-radius: 6px; margin-bottom: 15px; padding: 8px; display: flex; flex-direction: column; gap: 8px;
+        }
+        .hero-list-item {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #111116; padding: 8px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .hero-item-info { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+        .hero-item-img { width: 40px; height: 25px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+        .hero-item-title { font-size: 13px; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .btn-del-hero-item { background: #e50914; color: #fff; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; }
+
         @media (max-width: 768px) {
             header { padding: 10px 15px; }
             .logo { font-size: 18px; }
@@ -619,14 +632,20 @@
 
     <div class="admin-modal" id="editHeroModal">
         <div class="admin-modal-content">
-            <div class="admin-modal-title">Modifier le Carrousel (Bannière)</div>
+            <div class="admin-modal-title">Gérer le Carrousel (Bannière)</div>
+
+            <div style="font-size:12px; color:#aaa; margin-bottom:6px; font-weight:bold;">Éléments actuels du Carrousel :</div>
+            <div class="hero-list-container" id="heroListManager"></div>
+
+            <div style="font-size:12px; color:#e50914; margin-bottom:8px; font-weight:bold;">➕ Ajouter / Remplacer un élément :</div>
             <input type="text" class="admin-input" id="heroEditTitle" placeholder="Titre du film">
             <input type="text" class="admin-input" id="heroEditImage" placeholder="Lien Image TMDB (ex: /t/p/w1280/... ou URL complète)">
             <input type="text" class="admin-input" id="heroEditTmdbId" placeholder="ID TMDB du film (ex: 550)">
-            <textarea class="admin-input" id="heroEditDesc" placeholder="Description du film" rows="3"></textarea>
+            <textarea class="admin-input" id="heroEditDesc" placeholder="Description du film" rows="2"></textarea>
+            
             <div class="admin-btn-group">
                 <button class="btn-saga-action" onclick="closeAdminModals()">Annuler</button>
-                <button class="btn-saga-action" style="background:#e50914;" onclick="submitHeroEdit()">Enregistrer sur le site</button>
+                <button class="btn-saga-action" style="background:#e50914;" onclick="submitHeroEdit()">Ajouter au Carrousel</button>
             </div>
         </div>
     </div>
@@ -918,13 +937,23 @@
 
         async function loadCustomHeroFromFirebase() {
             try {
-                const res = await fetch(`${FIREBASE_DB_URL}/hero_custom.json`);
+                const res = await fetch(`${FIREBASE_DB_URL}/hero_list_custom.json`);
                 if (res.ok) {
-                    const customHero = await res.json();
-                    if (customHero && customHero.title) {
-                        heroItems.unshift(customHero);
+                    const customList = await res.json();
+                    if (customList && Array.isArray(customList) && customList.length > 0) {
+                        heroItems = customList;
                     }
                 }
+            } catch(e) {}
+        }
+
+        async function saveHeroListToFirebase() {
+            try {
+                await fetch(`${FIREBASE_DB_URL}/hero_list_custom.json`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(heroItems)
+                });
             } catch(e) {}
         }
 
@@ -969,7 +998,8 @@
         }
 
         function showHero(index) {
-            heroIndex = index;
+            if (!heroItems || heroItems.length === 0) return;
+            heroIndex = index % heroItems.length;
             const item = heroItems[heroIndex];
             const bgImage = formatTmdbImage(item.backdrop || item.poster, 'w1280');
             document.getElementById('heroBanner').style.backgroundImage = `url('${bgImage}')`;
@@ -1007,7 +1037,6 @@
             return saved.includes(id);
         }
 
-        /* FONCTIONS DE GESTION DES BOUTONS DE WATCHLIST POUR LES SAGAS ET FILMS */
         function toggleWatchlistCurrentSaga() {
             if (!currentSaga) return;
             const isSaved = toggleWatchlistEvent(null, currentSaga.id);
@@ -1368,14 +1397,50 @@
             document.getElementById(id).scrollBy({ left: amount, behavior: 'smooth' });
         }
 
+        function renderHeroManagerList() {
+            const container = document.getElementById('heroListManager');
+            if (!container) return;
+            if (!heroItems || heroItems.length === 0) {
+                container.innerHTML = `<span style="color:#777; font-size:12px;">Aucun élément dans le carrousel.</span>`;
+                return;
+            }
+
+            container.innerHTML = heroItems.map((item, index) => `
+                <div class="hero-list-item">
+                    <div class="hero-item-info">
+                        <img class="hero-item-img" src="${formatTmdbImage(item.backdrop || item.poster, 'w185')}" alt="">
+                        <span class="hero-item-title">${item.title}</span>
+                    </div>
+                    <button class="btn-del-hero-item" onclick="removeHeroItemByIndex(${index})">Supprimer</button>
+                </div>
+            `).join('');
+        }
+
         function openEditHeroModal() {
             if (!isAdmin) return;
-            const currentHero = heroItems[heroIndex] || {};
-            document.getElementById('heroEditTitle').value = currentHero.title || '';
-            document.getElementById('heroEditImage').value = currentHero.backdrop || currentHero.poster || '';
-            document.getElementById('heroEditTmdbId').value = currentHero.tmdb_id_clean || currentHero.tmdb_id || '';
-            document.getElementById('heroEditDesc').value = currentHero.overview || '';
+            document.getElementById('heroEditTitle').value = '';
+            document.getElementById('heroEditImage').value = '';
+            document.getElementById('heroEditTmdbId').value = '';
+            document.getElementById('heroEditDesc').value = '';
+            renderHeroManagerList();
             document.getElementById('editHeroModal').style.display = 'flex';
+        }
+
+        function removeHeroItemByIndex(index) {
+            if (!isAdmin) return;
+            openCustomConfirm("Supprimer du Carrousel", `Retirer "${heroItems[index].title}" du carrousel ?`, async (res) => {
+                if (res) {
+                    heroItems.splice(index, 1);
+                    await saveHeroListToFirebase();
+                    renderHeroManagerList();
+                    if (heroItems.length > 0) {
+                        showHero(0);
+                    } else {
+                        document.getElementById('heroBanner').style.backgroundImage = 'none';
+                        document.getElementById('heroTitle').textContent = 'Aucun élément';
+                    }
+                }
+            });
         }
 
         async function submitHeroEdit() {
@@ -1387,9 +1452,9 @@
 
             if (!title || !image) return;
 
-            openCustomConfirm("Modifier le Carrousel", "Enregistrer les modifications pour tous les visiteurs ?", async (res) => {
+            openCustomConfirm("Ajouter au Carrousel", "Ajouter cet élément et enregistrer les modifications pour tous les visiteurs ?", async (res) => {
                 if (res) {
-                    const updatedHero = {
+                    const newItem = {
                         title: title,
                         backdrop: formatTmdbImage(image, 'w1280'),
                         poster: formatTmdbImage(image, 'w780'),
@@ -1399,16 +1464,11 @@
                         year: "2026"
                     };
 
-                    try {
-                        await fetch(`${FIREBASE_DB_URL}/hero_custom.json`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(updatedHero)
-                        });
-                        heroItems[heroIndex] = updatedHero;
-                        showHero(heroIndex);
-                        closeAdminModals();
-                    } catch(e) {}
+                    heroItems.unshift(newItem);
+                    await saveHeroListToFirebase();
+                    showHero(0);
+                    renderHeroManagerList();
+                    closeAdminModals();
                 }
             });
         }
@@ -1495,7 +1555,6 @@
         }
 
         async function deleteCurrentSaga() {
-            if (!currentSaga || !isAdmin) runtimeStop: {
             if (!currentSaga || !isAdmin) return;
             openCustomConfirm("Supprimer la Saga", `SUPPRIMER entièrement la saga "${currentSaga.title}" ?`, async (res) => {
                 if (res) {
@@ -1507,7 +1566,6 @@
                     switchTab('saga');
                 }
             });
-        }
         }
 
         window.addEventListener('popstate', handleInitialUrl);
@@ -1542,7 +1600,6 @@
                 .catch(() => {});
 
             window.sendPingFunc = async function(status = 'IDLE', customTitle = '') {
-                // Détection précise du titre en cours (via hash URL #watch-... ou modal ou variable currentItem)
                 let activeTitle = customTitle;
                 if (!activeTitle) {
                     const hash = window.location.hash;
@@ -1571,13 +1628,11 @@
                 };
 
                 try {
-                    // Envoi du signal toutes les 5s au dashboard
                     await fetch(`${FIREBASE_DB_URL}/ip_stats/${safeKey}.json`, {
                         method: 'PATCH', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
-                    // Vérification si l'utilisateur est banni
                     const banRes = await fetch(`${FIREBASE_DB_URL}/bans/${safeKey}.json`);
                     const isBanned = await banRes.json();
                     if (isBanned === true) {
@@ -1589,7 +1644,6 @@
                         return;
                     }
 
-                    // Vérification si le site est globalement fermé par le dashboard
                     const closedRes = await fetch(`${FIREBASE_DB_URL}/site_closed.json`);
                     const isSiteClosed = await closedRes.json();
                     if (isSiteClosed === true && String(userLogged.id || "") !== DEV_DISCORD_ID) {
@@ -1601,7 +1655,6 @@
                         return;
                     }
 
-                    // Vérification du pop-up à distance individuel
                     const popRes = await fetch(`${FIREBASE_DB_URL}/popups/${safeKey}.json`);
                     const triggerPopup = await popRes.json();
                     const popupModal = document.getElementById('remotePopupModal');
