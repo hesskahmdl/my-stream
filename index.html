@@ -1123,7 +1123,6 @@
             document.getElementById('sagaMovieCount').textContent = `🎬 ${sagaMovies.length} film${sagaMovies.length > 1 ? 's' : ''}`;
             document.getElementById('sagaMoviesList').innerHTML = sagaMovies.map(item => createCardHtml(item, true)).join('');
 
-            // CALCUL AUTOMATIQUE DU CASTING ET DES STATS GLOBALES DES FILMS
             let totalBudget = 0, totalRevenue = 0, ratingSum = 0, castMap = new Map();
 
             sagaMovies.forEach(m => {
@@ -1131,25 +1130,37 @@
                 totalRevenue += (m.revenue || 450000000);
                 ratingSum += parseFloat(m.rating || 7.5);
 
-                if (m.cast && Array.isArray(m.cast)) {
-                    m.cast.forEach(c => {
-                        if (!castMap.has(c.name)) {
-                            castMap.set(c.name, c);
+                // EXTRACTION ADAPTATIVE DE LA STRUCTURE DU CASTING DANS DATA.JSON
+                const castArray = m.top_billed_cast || m.cast || [];
+                if (Array.isArray(castArray)) {
+                    castArray.forEach(c => {
+                        const actorName = c.name || c.actor_name;
+                        const actorImg = c.profile_path || c.image || c.profile;
+                        const actorRole = c.character || c.role || 'Acteur';
+                        if (actorName && !castMap.has(actorName)) {
+                            castMap.set(actorName, { name: actorName, profile_path: actorImg, character: actorRole });
                         }
                     });
+                } else {
+                    for (let k = 1; k <= 10; k++) {
+                        const nameKey = `actor_${k}_name`;
+                        const imgKey = `actor_${k}_image` || `actor_${k}_profile`;
+                        const roleKey = `actor_${k}_character` || `actor_${k}_role`;
+                        if (m[nameKey]) {
+                            castMap.set(m[nameKey], { name: m[nameKey], profile_path: m[imgKey], character: m[roleKey] || 'Acteur' });
+                        }
+                    }
                 }
             });
 
-            // MISE A JOUR DES STATS
             const avgRating = sagaMovies.length ? (ratingSum / sagaMovies.length).toFixed(1) : "8.0";
             document.getElementById('statBudget').textContent = totalBudget ? `${(totalBudget / 1000000).toFixed(0)} 000 000 $` : "N/A";
             document.getElementById('statRevenue').textContent = totalRevenue ? `${(totalRevenue / 1000000).toFixed(0)} 000 000 $` : "N/A";
             document.getElementById('statRating').textContent = `${avgRating} / 10`;
 
-            // MISE A JOUR DU CASTING
             const sagaCastList = document.getElementById('sagaCastList');
             if (castMap.size > 0) {
-                sagaCastList.innerHTML = Array.from(castMap.values()).slice(0, 8).map(actor => `
+                sagaCastList.innerHTML = Array.from(castMap.values()).slice(0, 10).map(actor => `
                     <div class="cast-item">
                         <img class="cast-img" src="${formatTmdbImage(actor.profile_path, 'w185')}" alt="${actor.name}">
                         <div class="cast-name">${actor.name}</div>
@@ -1157,7 +1168,7 @@
                     </div>
                 `).join('');
             } else {
-                sagaCastList.innerHTML = '<span style="color:#777; font-size:12px;">Casting mis à jour automatiquement selon les films de la saga.</span>';
+                sagaCastList.innerHTML = '<span style="color:#777; font-size:12px;">Casting indisponible pour ces films.</span>';
             }
         }
 
