@@ -44,12 +44,16 @@
         .player-container { background: #000; border-radius: 12px; overflow: hidden; position: relative; aspect-ratio: 16/9; border: 1px solid rgba(255,255,255,0.1); }
         .player-container iframe { width: 100%; height: 100%; border: none; }
         
-        /* OVERLAY DE SYNCHRONISATION PARTICIPANTS */
-        .sync-gate-overlay { position: absolute; inset: 0; background: rgba(7, 7, 10, 0.95); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; padding: 20px; }
-        .sync-gate-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 10px; }
-        .sync-gate-desc { font-size: 13px; color: #aaa; max-width: 400px; margin-bottom: 20px; line-height: 1.4; }
-        .btn-ready { background: #10b981; color: #fff; border: none; padding: 12px 28px; border-radius: 30px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        /* BANDEAU DE SYNCHRONISATION EN HAUT (N'OBSTRUE PAS LES PUBS) */
+        .sync-gate-banner { position: absolute; top: 12px; left: 12px; right: 12px; background: rgba(13, 13, 20, 0.92); backdrop-filter: blur(8px); padding: 12px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: space-between; z-index: 50; box-shadow: 0 8px 25px rgba(0,0,0,0.8); }
+        .sync-banner-text { font-size: 13px; font-weight: 700; color: #fff; }
+        .sync-banner-text span { color: #aaa; font-weight: normal; font-size: 12px; display: block; }
+        .btn-ready { background: #10b981; color: #fff; border: none; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
         .btn-ready:hover { background: #059669; transform: scale(1.05); }
+
+        /* BOUTON RESYNC PERMANENT/PLEIN ÉCRAN */
+        .btn-floating-resync { position: absolute; bottom: 15px; right: 15px; z-index: 60; background: rgba(229, 9, 20, 0.9); color: #fff; border: 1px solid #ff4d4d; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; }
+        .btn-floating-resync:hover { background: #ff0f1a; transform: scale(1.05); }
 
         .chat-container { background: #0d0d12; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; display: flex; flex-direction: column; height: 100%; max-height: 520px; }
         .chat-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); font-weight: bold; font-size: 13px; color: #aaa; }
@@ -62,7 +66,7 @@
         /* MODALS */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; backdrop-filter: blur(6px); z-index: 999; }
         .modal-card { background: #13131c; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 440px; padding: 25px; border-radius: 12px; text-align: center; }
-        .modal-card input[type="text"] { width: 100%; background: #07070a; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 15px; text-align: center; outline: none; }
+        .modal-card input[type="text"] { width: 100%; background: #07070a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; margin: 8px 0 15px 0; font-size: 14px; outline: none; }
         
         .catalog-selector { max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin: 15px 0; padding: 5px; text-align: left; }
         .mini-card { background: #181824; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
@@ -109,7 +113,7 @@
         </div>
     </div>
 
-    <!-- LOBBY / SALON DE PRÉPARATION -->
+    <!-- LOBBY -->
     <div class="lobby-card" id="lobbyBox" style="display:none;">
         <h2 style="font-size:20px; text-transform:uppercase; color:#fff;">🏠 Lobby de la Watch Party</h2>
         <p style="font-size:13px; color:#aaa; margin-top:5px;">Partage le code ci-dessous à tes amis pour qu'ils te rejoignent.</p>
@@ -124,7 +128,6 @@
             <div class="members-list" id="membersList"></div>
         </div>
 
-        <!-- HÔTE CONFIG -->
         <div id="hostConfigArea" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
             <h3 style="font-size:15px; margin-bottom:10px;">1. Choisis un Film / Série :</h3>
             <input type="text" id="movieSearchLobby" placeholder="🔎 Rechercher un film dans le catalogue..." oninput="filterLobbyCatalog(this.value)" style="width:100%; background:#07070a; border:1px solid #333; color:#fff; padding:8px 12px; border-radius:6px; font-size:13px; margin-bottom:10px;">
@@ -146,7 +149,7 @@
         </div>
 
         <div id="clientWaitArea" style="display:none; margin-top:20px;">
-            <p style="font-size:14px; color:#10b981; font-weight:bold;">⏳ En attente que l'hôte choissise le film et lance la séance...</p>
+            <p style="font-size:14px; color:#10b981; font-weight:bold;">⏳ En attente que l'hôte choisisse le film et lance la séance...</p>
         </div>
     </div>
 
@@ -154,19 +157,24 @@
     <div class="room-active-layout" id="roomLayout">
         <div>
             <div class="player-container">
-                <!-- Overlay de synchro départ -->
-                <div class="sync-gate-overlay" id="syncGateOverlay">
-                    <div class="sync-gate-title" id="syncGateTitle">Préparation du lecteur...</div>
-                    <div class="sync-gate-desc" id="syncGateDesc">Passe les éventuelles pubs sur l'iFrame en arrière-plan puis clique sur le bouton dès que tu es prêt !</div>
+                <!-- BANDEAU DE SYNCHRO (Permet de cliquer sur les pubs derrière) -->
+                <div class="sync-gate-banner" id="syncGateBanner">
+                    <div class="sync-banner-text">
+                        <div id="syncGateTitle">Préparation du lecteur...</div>
+                        <span>Lance la vidéo et ferme les pubs ci-dessous, puis clique sur prêt.</span>
+                    </div>
                     <button class="btn-ready" id="btnReadySync" onclick="markUserReady()">🟢 Je suis prêt !</button>
                 </div>
+
+                <!-- Bouton de resync rapide -->
+                <button class="btn-floating-resync" onclick="reloadIframeOnly()">⏱️ Resync Vidéo</button>
 
                 <iframe id="wpPlayer" src="" allowfullscreen></iframe>
             </div>
             <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <h3 id="currentPlayingTitle" style="font-size: 16px; color:#fff;">Film en cours...</h3>
                 <div style="display:flex; gap:10px; align-items:center;">
-                    <button class="btn-action" id="hostResyncBtn" onclick="forceResyncAll()" style="display:none; padding:4px 10px; font-size:11px;">🔄 Resynchroniser tout le monde</button>
+                    <button class="btn-action" id="hostResyncBtn" onclick="forceResyncAll()" style="display:none; padding:4px 10px; font-size:11px;">🔄 Relancer pour tous</button>
                     <span id="roomCodeDisplay" style="font-size:12px; background:#181824; padding:6px 12px; border-radius:6px; color:#10b981; font-weight:bold;"></span>
                 </div>
             </div>
@@ -194,9 +202,13 @@
     <!-- MODAL CREATION -->
     <div class="modal" id="createModal">
         <div class="modal-card">
-            <h3 style="font-size:18px; color:#fff; margin-bottom:15px;">Créer une Watch Party</h3>
-            <p style="font-size:13px; color:#aaa; margin-bottom:20px;">Choisis la visibilité de ton salon :</p>
-            <div style="display:flex; flex-direction:column; gap:12px;">
+            <h3 style="font-size:18px; color:#fff; margin-bottom:10px;">Créer une Watch Party</h3>
+            <div id="customNameBoxCreate" style="display:none; text-align:left;">
+                <label style="font-size:12px; color:#aaa;">Ton Pseudo :</label>
+                <input type="text" id="customUsernameCreate" placeholder="Entre ton pseudo...">
+            </div>
+            <p style="font-size:13px; color:#aaa; margin-bottom:15px;">Choisis la visibilité de ton salon :</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
                 <button class="btn-action btn-primary" style="justify-content:center; padding:12px;" onclick="initPartyCreation(false)">🔒 Salon Privé (Accès via Code)</button>
                 <button class="btn-action" style="justify-content:center; padding:12px;" onclick="initPartyCreation(true)">🌐 Salon Public (Visible par tous)</button>
                 <button class="btn-action" style="justify-content:center; background:transparent; border:none;" onclick="closeModals()">Annuler</button>
@@ -208,7 +220,11 @@
     <div class="modal" id="joinModal">
         <div class="modal-card">
             <h3 style="font-size:18px; color:#fff;">Rejoindre une Party</h3>
-            <input type="text" id="joinCodeInput" placeholder="CODE DU SALON (ex: 4GZ1C)">
+            <div id="customNameBoxJoin" style="display:none; text-align:left; margin-top:10px;">
+                <label style="font-size:12px; color:#aaa;">Ton Pseudo :</label>
+                <input type="text" id="customUsernameJoin" placeholder="Entre ton pseudo...">
+            </div>
+            <input type="text" id="joinCodeInput" placeholder="CODE DU SALON (ex: 4GZ1C)" style="text-transform:uppercase;">
             <div style="display:flex; gap:10px; justify-content:center;">
                 <button class="btn-action" onclick="closeModals()">Annuler</button>
                 <button class="btn-action btn-primary" onclick="confirmJoinRoom()">Rejoindre</button>
@@ -226,12 +242,19 @@
         let catalog = [];
         let selectedMovie = null;
         let currentRoomCode = "";
-        let userName = "Anonyme";
+        let userName = "";
         let participantsMap = new Map();
         let readyCount = 0;
 
+        // Détection de l'utilisateur
         const savedUser = JSON.parse(localStorage.getItem('sk_logged_user') || '{}');
-        if (savedUser.name) userName = savedUser.name;
+        if (savedUser.name) {
+            userName = savedUser.name;
+        } else {
+            // Si pas connecté à Discord, afficher les champs de saisie du pseudo
+            document.getElementById('customNameBoxCreate').style.display = 'block';
+            document.getElementById('customNameBoxJoin').style.display = 'block';
+        }
 
         async function loadCatalog() {
             try {
@@ -258,6 +281,17 @@
             alert("Code copié dans le presse-papier !");
         }
 
+        function resolveUsername(inputId) {
+            if (userName) return userName;
+            const inputVal = document.getElementById(inputId).value.trim();
+            if (inputVal) {
+                userName = inputVal;
+                localStorage.setItem('sk_user_id', userName);
+                return userName;
+            }
+            return `Visiteur #${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
         function renderMembersList() {
             const list = document.getElementById('membersList');
             let html = `<div class="member-item">👑 <span>${isHost ? userName + ' (Moi)' : hostName}</span></div>`;
@@ -282,8 +316,9 @@
             }
         }
 
-        // 1. L'HÔTE CRÉE LE SALON
+        // 1. CRÉER UN SALON
         function initPartyCreation(isPublic) {
+            userName = resolveUsername('customUsernameCreate');
             closeModals();
             currentRoomCode = generateCode();
             peer = new Peer("skparty-" + currentRoomCode);
@@ -308,8 +343,6 @@
             peer.on('connection', (conn) => {
                 conn.on('open', () => {
                     connections.push(conn);
-                    
-                    // L'hôte envoie son nom immédiatement
                     conn.send({ type: 'HOST_INFO', name: userName });
                 });
 
@@ -317,8 +350,9 @@
             });
         }
 
-        // 2. UN PARTICIPANT REJOINT
+        // 2. REJOINDRE UN SALON
         function confirmJoinRoom() {
+            userName = resolveUsername('customUsernameJoin');
             const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
             if (!code) return alert("Rentre un code valide !");
 
@@ -336,7 +370,6 @@
                     document.getElementById('hostConfigArea').style.display = 'none';
                     document.getElementById('clientWaitArea').style.display = 'block';
 
-                    // Envoi de son pseudo à l'hôte
                     hostConnection.send({ type: 'JOIN_NAME', name: userName });
                 });
 
@@ -367,7 +400,7 @@
             if (activeCard) activeCard.classList.add('selected');
         }
 
-        // 3. LANCEMENT PAR L'HÔTE
+        // 3. LANCEMENT DE SÉANCE
         function startPartySession() {
             if (!selectedMovie) return alert("Sélectionne un film dans la liste avant de lancer !");
             if (participantsMap.size === 0) return alert("Tu ne peux pas lancer seul ! Attends qu'un ami rejoigne.");
@@ -408,20 +441,23 @@
 
             document.getElementById('wpPlayer').src = url;
             
-            // Affichage du volet de synchronisation
-            document.getElementById('syncGateOverlay').style.display = 'flex';
+            // Affichage du bandeau supérieur
+            document.getElementById('syncGateBanner').style.display = 'flex';
             document.getElementById('syncGateTitle').textContent = "Préparation du lecteur...";
-            document.getElementById('syncGateDesc').textContent = "Regarde la vidéo en arrière-plan, passe les pubs puis appuie sur le bouton vert dès que tu es prêt !";
             document.getElementById('btnReadySync').style.display = 'inline-block';
             
             readyCount = 0;
-            appendChatMessage("Système", `La vidéo est chargée. Cliquez sur le bouton vert dès que vous êtes prêts !`);
+            appendChatMessage("Système", `La vidéo est chargée. Fermez les pubs puis cliquez sur le bouton vert dès que vous êtes prêts !`);
+        }
+
+        function reloadIframeOnly() {
+            const player = document.getElementById('wpPlayer');
+            player.src = player.src;
         }
 
         function markUserReady() {
             document.getElementById('btnReadySync').style.display = 'none';
-            document.getElementById('syncGateTitle').textContent = "✅ Tu es prêt !";
-            document.getElementById('syncGateDesc').textContent = "En attente des autres participants...";
+            document.getElementById('syncGateTitle').textContent = "✅ Tu es prêt ! (En attente des autres)";
 
             if (isHost) {
                 readyCount++;
@@ -434,7 +470,6 @@
         function checkAllReady() {
             const totalRequired = participantsMap.size + 1;
             if (readyCount >= totalRequired) {
-                // Déclencher le décompte synchronisé
                 broadcast({ type: 'COUNTDOWN_START' });
                 startCountdown();
             }
@@ -443,7 +478,6 @@
         function startCountdown() {
             let sec = 3;
             document.getElementById('syncGateTitle').textContent = `🚀 Démarrage dans ${sec}...`;
-            document.getElementById('syncGateDesc').textContent = "Lancement synchronisé simultané !";
 
             const timer = setInterval(() => {
                 sec--;
@@ -451,24 +485,22 @@
                     document.getElementById('syncGateTitle').textContent = `🚀 Démarrage dans ${sec}...`;
                 } else {
                     clearInterval(timer);
-                    document.getElementById('syncGateOverlay').style.display = 'none';
+                    document.getElementById('syncGateBanner').style.display = 'none';
                 }
             }, 1000);
         }
 
         function forceResyncAll() {
             if (!isHost) return;
-            const player = document.getElementById('wpPlayer');
-            player.src = player.src;
+            reloadIframeOnly();
             broadcast({ type: 'RESYNC' });
-            document.getElementById('syncGateOverlay').style.display = 'flex';
+            document.getElementById('syncGateBanner').style.display = 'flex';
             document.getElementById('syncGateTitle').textContent = "🔄 Resynchronisation...";
-            document.getElementById('syncGateDesc').textContent = "Passez les pubs puis appuyez sur prêt.";
             document.getElementById('btnReadySync').style.display = 'inline-block';
             readyCount = 0;
         }
 
-        // RECEPTION DONNEES WEBRTC
+        // DONNÉES WEBRTC
         function handleData(data, conn) {
             if (data.type === 'HOST_INFO') {
                 hostName = data.name;
@@ -477,7 +509,6 @@
                 participantsMap.set(conn.peer, data.name);
                 renderMembersList();
                 
-                // Diffuser la liste complète mise à jour à tout le monde
                 const membersArray = Array.from(participantsMap.entries());
                 broadcast({ type: 'SYNC_MEMBERS', members: membersArray, host: userName });
             } else if (data.type === 'SYNC_MEMBERS') {
@@ -496,11 +527,9 @@
             } else if (data.type === 'COUNTDOWN_START') {
                 startCountdown();
             } else if (data.type === 'RESYNC') {
-                const player = document.getElementById('wpPlayer');
-                player.src = player.src;
-                document.getElementById('syncGateOverlay').style.display = 'flex';
+                reloadIframeOnly();
+                document.getElementById('syncGateBanner').style.display = 'flex';
                 document.getElementById('syncGateTitle').textContent = "🔄 Resynchronisation...";
-                document.getElementById('syncGateDesc').textContent = "Passez les pubs puis appuyez sur prêt.";
                 document.getElementById('btnReadySync').style.display = 'inline-block';
             }
         }
