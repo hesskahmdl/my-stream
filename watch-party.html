@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SK Stream - Watch Parties</title>
-    <!-- PeerJS pour la synchronisation WebRTC à très faible latence -->
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -32,7 +31,7 @@
         .howto-card h3 { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
         .howto-card p { font-size: 12px; color: #8a8a9e; line-height: 1.4; }
 
-        /* LOBBY / SALON DE PRÉPARATION */
+        /* LOBBY */
         .lobby-card { background: #13131c; border: 1px solid #e50914; border-radius: 12px; padding: 25px; text-align: center; margin-bottom: 25px; }
         .room-code-badge { display: inline-flex; align-items: center; gap: 10px; background: #07070a; border: 1px solid #e50914; padding: 10px 20px; border-radius: 30px; font-size: 22px; font-weight: 900; letter-spacing: 3px; color: #e50914; margin: 15px 0; }
         .room-code-badge button { background: #e50914; border: none; color: #fff; padding: 5px 10px; border-radius: 15px; font-size: 11px; cursor: pointer; letter-spacing: normal; }
@@ -40,11 +39,18 @@
         .members-list { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 20px 0; }
         .member-item { background: #1a1a26; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-        /* LECTEUR ET CHAT */
+        /* LECTEUR ET SYNCHRONISATION */
         .room-active-layout { display: none; grid-template-columns: 1fr 320px; gap: 20px; margin-top: 20px; }
         .player-container { background: #000; border-radius: 12px; overflow: hidden; position: relative; aspect-ratio: 16/9; border: 1px solid rgba(255,255,255,0.1); }
         .player-container iframe { width: 100%; height: 100%; border: none; }
         
+        /* OVERLAY DE SYNCHRONISATION PARTICIPANTS */
+        .sync-gate-overlay { position: absolute; inset: 0; background: rgba(7, 7, 10, 0.95); backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; padding: 20px; }
+        .sync-gate-title { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 10px; }
+        .sync-gate-desc { font-size: 13px; color: #aaa; max-width: 400px; margin-bottom: 20px; line-height: 1.4; }
+        .btn-ready { background: #10b981; color: #fff; border: none; padding: 12px 28px; border-radius: 30px; font-size: 15px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .btn-ready:hover { background: #059669; transform: scale(1.05); }
+
         .chat-container { background: #0d0d12; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; display: flex; flex-direction: column; height: 100%; max-height: 520px; }
         .chat-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); font-weight: bold; font-size: 13px; color: #aaa; }
         .chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
@@ -58,7 +64,6 @@
         .modal-card { background: #13131c; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 440px; padding: 25px; border-radius: 12px; text-align: center; }
         .modal-card input[type="text"] { width: 100%; background: #07070a; border: 1px solid #333; color: #fff; padding: 12px; border-radius: 8px; margin: 15px 0; font-size: 15px; text-align: center; outline: none; }
         
-        /* SELECTION DU FILM DANS LE LOBBY */
         .catalog-selector { max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin: 15px 0; padding: 5px; text-align: left; }
         .mini-card { background: #181824; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .mini-card:hover, .mini-card.selected { border-color: #e50914; transform: scale(1.03); }
@@ -66,7 +71,6 @@
         .mini-card p { font-size: 10px; font-weight: bold; padding: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
 
         .source-select { width: 100%; background: #181824; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; outline: none; }
-
         .empty-state { text-align: center; padding: 40px 20px; color: #8a8a9e; }
         .empty-state svg { width: 48px; height: 48px; fill: #333; margin-bottom: 15px; }
 
@@ -91,7 +95,6 @@
         </div>
     </div>
 
-    <!-- Section Comment ça marche -->
     <div class="box-container">
         <div class="box-title">📺 Comment ça marche ?</div>
         <div class="howto-grid">
@@ -106,7 +109,7 @@
         </div>
     </div>
 
-    <!-- ZONE DE LOBBY / ATTENTE DES PARTICIPANTS -->
+    <!-- LOBBY / SALON DE PRÉPARATION -->
     <div class="lobby-card" id="lobbyBox" style="display:none;">
         <h2 style="font-size:20px; text-transform:uppercase; color:#fff;">🏠 Lobby de la Watch Party</h2>
         <p style="font-size:13px; color:#aaa; margin-top:5px;">Partage le code ci-dessous à tes amis pour qu'ils te rejoignent.</p>
@@ -118,12 +121,10 @@
 
         <div>
             <h4 style="font-size:14px; color:#8a8a9e; margin-bottom:10px;">PARTICIPANTS CONNECTÉS (<span id="memberCount">1</span>) :</h4>
-            <div class="members-list" id="membersList">
-                <div class="member-item">👑 <span id="hostNameTag">Moi (Hôte)</span></div>
-            </div>
+            <div class="members-list" id="membersList"></div>
         </div>
 
-        <!-- Section configuration réservée à l'hôte -->
+        <!-- HÔTE CONFIG -->
         <div id="hostConfigArea" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
             <h3 style="font-size:15px; margin-bottom:10px;">1. Choisis un Film / Série :</h3>
             <input type="text" id="movieSearchLobby" placeholder="🔎 Rechercher un film dans le catalogue..." oninput="filterLobbyCatalog(this.value)" style="width:100%; background:#07070a; border:1px solid #333; color:#fff; padding:8px 12px; border-radius:6px; font-size:13px; margin-bottom:10px;">
@@ -149,19 +150,28 @@
         </div>
     </div>
 
-    <!-- ZONE DE VISIONNAGE (FILM + CHAT) -->
+    <!-- LECTEUR & CHAT -->
     <div class="room-active-layout" id="roomLayout">
         <div>
             <div class="player-container">
+                <!-- Overlay de synchro départ -->
+                <div class="sync-gate-overlay" id="syncGateOverlay">
+                    <div class="sync-gate-title" id="syncGateTitle">Préparation du lecteur...</div>
+                    <div class="sync-gate-desc" id="syncGateDesc">Passe les éventuelles pubs sur l'iFrame en arrière-plan puis clique sur le bouton dès que tu es prêt !</div>
+                    <button class="btn-ready" id="btnReadySync" onclick="markUserReady()">🟢 Je suis prêt !</button>
+                </div>
+
                 <iframe id="wpPlayer" src="" allowfullscreen></iframe>
             </div>
             <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <h3 id="currentPlayingTitle" style="font-size: 16px; color:#fff;">Film en cours...</h3>
-                <span id="roomCodeDisplay" style="font-size:12px; background:#181824; padding:6px 12px; border-radius:6px; color:#10b981; font-weight:bold;"></span>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <button class="btn-action" id="hostResyncBtn" onclick="forceResyncAll()" style="display:none; padding:4px 10px; font-size:11px;">🔄 Resynchroniser tout le monde</button>
+                    <span id="roomCodeDisplay" style="font-size:12px; background:#181824; padding:6px 12px; border-radius:6px; color:#10b981; font-weight:bold;"></span>
+                </div>
             </div>
         </div>
 
-        <!-- Module Chat -->
         <div class="chat-container">
             <div class="chat-header">💬 Chat de la Session</div>
             <div class="chat-messages" id="chatMessages"></div>
@@ -172,7 +182,7 @@
         </div>
     </div>
 
-    <!-- État vide par défaut -->
+    <!-- ETAT VIDE -->
     <div class="box-container" id="emptyStateBox">
         <div class="empty-state">
             <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
@@ -181,7 +191,7 @@
         </div>
     </div>
 
-    <!-- MODAL : Créer une Party (Publique ou Privée) -->
+    <!-- MODAL CREATION -->
     <div class="modal" id="createModal">
         <div class="modal-card">
             <h3 style="font-size:18px; color:#fff; margin-bottom:15px;">Créer une Watch Party</h3>
@@ -194,7 +204,7 @@
         </div>
     </div>
 
-    <!-- MODAL : Rejoindre via Code -->
+    <!-- MODAL REJOINDRE -->
     <div class="modal" id="joinModal">
         <div class="modal-card">
             <h3 style="font-size:18px; color:#fff;">Rejoindre une Party</h3>
@@ -212,16 +222,17 @@
         let connections = [];
         let hostConnection = null;
         let isHost = false;
+        let hostName = "Chef de salon";
         let catalog = [];
         let selectedMovie = null;
         let currentRoomCode = "";
         let userName = "Anonyme";
+        let participantsMap = new Map();
+        let readyCount = 0;
 
-        // Récupération de l'utilisateur connecté
         const savedUser = JSON.parse(localStorage.getItem('sk_logged_user') || '{}');
         if (savedUser.name) userName = savedUser.name;
 
-        // Charger le fichier data.json
         async function loadCatalog() {
             try {
                 const res = await fetch('data.json');
@@ -247,7 +258,31 @@
             alert("Code copié dans le presse-papier !");
         }
 
-        // 1. INITIALISATION DE LA CRÉATION DU SALON (HÔTE)
+        function renderMembersList() {
+            const list = document.getElementById('membersList');
+            let html = `<div class="member-item">👑 <span>${isHost ? userName + ' (Moi)' : hostName}</span></div>`;
+            
+            participantsMap.forEach((name, peerId) => {
+                html += `<div class="member-item">👤 <span>${name}</span></div>`;
+            });
+
+            list.innerHTML = html;
+            const totalMembers = participantsMap.size + 1;
+            document.getElementById('memberCount').textContent = totalMembers;
+
+            if (isHost) {
+                const btn = document.getElementById('btnStartParty');
+                if (participantsMap.size > 0) {
+                    btn.classList.remove('btn-disabled');
+                    btn.textContent = "🚀 Lancer la Watch Party maintenant !";
+                } else {
+                    btn.classList.add('btn-disabled');
+                    btn.textContent = "🚀 Lancer la Watch Party (En attente d'un participant...)";
+                }
+            }
+        }
+
+        // 1. L'HÔTE CRÉE LE SALON
         function initPartyCreation(isPublic) {
             closeModals();
             currentRoomCode = generateCode();
@@ -255,12 +290,12 @@
 
             peer.on('open', () => {
                 isHost = true;
+                hostName = userName;
                 document.getElementById('emptyStateBox').style.display = 'none';
                 document.getElementById('lobbyBox').style.display = 'block';
                 document.getElementById('lobbyCodeSpan').textContent = currentRoomCode;
-                document.getElementById('hostNameTag').textContent = `${userName} (Hôte)`;
+                renderMembersList();
 
-                // Inscrire dans les salons publics Firebase si choisi
                 if (isPublic) {
                     fetch(`${FIREBASE_DB_URL}/public_rooms/${currentRoomCode}.json`, {
                         method: 'PUT',
@@ -270,54 +305,45 @@
                 }
             });
 
-            // Écouter les connexions entrantes
             peer.on('connection', (conn) => {
                 conn.on('open', () => {
                     connections.push(conn);
-                    updateMemberList(conn.peer);
                     
-                    // Notifier le nouveau venu
-                    conn.send({ type: 'WELCOME', hostName: userName });
-
-                    // Informer tout le monde
-                    broadcast({ type: 'CHAT', author: 'Système', text: `Un participant a rejoint le salon !` });
-                    appendChatMessage('Système', `Un participant a rejoint le salon !`);
-                    
-                    // Activer le bouton de lancement car il n'est plus seul !
-                    checkCanStart();
+                    // L'hôte envoie son nom immédiatement
+                    conn.send({ type: 'HOST_INFO', name: userName });
                 });
 
-                conn.on('data', (data) => handleData(data));
+                conn.on('data', (data) => handleData(data, conn));
             });
         }
 
-        // Mettre à jour la liste des membres connectés dans le lobby
-        function updateMemberList() {
-            const count = connections.length + 1;
-            document.getElementById('memberCount').textContent = count;
-            
-            const list = document.getElementById('membersList');
-            list.innerHTML = `<div class="member-item">👑 <span>${userName} (Hôte)</span></div>`;
-            
-            connections.forEach((c, idx) => {
-                list.innerHTML += `<div class="member-item">👤 <span>Participant #${idx + 1}</span></div>`;
+        // 2. UN PARTICIPANT REJOINT
+        function confirmJoinRoom() {
+            const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+            if (!code) return alert("Rentre un code valide !");
+
+            currentRoomCode = code;
+            peer = new Peer();
+
+            peer.on('open', () => {
+                hostConnection = peer.connect("skparty-" + code);
+
+                hostConnection.on('open', () => {
+                    closeModals();
+                    document.getElementById('emptyStateBox').style.display = 'none';
+                    document.getElementById('lobbyBox').style.display = 'block';
+                    document.getElementById('lobbyCodeSpan').textContent = code;
+                    document.getElementById('hostConfigArea').style.display = 'none';
+                    document.getElementById('clientWaitArea').style.display = 'block';
+
+                    // Envoi de son pseudo à l'hôte
+                    hostConnection.send({ type: 'JOIN_NAME', name: userName });
+                });
+
+                hostConnection.on('data', (data) => handleData(data, hostConnection));
             });
-
-            checkCanStart();
         }
 
-        function checkCanStart() {
-            const btn = document.getElementById('btnStartParty');
-            if (connections.length > 0) {
-                btn.classList.remove('btn-disabled');
-                btn.textContent = "🚀 Lancer la Watch Party maintenant !";
-            } else {
-                btn.classList.add('btn-disabled');
-                btn.textContent = "🚀 Lancer la Watch Party (En attente d'un participant...)";
-            }
-        }
-
-        // Affichage du catalogue dans le lobby
         function renderLobbyCatalog(items) {
             const grid = document.getElementById('lobbyCatalogGrid');
             grid.innerHTML = items.map(m => `
@@ -341,34 +367,10 @@
             if (activeCard) activeCard.classList.add('selected');
         }
 
-        // 2. REJOINDRE UN SALON (CLIENT)
-        function confirmJoinRoom() {
-            const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
-            if (!code) return alert("Rentre un code valide !");
-
-            currentRoomCode = code;
-            peer = new Peer();
-
-            peer.on('open', () => {
-                hostConnection = peer.connect("skparty-" + code);
-
-                hostConnection.on('open', () => {
-                    closeModals();
-                    document.getElementById('emptyStateBox').style.display = 'none';
-                    document.getElementById('lobbyBox').style.display = 'block';
-                    document.getElementById('lobbyCodeSpan').textContent = code;
-                    document.getElementById('hostConfigArea').style.display = 'none';
-                    document.getElementById('clientWaitArea').style.display = 'block';
-                });
-
-                hostConnection.on('data', (data) => handleData(data));
-            });
-        }
-
-        // 3. LANCEMENT DE LA SÉANCE
+        // 3. LANCEMENT PAR L'HÔTE
         function startPartySession() {
             if (!selectedMovie) return alert("Sélectionne un film dans la liste avant de lancer !");
-            if (connections.length === 0) return alert("Tu ne peux pas lancer seul ! Attends qu'un ami rejoigne.");
+            if (participantsMap.size === 0) return alert("Tu ne peux pas lancer seul ! Attends qu'un ami rejoigne.");
 
             const sourceKey = document.getElementById('lobbySourceSelect').value;
             const payload = {
@@ -389,7 +391,10 @@
             document.getElementById('roomCodeDisplay').textContent = `CODE : ${currentRoomCode}`;
             document.getElementById('currentPlayingTitle').textContent = data.title;
 
-            // Construction de l'URL du lecteur
+            if (isHost) {
+                document.getElementById('hostResyncBtn').style.display = 'inline-flex';
+            }
+
             let url = "";
             const id = data.tmdbId;
             const isTv = data.isTv;
@@ -402,15 +407,101 @@
             else if (data.source === '2embed') url = isTv ? `https://www.2embed.cc/embedtv/${id}&s=1&e=1` : `https://www.2embed.cc/embed/${id}`;
 
             document.getElementById('wpPlayer').src = url;
-            appendChatMessage("Système", `La séance a commencé ! Bon visionnage.`);
+            
+            // Affichage du volet de synchronisation
+            document.getElementById('syncGateOverlay').style.display = 'flex';
+            document.getElementById('syncGateTitle').textContent = "Préparation du lecteur...";
+            document.getElementById('syncGateDesc').textContent = "Regarde la vidéo en arrière-plan, passe les pubs puis appuie sur le bouton vert dès que tu es prêt !";
+            document.getElementById('btnReadySync').style.display = 'inline-block';
+            
+            readyCount = 0;
+            appendChatMessage("Système", `La vidéo est chargée. Cliquez sur le bouton vert dès que vous êtes prêts !`);
         }
 
-        // RÉCEPTION ET TRAITEMENT DES DONNÉES TEMPS RÉEL
-        function handleData(data) {
-            if (data.type === 'CHAT') {
+        function markUserReady() {
+            document.getElementById('btnReadySync').style.display = 'none';
+            document.getElementById('syncGateTitle').textContent = "✅ Tu es prêt !";
+            document.getElementById('syncGateDesc').textContent = "En attente des autres participants...";
+
+            if (isHost) {
+                readyCount++;
+                checkAllReady();
+            } else {
+                hostConnection.send({ type: 'USER_READY' });
+            }
+        }
+
+        function checkAllReady() {
+            const totalRequired = participantsMap.size + 1;
+            if (readyCount >= totalRequired) {
+                // Déclencher le décompte synchronisé
+                broadcast({ type: 'COUNTDOWN_START' });
+                startCountdown();
+            }
+        }
+
+        function startCountdown() {
+            let sec = 3;
+            document.getElementById('syncGateTitle').textContent = `🚀 Démarrage dans ${sec}...`;
+            document.getElementById('syncGateDesc').textContent = "Lancement synchronisé simultané !";
+
+            const timer = setInterval(() => {
+                sec--;
+                if (sec > 0) {
+                    document.getElementById('syncGateTitle').textContent = `🚀 Démarrage dans ${sec}...`;
+                } else {
+                    clearInterval(timer);
+                    document.getElementById('syncGateOverlay').style.display = 'none';
+                }
+            }, 1000);
+        }
+
+        function forceResyncAll() {
+            if (!isHost) return;
+            const player = document.getElementById('wpPlayer');
+            player.src = player.src;
+            broadcast({ type: 'RESYNC' });
+            document.getElementById('syncGateOverlay').style.display = 'flex';
+            document.getElementById('syncGateTitle').textContent = "🔄 Resynchronisation...";
+            document.getElementById('syncGateDesc').textContent = "Passez les pubs puis appuyez sur prêt.";
+            document.getElementById('btnReadySync').style.display = 'inline-block';
+            readyCount = 0;
+        }
+
+        // RECEPTION DONNEES WEBRTC
+        function handleData(data, conn) {
+            if (data.type === 'HOST_INFO') {
+                hostName = data.name;
+                renderMembersList();
+            } else if (data.type === 'JOIN_NAME') {
+                participantsMap.set(conn.peer, data.name);
+                renderMembersList();
+                
+                // Diffuser la liste complète mise à jour à tout le monde
+                const membersArray = Array.from(participantsMap.entries());
+                broadcast({ type: 'SYNC_MEMBERS', members: membersArray, host: userName });
+            } else if (data.type === 'SYNC_MEMBERS') {
+                hostName = data.host;
+                participantsMap = new Map(data.members);
+                renderMembersList();
+            } else if (data.type === 'CHAT') {
                 appendChatMessage(data.author, data.text);
             } else if (data.type === 'START_PARTY') {
                 launchPlayerUI(data);
+            } else if (data.type === 'USER_READY') {
+                if (isHost) {
+                    readyCount++;
+                    checkAllReady();
+                }
+            } else if (data.type === 'COUNTDOWN_START') {
+                startCountdown();
+            } else if (data.type === 'RESYNC') {
+                const player = document.getElementById('wpPlayer');
+                player.src = player.src;
+                document.getElementById('syncGateOverlay').style.display = 'flex';
+                document.getElementById('syncGateTitle').textContent = "🔄 Resynchronisation...";
+                document.getElementById('syncGateDesc').textContent = "Passez les pubs puis appuyez sur prêt.";
+                document.getElementById('btnReadySync').style.display = 'inline-block';
             }
         }
 
@@ -419,7 +510,6 @@
             else if (hostConnection) hostConnection.send(payload);
         }
 
-        // GESTION DU CHAT
         function sendChatMessage() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
