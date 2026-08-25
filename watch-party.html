@@ -48,14 +48,8 @@
         .timer-badge { background: #07070a; border: 1px solid #10b981; color: #10b981; padding: 6px 14px; border-radius: 20px; font-family: monospace; font-size: 14px; font-weight: bold; }
         
         .host-timer-controls { display: flex; gap: 8px; align-items: center; }
-        .btn-time-adjust { background: #181824; border: 1px solid #333; color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-time-adjust { background: #181824; border: 1px solid #333; color: #fff; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-time-adjust:hover { background: #e50914; border-color: #e50914; }
-
-        /* BANDEAU SYNCHRO DIRECTE HÔTE */
-        .host-sync-banner { display: none; background: #181824; border-bottom: 1px solid rgba(229, 9, 20, 0.4); padding: 10px 15px; }
-        .host-sync-banner label { font-size: 11px; color: #e50914; font-weight: bold; display: block; margin-bottom: 5px; }
-        .host-sync-input-group { display: flex; gap: 8px; flex-wrap: wrap; }
-        .host-sync-input-group input { flex: 1; min-width: 200px; background: #07070a; border: 1px solid #333; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none; }
 
         .player-container { position: relative; aspect-ratio: 16/9; width: 100%; }
         .player-container iframe { width: 100%; height: 100%; border: none; }
@@ -166,20 +160,10 @@
                         <button class="btn-time-adjust" onclick="adjustHostTime(-10)">-10s</button>
                         <button class="btn-time-adjust" onclick="toggleTimerState()" id="btnPlayPauseTimer">⏸️ Pause</button>
                         <button class="btn-time-adjust" onclick="adjustHostTime(10)">+10s</button>
+                        <button class="btn-time-adjust btn-primary" onclick="forceSyncAllUsers()">🔄 Synchroniser tous</button>
                     </div>
 
                     <button class="btn-action btn-primary" onclick="reloadPlayerIframe()" style="padding:5px 12px; font-size:12px;">⚡ Reload Lecteur</button>
-                </div>
-
-                <!-- BANDEAU SYNCHRO INSTANTANÉE HÔTE -->
-                <div class="host-sync-banner" id="hostSyncBanner">
-                    <label>👑 ÉTAPE 1 : Ouvre le film puis clique sur Play. ÉTAPE 2 : Copie l'URL et colle-la ci-dessous :</label>
-                    <div class="host-sync-input-group">
-                        <button class="btn-action" onclick="openCurrentFilmTab()" style="padding:6px 12px; font-size:12px; background:#20202d;">🔗 1. Ouvrir le film</button>
-                        <input type="text" id="directPlayUrlInput" placeholder="https://cinevaro.app/media/tmdb-movie-...">
-                        <button class="btn-action" onclick="pasteFromClipboard()" style="padding:6px 12px; font-size:12px;">📋 Coller</button>
-                        <button class="btn-action btn-primary" onclick="broadcastDirectUrlAndResetTimer()" style="padding:6px 12px; font-size:12px;">🚀 2. Diffuser & Reset 00:00:00</button>
-                    </div>
                 </div>
 
                 <div class="player-container">
@@ -267,7 +251,6 @@
         let currentRoomCode = "";
         let userName = "";
         let participantsMap = new Map();
-        let currentInitialUrl = "";
         
         let masterSeconds = 0;
         let masterTimerInterval = null;
@@ -304,37 +287,6 @@
         function copyCode() {
             navigator.clipboard.writeText(currentRoomCode);
             alert("Code copié dans le presse-papier !");
-        }
-
-        function openCurrentFilmTab() {
-            if (currentInitialUrl) {
-                window.open(currentInitialUrl, '_blank');
-            } else {
-                alert("Aucun film sélectionné !");
-            }
-        }
-
-        async function pasteFromClipboard() {
-            try {
-                const text = await navigator.clipboard.readText();
-                document.getElementById('directPlayUrlInput').value = text;
-            } catch (err) {
-                alert("Colle directement le lien dans la case !");
-            }
-        }
-
-        function broadcastDirectUrlAndResetTimer() {
-            const url = document.getElementById('directPlayUrlInput').value.trim();
-            if (!url) return alert("Entre un lien de lecteur valide !");
-
-            masterSeconds = 0;
-            updateTimerDisplays();
-            startMasterTimer();
-
-            document.getElementById('wpPlayer').src = url;
-            appendChatMessage("Système", `🚀 Séance synchronisée à 00:00:00 avec le lecteur direct !`);
-
-            broadcast({ type: 'RESET_AND_LOAD', url: url });
         }
 
         function resolveUsername(inputId) {
@@ -378,9 +330,11 @@
                 clearInterval(masterTimerInterval);
                 isTimerRunning = false;
                 btn.textContent = "▶️ Reprendre";
+                appendChatMessage("Système", `⏸️ L'hôte a mis la séance en pause.`);
             } else {
                 startMasterTimer();
                 btn.textContent = "⏸️ Pause";
+                appendChatMessage("Système", `▶️ L'hôte a repris la lecture.`);
             }
             broadcast({ type: 'TIME_SYNC', seconds: masterSeconds, isRunning: isTimerRunning });
         }
@@ -390,6 +344,13 @@
             masterSeconds = Math.max(0, masterSeconds + delta);
             updateTimerDisplays();
             broadcast({ type: 'TIME_SYNC', seconds: masterSeconds, isRunning: isTimerRunning });
+        }
+
+        function forceSyncAllUsers() {
+            if (!isHost) return;
+            reloadPlayerIframe();
+            broadcast({ type: 'FORCE_RELOAD' });
+            appendChatMessage("Système", `🔄 L'hôte a relancé la synchronisation des lecteurs.`);
         }
 
         function renderMembersList() {
@@ -521,8 +482,8 @@
 
             if (isHost) {
                 document.getElementById('hostControlsPanel').style.display = 'flex';
-                document.getElementById('hostSyncBanner').style.display = 'block';
                 document.getElementById('timerStatusTag').textContent = "👑 Mon Chrono Hôte";
+                startMasterTimer();
             } else {
                 document.getElementById('timerStatusTag').textContent = " Temps de l'Hôte";
             }
@@ -534,9 +495,8 @@
             const mediaType = isTv ? 'tv' : 'movie';
             const url = `https://cinevaro.app/media/tmdb-${mediaType}-${id}`;
 
-            currentInitialUrl = url;
             document.getElementById('wpPlayer').src = url;
-            appendChatMessage("Système", `Séance démarrée sur CineVaro. L'hôte peut utiliser le panneau supérieur pour caler la vidéo à 00:00:00 !`);
+            appendChatMessage("Système", `Séance démarrée sur CineVaro. Lancez le lecteur au même moment en suivant le chrono de l'hôte !`);
         }
 
         function reloadPlayerIframe() {
@@ -565,11 +525,15 @@
             } else if (data.type === 'TIME_SYNC') {
                 masterSeconds = data.seconds;
                 updateTimerDisplays();
-            } else if (data.type === 'RESET_AND_LOAD') {
-                masterSeconds = 0;
-                updateTimerDisplays();
-                document.getElementById('wpPlayer').src = data.url;
-                appendChatMessage("Système", `⚡ Le lecteur direct s'est chargé et le chrono est remis à 00:00:00 !`);
+                if (data.isRunning && !isTimerRunning && !isHost) {
+                    startMasterTimer();
+                } else if (!data.isRunning && isTimerRunning && !isHost) {
+                    clearInterval(masterTimerInterval);
+                    isTimerRunning = false;
+                }
+            } else if (data.type === 'FORCE_RELOAD') {
+                reloadPlayerIframe();
+                appendChatMessage("Système", `🔄 Le lecteur a été rechargé par l'hôte.`);
             }
         }
 
