@@ -39,39 +39,42 @@
         .members-list { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin: 20px 0; }
         .member-item { background: #1a1a26; border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
-        /* LECTEUR ET SYNCHRONISATION */
+        /* LECTEUR ET CONTROL BAR OVERLAY */
         .room-active-layout { display: none; grid-template-columns: 1fr 320px; gap: 20px; margin-top: 20px; }
-        .player-container { background: #000; border-radius: 12px; overflow: hidden; position: relative; aspect-ratio: 16/9; border: 1px solid rgba(255,255,255,0.1); }
-        .player-container iframe { width: 100%; height: 100%; border: none; }
+        .player-wrapper-box { position: relative; background: #000; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
         
-        /* BANDEAU DE SYNCHRONISATION EN HAUT (N'OBSTRUE PAS LES PUBS) */
-        .sync-gate-banner { position: absolute; top: 12px; left: 12px; right: 12px; background: rgba(13, 13, 20, 0.92); backdrop-filter: blur(8px); padding: 12px 20px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: space-between; z-index: 50; box-shadow: 0 8px 25px rgba(0,0,0,0.8); }
-        .sync-banner-text { font-size: 13px; font-weight: 700; color: #fff; }
-        .sync-banner-text span { color: #aaa; font-weight: normal; font-size: 12px; display: block; }
-        .btn-ready { background: #10b981; color: #fff; border: none; padding: 8px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
-        .btn-ready:hover { background: #059669; transform: scale(1.05); }
+        /* CONTROL BAR REHAUSSÉE COMPATIBLE PLEIN ÉCRAN */
+        .top-control-bar { background: #12121a; padding: 10px 15px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .timer-badge { background: #07070a; border: 1px solid #10b981; color: #10b981; padding: 6px 14px; border-radius: 20px; font-family: monospace; font-size: 14px; font-weight: bold; }
+        
+        .host-timer-controls { display: flex; gap: 8px; align-items: center; }
+        .btn-time-adjust { background: #181824; border: 1px solid #333; color: #fff; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; }
+        .btn-time-adjust:hover { background: #e50914; border-color: #e50914; }
 
-        /* BOUTON RESYNC PERMANENT/PLEIN ÉCRAN */
-        .btn-floating-resync { position: absolute; bottom: 15px; right: 15px; z-index: 60; background: rgba(229, 9, 20, 0.9); color: #fff; border: 1px solid #ff4d4d; padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.2s; }
-        .btn-floating-resync:hover { background: #ff0f1a; transform: scale(1.05); }
+        .player-container { position: relative; aspect-ratio: 16/9; width: 100%; }
+        .player-container iframe { width: 100%; height: 100%; border: none; }
 
-        .chat-container { background: #0d0d12; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; display: flex; flex-direction: column; height: 100%; max-height: 520px; }
-        .chat-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); font-weight: bold; font-size: 13px; color: #aaa; }
+        /* CHAT ET PANNEAU DE TEMPS */
+        .chat-container { background: #0d0d12; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; display: flex; flex-direction: column; height: 100%; max-height: 560px; }
+        .chat-header { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.06); font-weight: bold; font-size: 13px; color: #aaa; display: flex; justify-content: space-between; align-items: center; }
         .chat-messages { flex: 1; padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; font-size: 12px; }
         .chat-msg { background: #15151f; padding: 8px 12px; border-radius: 6px; }
         .chat-msg .author { font-weight: bold; color: #e50914; margin-bottom: 2px; }
         .chat-input-box { padding: 10px; border-top: 1px solid rgba(255,255,255,0.06); display: flex; gap: 8px; }
         .chat-input-box input { flex: 1; background: #15151f; border: 1px solid #252533; color: #fff; padding: 8px; border-radius: 6px; outline: none; font-size: 12px; }
 
+        /* CHRONO EN BAS DU CHAT */
+        .sync-footer-tracker { padding: 10px 14px; background: #13131c; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11px; color: #aaa; display: flex; align-items: center; justify-content: space-between; }
+
         /* MODALS */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; backdrop-filter: blur(6px); z-index: 999; }
         .modal-card { background: #13131c; border: 1px solid rgba(255,255,255,0.1); width: 90%; max-width: 440px; padding: 25px; border-radius: 12px; text-align: center; }
         .modal-card input[type="text"] { width: 100%; background: #07070a; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; margin: 8px 0 15px 0; font-size: 14px; outline: none; }
         
-        .catalog-selector { max-height: 300px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin: 15px 0; padding: 5px; text-align: left; }
+        .catalog-selector { max-height: 250px; overflow-y: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin: 15px 0; padding: 5px; text-align: left; }
         .mini-card { background: #181824; border-radius: 6px; overflow: hidden; cursor: pointer; border: 2px solid transparent; transition: 0.2s; }
         .mini-card:hover, .mini-card.selected { border-color: #e50914; transform: scale(1.03); }
-        .mini-card img { width: 100%; height: 120px; object-fit: cover; }
+        .mini-card img { width: 100%; height: 110px; object-fit: cover; }
         .mini-card p { font-size: 10px; font-weight: bold; padding: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
 
         .source-select { width: 100%; background: #181824; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; outline: none; }
@@ -108,7 +111,7 @@
             </div>
             <div class="howto-card">
                 <h3>⏰ Synchronisation temps réel</h3>
-                <p>La lecture du lecteur vidéo est ajustée automatiquement entre l'hôte et tous les participants.</p>
+                <p>Le temps de l'hôte est diffusé en continu pour permettre un alignement parfait à la seconde près.</p>
             </div>
         </div>
     </div>
@@ -156,36 +159,51 @@
     <!-- LECTEUR & CHAT -->
     <div class="room-active-layout" id="roomLayout">
         <div>
-            <div class="player-container">
-                <!-- BANDEAU DE SYNCHRO (Permet de cliquer sur les pubs derrière) -->
-                <div class="sync-gate-banner" id="syncGateBanner">
-                    <div class="sync-banner-text">
-                        <div id="syncGateTitle">Préparation du lecteur...</div>
-                        <span>Lance la vidéo et ferme les pubs ci-dessous, puis clique sur prêt.</span>
+            <div class="player-wrapper-box" id="fullPlayerContainer">
+                <!-- PANNEAU SUPÉRIEUR HÔTE / RESYNC (VISIBLE MÊME EN PLEIN ÉCRAN) -->
+                <div class="top-control-bar">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span class="timer-badge" id="hostTimerDisplay">⏱️ 00:00:00</span>
+                        <span style="font-size:12px; color:#aaa;" id="timerStatusTag">Chrono Hôte</span>
                     </div>
-                    <button class="btn-ready" id="btnReadySync" onclick="markUserReady()">🟢 Je suis prêt !</button>
+
+                    <div class="host-timer-controls" id="hostControlsPanel" style="display:none;">
+                        <button class="btn-time-adjust" onclick="adjustHostTime(-10)">-10s</button>
+                        <button class="btn-time-adjust" onclick="toggleTimerState()" id="btnPlayPauseTimer">⏸️ Pause</button>
+                        <button class="btn-time-adjust" onclick="adjustHostTime(10)">+10s</button>
+                    </div>
+
+                    <button class="btn-action btn-primary" onclick="reloadPlayerIframe()" style="padding:5px 12px; font-size:12px;">⚡ Reload Lecteur</button>
                 </div>
 
-                <!-- Bouton de resync rapide -->
-                <button class="btn-floating-resync" onclick="reloadIframeOnly()">⏱️ Resync Vidéo</button>
-
-                <iframe id="wpPlayer" src="" allowfullscreen></iframe>
+                <div class="player-container">
+                    <iframe id="wpPlayer" src="" allowfullscreen></iframe>
+                </div>
             </div>
+
             <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <h3 id="currentPlayingTitle" style="font-size: 16px; color:#fff;">Film en cours...</h3>
-                <div style="display:flex; gap:10px; align-items:center;">
-                    <button class="btn-action" id="hostResyncBtn" onclick="forceResyncAll()" style="display:none; padding:4px 10px; font-size:11px;">🔄 Relancer pour tous</button>
-                    <span id="roomCodeDisplay" style="font-size:12px; background:#181824; padding:6px 12px; border-radius:6px; color:#10b981; font-weight:bold;"></span>
-                </div>
+                <span id="roomCodeDisplay" style="font-size:12px; background:#181824; padding:6px 12px; border-radius:6px; color:#10b981; font-weight:bold;"></span>
             </div>
         </div>
 
         <div class="chat-container">
-            <div class="chat-header">💬 Chat de la Session</div>
+            <div class="chat-header">
+                <span>💬 Chat de la Session</span>
+                <span style="font-size:10px; color:#10b981;" id="syncIndicatorState">🟢 Synchro Active</span>
+            </div>
+            
             <div class="chat-messages" id="chatMessages"></div>
+            
             <div class="chat-input-box">
                 <input type="text" id="chatInput" placeholder="Écrire un message..." onkeypress="if(event.key==='Enter') sendChatMessage()">
                 <button class="btn-action btn-primary" style="padding: 6px 12px;" onclick="sendChatMessage()">Envoyer</button>
+            </div>
+
+            <!-- CHRONO ET TRACKER EN BAS DU CHAT -->
+            <div class="sync-footer-tracker">
+                <div>👑 Temps Hôte : <b style="color:#fff;" id="footerHostTime">00:00:00</b></div>
+                <div id="userSyncDelta" style="color:#10b981;">En phase</div>
             </div>
         </div>
     </div>
@@ -244,14 +262,17 @@
         let currentRoomCode = "";
         let userName = "";
         let participantsMap = new Map();
-        let readyCount = 0;
+        
+        // CHRONOMÈTRE GLOBAL
+        let masterSeconds = 0;
+        let masterTimerInterval = null;
+        let isTimerRunning = false;
 
-        // Détection de l'utilisateur
+        // AUTHENTIFICATION / PSEUDO
         const savedUser = JSON.parse(localStorage.getItem('sk_logged_user') || '{}');
         if (savedUser.name) {
             userName = savedUser.name;
         } else {
-            // Si pas connecté à Discord, afficher les champs de saisie du pseudo
             document.getElementById('customNameBoxCreate').style.display = 'block';
             document.getElementById('customNameBoxJoin').style.display = 'block';
         }
@@ -290,6 +311,50 @@
                 return userName;
             }
             return `Visiteur #${Math.floor(1000 + Math.random() * 9000)}`;
+        }
+
+        function formatTime(totalSec) {
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            return `${h < 10 ? '0' : ''}${h}:${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function updateTimerDisplays() {
+            const formatted = formatTime(masterSeconds);
+            document.getElementById('hostTimerDisplay').textContent = `⏱️ ${formatted}`;
+            document.getElementById('footerHostTime').textContent = formatted;
+        }
+
+        function startMasterTimer() {
+            if (masterTimerInterval) clearInterval(masterTimerInterval);
+            isTimerRunning = true;
+            masterTimerInterval = setInterval(() => {
+                masterSeconds++;
+                updateTimerDisplays();
+                if (isHost) broadcast({ type: 'TIME_SYNC', seconds: masterSeconds, isRunning: isTimerRunning });
+            }, 1000);
+        }
+
+        function toggleTimerState() {
+            if (!isHost) return;
+            const btn = document.getElementById('btnPlayPauseTimer');
+            if (isTimerRunning) {
+                clearInterval(masterTimerInterval);
+                isTimerRunning = false;
+                btn.textContent = "▶️ Reprendre";
+            } else {
+                startMasterTimer();
+                btn.textContent = "⏸️ Pause";
+            }
+            broadcast({ type: 'TIME_SYNC', seconds: masterSeconds, isRunning: isTimerRunning });
+        }
+
+        function adjustHostTime(delta) {
+            if (!isHost) return;
+            masterSeconds = Math.max(0, masterSeconds + delta);
+            updateTimerDisplays();
+            broadcast({ type: 'TIME_SYNC', seconds: masterSeconds, isRunning: isTimerRunning });
         }
 
         function renderMembersList() {
@@ -425,7 +490,11 @@
             document.getElementById('currentPlayingTitle').textContent = data.title;
 
             if (isHost) {
-                document.getElementById('hostResyncBtn').style.display = 'inline-flex';
+                document.getElementById('hostControlsPanel').style.display = 'flex';
+                document.getElementById('timerStatusTag').textContent = "👑 Mon Chrono Hôte";
+                startMasterTimer();
+            } else {
+                document.getElementById('timerStatusTag').textContent = " Temps de l'Hôte";
             }
 
             let url = "";
@@ -440,67 +509,15 @@
             else if (data.source === '2embed') url = isTv ? `https://www.2embed.cc/embedtv/${id}&s=1&e=1` : `https://www.2embed.cc/embed/${id}`;
 
             document.getElementById('wpPlayer').src = url;
-            
-            // Affichage du bandeau supérieur
-            document.getElementById('syncGateBanner').style.display = 'flex';
-            document.getElementById('syncGateTitle').textContent = "Préparation du lecteur...";
-            document.getElementById('btnReadySync').style.display = 'inline-block';
-            
-            readyCount = 0;
-            appendChatMessage("Système", `La vidéo est chargée. Fermez les pubs puis cliquez sur le bouton vert dès que vous êtes prêts !`);
+            appendChatMessage("Système", `Séance démarrée. Suivez le chrono supérieur pour être calés ensemble !`);
         }
 
-        function reloadIframeOnly() {
+        function reloadPlayerIframe() {
             const player = document.getElementById('wpPlayer');
             player.src = player.src;
         }
 
-        function markUserReady() {
-            document.getElementById('btnReadySync').style.display = 'none';
-            document.getElementById('syncGateTitle').textContent = "✅ Tu es prêt ! (En attente des autres)";
-
-            if (isHost) {
-                readyCount++;
-                checkAllReady();
-            } else {
-                hostConnection.send({ type: 'USER_READY' });
-            }
-        }
-
-        function checkAllReady() {
-            const totalRequired = participantsMap.size + 1;
-            if (readyCount >= totalRequired) {
-                broadcast({ type: 'COUNTDOWN_START' });
-                startCountdown();
-            }
-        }
-
-        function startCountdown() {
-            let sec = 3;
-            document.getElementById('syncGateTitle').textContent = `🚀 Démarrage dans ${sec}...`;
-
-            const timer = setInterval(() => {
-                sec--;
-                if (sec > 0) {
-                    document.getElementById('syncGateTitle').textContent = `🚀 Démarrage dans ${sec}...`;
-                } else {
-                    clearInterval(timer);
-                    document.getElementById('syncGateBanner').style.display = 'none';
-                }
-            }, 1000);
-        }
-
-        function forceResyncAll() {
-            if (!isHost) return;
-            reloadIframeOnly();
-            broadcast({ type: 'RESYNC' });
-            document.getElementById('syncGateBanner').style.display = 'flex';
-            document.getElementById('syncGateTitle').textContent = "🔄 Resynchronisation...";
-            document.getElementById('btnReadySync').style.display = 'inline-block';
-            readyCount = 0;
-        }
-
-        // DONNÉES WEBRTC
+        // TRAITEMENT DONNÉES WEBRTC
         function handleData(data, conn) {
             if (data.type === 'HOST_INFO') {
                 hostName = data.name;
@@ -519,18 +536,9 @@
                 appendChatMessage(data.author, data.text);
             } else if (data.type === 'START_PARTY') {
                 launchPlayerUI(data);
-            } else if (data.type === 'USER_READY') {
-                if (isHost) {
-                    readyCount++;
-                    checkAllReady();
-                }
-            } else if (data.type === 'COUNTDOWN_START') {
-                startCountdown();
-            } else if (data.type === 'RESYNC') {
-                reloadIframeOnly();
-                document.getElementById('syncGateBanner').style.display = 'flex';
-                document.getElementById('syncGateTitle').textContent = "🔄 Resynchronisation...";
-                document.getElementById('btnReadySync').style.display = 'inline-block';
+            } else if (data.type === 'TIME_SYNC') {
+                masterSeconds = data.seconds;
+                updateTimerDisplays();
             }
         }
 
