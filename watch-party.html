@@ -138,6 +138,7 @@
 
             <h3 style="font-size:15px; margin-bottom:10px; margin-top:15px;">2. Choisis le Lecteur Video :</h3>
             <select class="source-select" id="lobbySourceSelect">
+                <option value="cinepulse">CinePulse (VF / Vostfr)</option>
                 <option value="vidzy">Vidzy (VF / Multi)</option>
                 <option value="frembed">Frembed (VF)</option>
                 <option value="movix">Movix (VF)</option>
@@ -501,7 +502,8 @@
             const id = data.tmdbId;
             const isTv = data.isTv;
 
-            if (data.source === 'vidzy') url = isTv ? `https://vidzy.org/tv/${id}/1/1` : `https://vidzy.org/movie/${id}`;
+            if (data.source === 'cinepulse') url = isTv ? `https://cinepulse.id/sheet/tv-${id}` : `https://cinepulse.id/sheet/movie-${id}`;
+            else if (data.source === 'vidzy') url = isTv ? `https://vidzy.org/tv/${id}/1/1` : `https://vidzy.org/movie/${id}`;
             else if (data.source === 'frembed') url = isTv ? `https://frembed.casa/api/serie.php?id=${id}&sa=1&epi=1` : `https://frembed.casa/api/film.php?id=${id}`;
             else if (data.source === 'movix') url = isTv ? `https://movix.cash/watch/tv/${id}/s/1/e/1` : `https://movix.cash/watch/movie/${id}`;
             else if (data.source === 'multiembed') url = `https://multiembed.mov/?video_id=${id}&tmdb=1`;
