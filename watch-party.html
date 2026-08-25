@@ -54,8 +54,8 @@
         /* BANDEAU SYNCHRO DIRECTE HÔTE */
         .host-sync-banner { display: none; background: #181824; border-bottom: 1px solid rgba(229, 9, 20, 0.4); padding: 10px 15px; }
         .host-sync-banner label { font-size: 11px; color: #e50914; font-weight: bold; display: block; margin-bottom: 5px; }
-        .host-sync-input-group { display: flex; gap: 8px; }
-        .host-sync-input-group input { flex: 1; background: #07070a; border: 1px solid #333; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none; }
+        .host-sync-input-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .host-sync-input-group input { flex: 1; min-width: 200px; background: #07070a; border: 1px solid #333; color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; outline: none; }
 
         .player-container { position: relative; aspect-ratio: 16/9; width: 100%; }
         .player-container iframe { width: 100%; height: 100%; border: none; }
@@ -183,13 +183,14 @@
                     <button class="btn-action btn-primary" onclick="reloadPlayerIframe()" style="padding:5px 12px; font-size:12px;">⚡ Reload Lecteur</button>
                 </div>
 
-                <!-- PANNEAU D'INJECTION DE LIEN DIRECT CINEPULSE (RESERVÉ À L'HÔTE) -->
+                <!-- BANDEAU SYNCHRO INSTANTANÉE HÔTE -->
                 <div class="host-sync-banner" id="hostSyncBanner">
-                    <label>👑 MODE HÔTE : Colle l'URL /play/ de CinePulse pour l'envoyer à tout le monde :</label>
+                    <label>👑 ÉTAPE 1 : Ouvre le film puis clique sur Play. ÉTAPE 2 : Copie l'URL /play/ et colle-la ci-dessous :</label>
                     <div class="host-sync-input-group">
+                        <button class="btn-action" onclick="openCurrentFilmTab()" style="padding:6px 12px; font-size:12px; background:#20202d;">🔗 1. Ouvrir le film</button>
                         <input type="text" id="directPlayUrlInput" placeholder="https://cinepulse.id/play/...">
                         <button class="btn-action" onclick="pasteFromClipboard()" style="padding:6px 12px; font-size:12px;">📋 Coller</button>
-                        <button class="btn-action btn-primary" onclick="broadcastDirectUrl()" style="padding:6px 12px; font-size:12px;">🚀 Diffuser</button>
+                        <button class="btn-action btn-primary" onclick="broadcastDirectUrlAndResetTimer()" style="padding:6px 12px; font-size:12px;">🚀 2. Diffuser & Reset 00:00:00</button>
                     </div>
                 </div>
 
@@ -278,6 +279,7 @@
         let currentRoomCode = "";
         let userName = "";
         let participantsMap = new Map();
+        let currentInitialUrl = "";
         
         let masterSeconds = 0;
         let masterTimerInterval = null;
@@ -316,6 +318,14 @@
             alert("Code copié dans le presse-papier !");
         }
 
+        function openCurrentFilmTab() {
+            if (currentInitialUrl) {
+                window.open(currentInitialUrl, '_blank');
+            } else {
+                alert("Aucun film sélectionné !");
+            }
+        }
+
         async function pasteFromClipboard() {
             try {
                 const text = await navigator.clipboard.readText();
@@ -325,16 +335,21 @@
             }
         }
 
-        function broadcastDirectUrl() {
+        function broadcastDirectUrlAndResetTimer() {
             const url = document.getElementById('directPlayUrlInput').value.trim();
             if (!url) return alert("Entre un lien CinePulse /play/ valide !");
 
-            // Met à jour l'hôte
-            document.getElementById('wpPlayer').src = url;
-            appendChatMessage("Système", `👑 L'hôte a diffusé le lecteur direct !`);
+            // 1. Remettre le chrono à 00:00:00 et démarrer
+            masterSeconds = 0;
+            updateTimerDisplays();
+            startMasterTimer();
 
-            // Envoie à tous les invités
-            broadcast({ type: 'CHANGE_STREAM_URL', url: url });
+            // 2. Mettre à jour le lecteur local
+            document.getElementById('wpPlayer').src = url;
+            appendChatMessage("Système", `🚀 Séance synchronisée à 00:00:00 avec le lecteur direct !`);
+
+            // 3. Diffuser le lien et la remise à zéro à tous les invités
+            broadcast({ type: 'RESET_AND_LOAD', url: url });
         }
 
         function resolveUsername(inputId) {
@@ -525,7 +540,6 @@
                 document.getElementById('hostControlsPanel').style.display = 'flex';
                 document.getElementById('hostSyncBanner').style.display = 'block';
                 document.getElementById('timerStatusTag').textContent = "👑 Mon Chrono Hôte";
-                startMasterTimer();
             } else {
                 document.getElementById('timerStatusTag').textContent = " Temps de l'Hôte";
             }
@@ -542,8 +556,9 @@
             else if (data.source === 'vidlink') url = isTv ? `https://vidlink.pro/tv/${id}/1/1` : `https://vidlink.pro/movie/${id}`;
             else if (data.source === '2embed') url = isTv ? `https://www.2embed.cc/embedtv/${id}&s=1&e=1` : `https://www.2embed.cc/embed/${id}`;
 
+            currentInitialUrl = url;
             document.getElementById('wpPlayer').src = url;
-            appendChatMessage("Système", `Séance démarrée. Suivez le chrono supérieur pour être calés ensemble !`);
+            appendChatMessage("Système", `Séance démarrée. L'hôte peut utiliser le panneau supérieur pour caler la vidéo à 00:00:00 !`);
         }
 
         function reloadPlayerIframe() {
@@ -572,9 +587,11 @@
             } else if (data.type === 'TIME_SYNC') {
                 masterSeconds = data.seconds;
                 updateTimerDisplays();
-            } else if (data.type === 'CHANGE_STREAM_URL') {
+            } else if (data.type === 'RESET_AND_LOAD') {
+                masterSeconds = 0;
+                updateTimerDisplays();
                 document.getElementById('wpPlayer').src = data.url;
-                appendChatMessage("Système", `⚡ L'iframe s'est mise à jour vers le lecteur direct !`);
+                appendChatMessage("Système", `⚡ Le lecteur direct s'est chargé et le chrono est remis à 00:00:00 !`);
             }
         }
 
