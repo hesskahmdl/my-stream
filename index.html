@@ -22,6 +22,7 @@
             background: none; border: none; color: #aaa; font-size: 14px; cursor: pointer;
             display: flex; align-items: center; gap: 6px; font-weight: 600; padding-bottom: 3px;
             position: relative; transition: color 0.2s; border-bottom: 2px solid transparent; white-space: nowrap;
+            text-decoration: none;
         }
         .nav-item svg { width: 16px; height: 16px; fill: currentColor; }
         .nav-item:hover, .nav-item.active { color: #fff; border-bottom-color: #e50914; }
@@ -32,6 +33,14 @@
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;
         }
         .btn-suggestion:hover { background: #e50914; color: #fff; }
+
+        .btn-watch-party {
+            background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid #10b981;
+            padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 5px;
+            text-decoration: none; white-space: nowrap;
+        }
+        .btn-watch-party:hover { background: #10b981; color: #fff; }
 
         .right-header { display: flex; align-items: center; gap: 12px; }
         .lang-switch { display: flex; gap: 6px; cursor: pointer; }
@@ -449,6 +458,9 @@
             <button class="nav-item" id="btn-anime" onclick="switchTab('anime')">
                 <svg viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61z"/></svg> <span data-i18n="nav_anime">Anime</span>
             </button>
+            <a href="https://Hesskahmdl.github.io/my-stream/watch-party.html" class="btn-watch-party">
+                👥 Watch Party
+            </a>
             <button class="btn-suggestion" onclick="openSuggestionModal()">
                 💡 Suggestions / Bugs
             </button>
@@ -743,7 +755,10 @@
                 </button>
                 <div class="source-sidebar" id="sourceSidebar">
                     <div class="source-sidebar-title">Choix des Lecteurs</div>
-                    <button class="btn-source-item active" id="btn-src-frembed" onclick="selectSource('frembed')">
+                    <button class="btn-source-item active" id="btn-src-vidzy" onclick="selectSource('vidzy')">
+                        <span>Vidzy</span> <span class="lang-flag">🇫🇷 VF / Multi</span>
+                    </button>
+                    <button class="btn-source-item" id="btn-src-frembed" onclick="selectSource('frembed')">
                         <span>Frembed</span> <span class="lang-flag">🇫🇷 VF</span>
                     </button>
                     <button class="btn-source-item" id="btn-src-movix" onclick="selectSource('movix')">
@@ -839,7 +854,7 @@
         let editingHeroIndex = null;
         let pendingSagaMovies = [];
         const SLIDE_DURATION = 3900;
-        let currentSourceKey = 'frembed';
+        let currentSourceKey = 'vidzy';
 
         function openCustomConfirm(title, text, callback) {
             document.getElementById('customConfirmTitle').textContent = title;
@@ -1622,7 +1637,7 @@
             document.getElementById('modalOverview').textContent = item.overview || "Synopsis indisponible.";
 
             updateMovieWatchlistBtn(isSavedInWatchlist(idClean));
-            selectSource('frembed');
+            selectSource('vidzy');
             document.getElementById('playerModal').style.display = 'block';
         }
 
@@ -1642,7 +1657,9 @@
             const isTv = (currentItem.type === 'tv' || isAnimeItem(currentItem));
             let url = "";
 
-            if (key === 'frembed') {
+            if (key === 'vidzy') {
+                url = isTv ? `https://vidzy.org/tv/${id}/1/1` : `https://vidzy.org/movie/${id}`;
+            } else if (key === 'frembed') {
                 url = isTv ? `https://frembed.casa/api/serie.php?id=${id}&sa=1&epi=1` : `https://frembed.casa/api/film.php?id=${id}`;
             } else if (key === 'movix') {
                 url = isTv ? `https://movix.cash/watch/tv/${id}/s/1/e/1` : `https://movix.cash/watch/movie/${id}`;
