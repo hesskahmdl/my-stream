@@ -83,7 +83,6 @@
         .mini-card img { width: 100%; height: 110px; object-fit: cover; }
         .mini-card p { font-size: 10px; font-weight: bold; padding: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center; }
 
-        .source-select { width: 100%; background: #181824; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 15px; outline: none; }
         .empty-state { text-align: center; padding: 40px 20px; color: #8a8a9e; }
         .empty-state svg { width: 48px; height: 48px; fill: #333; margin-bottom: 15px; }
 
@@ -138,22 +137,11 @@
         </div>
 
         <div id="hostConfigArea" style="margin-top:20px; border-top:1px solid rgba(255,255,255,0.1); padding-top:20px;">
-            <h3 style="font-size:15px; margin-bottom:10px;">1. Choisis un Film / Série :</h3>
+            <h3 style="font-size:15px; margin-bottom:10px;">Choisis un Film / Série :</h3>
             <input type="text" id="movieSearchLobby" placeholder="🔎 Rechercher un film dans le catalogue..." oninput="filterLobbyCatalog(this.value)" style="width:100%; background:#07070a; border:1px solid #333; color:#fff; padding:8px 12px; border-radius:6px; font-size:13px; margin-bottom:10px;">
             <div class="catalog-selector" id="lobbyCatalogGrid"></div>
 
-            <h3 style="font-size:15px; margin-bottom:10px; margin-top:15px;">2. Choisis le Lecteur Video :</h3>
-            <select class="source-select" id="lobbySourceSelect">
-                <option value="cinepulse">CinePulse (VF / Vostfr)</option>
-                <option value="vidzy">Vidzy (VF / Multi)</option>
-                <option value="frembed">Frembed (VF)</option>
-                <option value="movix">Movix (VF)</option>
-                <option value="multiembed">MultiEmbed</option>
-                <option value="vidlink">VidLink (VO)</option>
-                <option value="2embed">2embed (VOSTFR)</option>
-            </select>
-
-            <button class="btn-action btn-primary btn-disabled" id="btnStartParty" onclick="startPartySession()" style="width:100%; justify-content:center; padding:14px; font-size:15px;">
+            <button class="btn-action btn-primary btn-disabled" id="btnStartParty" onclick="startPartySession()" style="width:100%; justify-content:center; padding:14px; font-size:15px; margin-top:15px;">
                 🚀 Lancer la Watch Party (En attente d'un participant...)
             </button>
         </div>
@@ -185,10 +173,10 @@
 
                 <!-- BANDEAU SYNCHRO INSTANTANÉE HÔTE -->
                 <div class="host-sync-banner" id="hostSyncBanner">
-                    <label>👑 ÉTAPE 1 : Ouvre le film puis clique sur Play. ÉTAPE 2 : Copie l'URL /play/ et colle-la ci-dessous :</label>
+                    <label>👑 ÉTAPE 1 : Ouvre le film puis clique sur Play. ÉTAPE 2 : Copie l'URL et colle-la ci-dessous :</label>
                     <div class="host-sync-input-group">
                         <button class="btn-action" onclick="openCurrentFilmTab()" style="padding:6px 12px; font-size:12px; background:#20202d;">🔗 1. Ouvrir le film</button>
-                        <input type="text" id="directPlayUrlInput" placeholder="https://cinepulse.id/play/...">
+                        <input type="text" id="directPlayUrlInput" placeholder="https://cinevaro.app/media/tmdb-movie-...">
                         <button class="btn-action" onclick="pasteFromClipboard()" style="padding:6px 12px; font-size:12px;">📋 Coller</button>
                         <button class="btn-action btn-primary" onclick="broadcastDirectUrlAndResetTimer()" style="padding:6px 12px; font-size:12px;">🚀 2. Diffuser & Reset 00:00:00</button>
                     </div>
@@ -337,18 +325,15 @@
 
         function broadcastDirectUrlAndResetTimer() {
             const url = document.getElementById('directPlayUrlInput').value.trim();
-            if (!url) return alert("Entre un lien CinePulse /play/ valide !");
+            if (!url) return alert("Entre un lien de lecteur valide !");
 
-            // 1. Remettre le chrono à 00:00:00 et démarrer
             masterSeconds = 0;
             updateTimerDisplays();
             startMasterTimer();
 
-            // 2. Mettre à jour le lecteur local
             document.getElementById('wpPlayer').src = url;
             appendChatMessage("Système", `🚀 Séance synchronisée à 00:00:00 avec le lecteur direct !`);
 
-            // 3. Diffuser le lien et la remise à zéro à tous les invités
             broadcast({ type: 'RESET_AND_LOAD', url: url });
         }
 
@@ -517,13 +502,11 @@
             if (!selectedMovie) return alert("Sélectionne un film dans la liste avant de lancer !");
             if (participantsMap.size === 0) return alert("Tu ne peux pas lancer seul ! Attends qu'un ami rejoigne.");
 
-            const sourceKey = document.getElementById('lobbySourceSelect').value;
             const payload = {
                 type: 'START_PARTY',
                 tmdbId: selectedMovie.tmdb_id_clean || selectedMovie.tmdb_id,
                 title: selectedMovie.title,
-                isTv: selectedMovie.type === 'tv',
-                source: sourceKey
+                isTv: selectedMovie.type === 'tv'
             };
 
             broadcast(payload);
@@ -544,21 +527,16 @@
                 document.getElementById('timerStatusTag').textContent = " Temps de l'Hôte";
             }
 
-            let url = "";
             const id = data.tmdbId;
             const isTv = data.isTv;
 
-            if (data.source === 'cinepulse') url = isTv ? `https://cinepulse.id/sheet/tv-${id}` : `https://cinepulse.id/sheet/movie-${id}`;
-            else if (data.source === 'vidzy') url = isTv ? `https://vidzy.org/tv/${id}/1/1` : `https://vidzy.org/movie/${id}`;
-            else if (data.source === 'frembed') url = isTv ? `https://frembed.casa/api/serie.php?id=${id}&sa=1&epi=1` : `https://frembed.casa/api/film.php?id=${id}`;
-            else if (data.source === 'movix') url = isTv ? `https://movix.cash/watch/tv/${id}/s/1/e/1` : `https://movix.cash/watch/movie/${id}`;
-            else if (data.source === 'multiembed') url = `https://multiembed.mov/?video_id=${id}&tmdb=1`;
-            else if (data.source === 'vidlink') url = isTv ? `https://vidlink.pro/tv/${id}/1/1` : `https://vidlink.pro/movie/${id}`;
-            else if (data.source === '2embed') url = isTv ? `https://www.2embed.cc/embedtv/${id}&s=1&e=1` : `https://www.2embed.cc/embed/${id}`;
+            // URL unique fixée sur CineVaro
+            const mediaType = isTv ? 'tv' : 'movie';
+            const url = `https://cinevaro.app/media/tmdb-${mediaType}-${id}`;
 
             currentInitialUrl = url;
             document.getElementById('wpPlayer').src = url;
-            appendChatMessage("Système", `Séance démarrée. L'hôte peut utiliser le panneau supérieur pour caler la vidéo à 00:00:00 !`);
+            appendChatMessage("Système", `Séance démarrée sur CineVaro. L'hôte peut utiliser le panneau supérieur pour caler la vidéo à 00:00:00 !`);
         }
 
         function reloadPlayerIframe() {
