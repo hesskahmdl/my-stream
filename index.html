@@ -354,17 +354,16 @@
         .btn-source-item:hover, .btn-source-item.active { background: #e50914; border-color: #e50914; }
         .btn-source-item .lang-flag { font-size: 14px; }
 
-        /* CARTES SAISONS & ÉPISODES TMDB */
+        /* CARTES SAISONS & ÉPISODES TMDB (AFFICHAGE EN GRILLE AVEC WRAP) */
         .tv-seasons-container { margin-top: 25px; display: none; }
         .seasons-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
 
         .seasons-grid, .episodes-grid {
-            display: flex; gap: 15px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none;
+            display: flex; flex-wrap: wrap; gap: 15px; padding-bottom: 12px;
         }
-        .seasons-grid::-webkit-scrollbar, .episodes-grid::-webkit-scrollbar { display: none; }
 
         .season-card, .episode-card {
-            flex: 0 0 150px; background: #13131a; border-radius: 10px; overflow: hidden;
+            flex: 0 0 calc(14.28% - 13px); min-width: 130px; background: #13131a; border-radius: 10px; overflow: hidden;
             border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: transform 0.2s, border-color 0.2s;
             position: relative;
         }
@@ -372,7 +371,7 @@
             transform: translateY(-4px); border-color: #e50914;
         }
         .season-card img, .episode-card img {
-            width: 100%; height: 210px; object-fit: cover; display: block;
+            width: 100%; height: 180px; object-fit: cover; display: block;
         }
         .episode-card img { height: 95px; }
         .season-info, .episode-info { padding: 8px; background: #13131a; }
@@ -458,6 +457,7 @@
             .card-top10 img { width: 120px; height: 180px; }
             .top10-number { font-size: 90px; left: -20px; }
             .trailer-box { width: 100%; }
+            .season-card, .episode-card { flex: 0 0 calc(50% - 8px); min-width: 120px; }
         }
     </style>
 </head>
@@ -802,7 +802,7 @@
                 </div>
                 <div class="player-wrapper" id="videoContainer"></div>
 
-                <!-- AFFICHAGE DYNAMIQUE DES SAISONS & ÉPISODES (TMDB) -->
+                <!-- AFFICHAGE DYNAMIQUE DES SAISONS & ÉPISODES (TMDB) EN GRILLE -->
                 <div class="tv-seasons-container" id="tvSeasonsContainer">
                     <div class="seasons-title">Saisons</div>
                     <div class="seasons-grid" id="seasonsList"></div>
