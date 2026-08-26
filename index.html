@@ -335,10 +335,11 @@
         }
         .btn-toggle-sources:hover { background: #e50914; }
 
+        /* PANNEAU LATÉRAL COULISSANT DES SOURCES */
         .source-sidebar {
             position: absolute; top: 0; right: -280px; width: 260px; height: 100%;
             background: rgba(13, 13, 20, 0.96); border-left: 1px solid rgba(255,255,255,0.1);
-            z-index: 95; padding: 15px; display: flex; flex-direction: column; gap: 10px;
+            z-index: 200; padding: 15px; display: flex; flex-direction: column; gap: 10px;
             transition: right 0.3s ease-in-out; backdrop-filter: blur(12px); overflow-y: auto;
         }
         .source-sidebar.open { right: 0; }
@@ -353,18 +354,30 @@
         .btn-source-item:hover, .btn-source-item.active { background: #e50914; border-color: #e50914; }
         .btn-source-item .lang-flag { font-size: 14px; }
 
-        /* SÉLECTEUR DE SAISONS ET ÉPISODES */
-        .season-episode-selector {
-            display: none; align-items: center; gap: 15px; margin-bottom: 40px;
-            background: #13131a; padding: 12px 18px; border-radius: 10px; border: 1px solid #222;
+        /* CARTES SAISONS & ÉPISODES TMDB */
+        .tv-seasons-container { margin-top: 25px; display: none; }
+        .seasons-title { font-size: 18px; font-weight: 800; color: #fff; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .seasons-grid, .episodes-grid {
+            display: flex; gap: 15px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none;
         }
-        .se-select-group { display: flex; align-items: center; gap: 8px; }
-        .se-select-group label { font-size: 13px; font-weight: bold; color: #aaa; text-transform: uppercase; }
-        .se-select {
-            background: #18181f; border: 1px solid #333; color: #fff; padding: 8px 12px;
-            border-radius: 6px; font-size: 13px; font-weight: bold; outline: none; cursor: pointer;
+        .seasons-grid::-webkit-scrollbar, .episodes-grid::-webkit-scrollbar { display: none; }
+
+        .season-card, .episode-card {
+            flex: 0 0 150px; background: #13131a; border-radius: 10px; overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1); cursor: pointer; transition: transform 0.2s, border-color 0.2s;
+            position: relative;
         }
-        .se-select:focus { border-color: #e50914; }
+        .season-card:hover, .season-card.active, .episode-card:hover, .episode-card.active {
+            transform: translateY(-4px); border-color: #e50914;
+        }
+        .season-card img, .episode-card img {
+            width: 100%; height: 210px; object-fit: cover; display: block;
+        }
+        .episode-card img { height: 95px; }
+        .season-info, .episode-info { padding: 8px; background: #13131a; }
+        .season-info-title { font-size: 12px; font-weight: bold; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .season-info-sub { font-size: 10px; color: #aaa; margin-top: 2px; display: flex; justify-content: space-between; }
 
         .admin-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 6000;
@@ -789,16 +802,13 @@
                 </div>
                 <div class="player-wrapper" id="videoContainer"></div>
 
-                <!-- SÉLECTEUR SAISON ET ÉPISODE -->
-                <div class="season-episode-selector" id="seasonEpisodeSelector">
-                    <div class="se-select-group">
-                        <label for="selectSeason">Saison :</label>
-                        <select class="se-select" id="selectSeason" onchange="onEpisodeChange()"></select>
-                    </div>
-                    <div class="se-select-group">
-                        <label for="selectEpisode">Épisode :</label>
-                        <select class="se-select" id="selectEpisode" onchange="onEpisodeChange()"></select>
-                    </div>
+                <!-- AFFICHAGE DYNAMIQUE DES SAISONS & ÉPISODES (TMDB) -->
+                <div class="tv-seasons-container" id="tvSeasonsContainer">
+                    <div class="seasons-title">Saisons</div>
+                    <div class="seasons-grid" id="seasonsList"></div>
+
+                    <div class="seasons-title" style="margin-top: 20px;">Épisodes</div>
+                    <div class="episodes-grid" id="episodesList"></div>
                 </div>
             </div>
         </div>
@@ -882,6 +892,7 @@
         let currentSourceKey = 'vidzy';
         let currentSeason = 1;
         let currentEpisode = 1;
+        let tvSeasonsData = [];
 
         function openCustomConfirm(title, text, callback) {
             document.getElementById('customConfirmTitle').textContent = title;
@@ -923,7 +934,7 @@
                         }]
                     })
                 });
-                alert("Merci ! Ton message a été transmitted à l'équipe.");
+                alert("Merci ! Ton message a été transmis à l'équipe.");
                 closeSuggestionModal();
             } catch(e) {
                 alert("Erreur lors de l'envoi.");
@@ -1665,46 +1676,95 @@
 
             updateMovieWatchlistBtn(isSavedInWatchlist(idClean));
             
-            // Gérer sélecteurs Saisons / Épisodes
+            // Connexion dynamique aux données de saisons/épisodes via TMDB
             const isTv = (item.type === 'tv' || isAnimeItem(item));
-            const seSelector = document.getElementById('seasonEpisodeSelector');
+            const tvContainer = document.getElementById('tvSeasonsContainer');
+
             if (isTv) {
+                tvContainer.style.display = 'block';
                 currentSeason = 1;
                 currentEpisode = 1;
-                setupSeasonEpisodeOptions(idClean);
-                seSelector.style.display = 'flex';
+                await loadTmdbSeasons(idClean);
             } else {
-                seSelector.style.display = 'none';
+                tvContainer.style.display = 'none';
             }
 
             selectSource('vidzy');
             document.getElementById('playerModal').style.display = 'block';
         }
 
-        function setupSeasonEpisodeOptions(tmdbId) {
-            const selectS = document.getElementById('selectSeason');
-            const selectE = document.getElementById('selectEpisode');
+        // CHARGEMENT ET AFFICHAGE DYNAMIQUE DE VRAIES SAISONS (TMDB)
+        async function loadTmdbSeasons(tmdbId) {
+            const seasonsList = document.getElementById('seasonsList');
+            seasonsList.innerHTML = '<span style="color:#aaa; font-size:12px;">Chargement des saisons...</span>';
             
-            // Remplir 10 saisons par défaut (ajustable)
-            let sOptions = '';
-            for (let s = 1; s <= 15; s++) {
-                sOptions += `<option value="${s}">Saison ${s}</option>`;
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}?api_key=${API_KEY}&language=fr-FR`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+                
+                tvSeasonsData = data.seasons ? data.seasons.filter(s => s.season_number > 0) : [];
+                renderSeasonsCards(tmdbId);
+                await loadTmdbEpisodes(tmdbId, currentSeason);
+            } catch (e) {
+                seasonsList.innerHTML = '<span style="color:#777; font-size:12px;">Erreur lors du chargement des saisons TMDB.</span>';
             }
-            selectS.innerHTML = sOptions;
-            selectS.value = currentSeason;
-
-            // Remplir 30 épisodes par défaut
-            let eOptions = '';
-            for (let e = 1; e <= 50; e++) {
-                eOptions += `<option value="${e}">Épisode ${e}</option>`;
-            }
-            selectE.innerHTML = eOptions;
-            selectE.value = currentEpisode;
         }
 
-        function onEpisodeChange() {
-            currentSeason = parseInt(document.getElementById('selectSeason').value) || 1;
-            currentEpisode = parseInt(document.getElementById('selectEpisode').value) || 1;
+        function renderSeasonsCards(tmdbId) {
+            const seasonsList = document.getElementById('seasonsList');
+            seasonsList.innerHTML = tvSeasonsData.map(s => {
+                const year = s.air_date ? s.air_date.split('-')[0] : '';
+                return `
+                    <div class="season-card ${s.season_number === currentSeason ? 'active' : ''}" onclick="selectSeasonCard(${tmdbId}, ${s.season_number})">
+                        <img src="${s.poster_path ? formatTmdbImage(s.poster_path, 'w300') : 'https://via.placeholder.com/300x450'}" alt="${s.name}">
+                        <div class="season-info">
+                            <div class="season-info-title">${s.name}</div>
+                            <div class="season-info-sub">
+                                <span>${year}</span>
+                                <span>${s.episode_count} épisodes</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function selectSeasonCard(tmdbId, seasonNum) {
+            currentSeason = seasonNum;
+            currentEpisode = 1;
+            renderSeasonsCards(tmdbId);
+            await loadTmdbEpisodes(tmdbId, seasonNum);
+            selectSource(currentSourceKey);
+        }
+
+        // CHARGEMENT ET AFFICHAGE DES ÉPISODES CORRESPONDANTS (TMDB)
+        async function loadTmdbEpisodes(tmdbId, seasonNum) {
+            const episodesList = document.getElementById('episodesList');
+            episodesList.innerHTML = '<span style="color:#aaa; font-size:12px;">Chargement des épisodes...</span>';
+
+            try {
+                const res = await fetch(`https://api.themoviedb.org/3/tv/${tmdbId}/season/${seasonNum}?api_key=${API_KEY}&language=fr-FR`);
+                if (!res.ok) throw new Error();
+                const data = await res.json();
+
+                episodesList.innerHTML = (data.episodes || []).map(e => `
+                    <div class="episode-card ${e.episode_number === currentEpisode ? 'active' : ''}" onclick="selectEpisodeCard(${e.episode_number})">
+                        <img src="${e.still_path ? formatTmdbImage(e.still_path, 'w300') : 'https://via.placeholder.com/300x170'}" alt="Épisode ${e.episode_number}">
+                        <div class="episode-info">
+                            <div class="season-info-title">Ép. ${e.episode_number} - ${e.name}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (e) {
+                episodesList.innerHTML = '<span style="color:#777; font-size:12px;">Épisodes non disponibles.</span>';
+            }
+        }
+
+        function selectEpisodeCard(epNum) {
+            currentEpisode = epNum;
+            const tmdbId = currentItem.tmdb_id_clean || currentItem.tmdb_id;
+            loadTmdbEpisodes(tmdbId, currentSeason);
             selectSource(currentSourceKey);
         }
 
